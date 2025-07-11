@@ -1,0 +1,14 @@
+{
+  "consumer": {
+    "name": "Form137Frontend"
+  },
+  "provider": {
+    "name": "Form137API"
+  },
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  },
+  "interactions": []
+}
