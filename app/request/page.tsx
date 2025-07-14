@@ -9,8 +9,11 @@ import { BotIDProvider } from "@/components/botid-provider"
 import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { getSession } from "@auth0/nextjs-auth0"
+import { LoginPrompt } from "@/components/login-prompt"
 
-export default function RequestPage() {
+export default async function RequestPage() {
+  const session = await getSession()
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
@@ -41,14 +44,18 @@ export default function RequestPage() {
         <TopNavigation />
         <BotProtection>
           <main className="container mx-auto px-4 py-8">
-            {isSubmitted ? (
-              <SuccessPage
-                submissionData={submissionData}
-                onBackToForm={handleBackToForm}
-                onGoToDashboard={handleGoToDashboard}
-              />
+            {session?.user ? (
+              isSubmitted ? (
+                <SuccessPage
+                  submissionData={submissionData}
+                  onBackToForm={handleBackToForm}
+                  onGoToDashboard={handleGoToDashboard}
+                />
+              ) : (
+                <RequestForm137 onSubmit={handleFormSubmit} />
+              )
             ) : (
-              <RequestForm137 onSubmit={handleFormSubmit} />
+              <LoginPrompt />
             )}
           </main>
         </BotProtection>

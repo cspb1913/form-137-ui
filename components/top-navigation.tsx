@@ -2,12 +2,24 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useUser } from "@auth0/nextjs-auth0/client"
 import { Button } from "@/components/ui/button"
-import { FileText, LayoutDashboard, Plus, User } from "lucide-react"
+import { FileText, LayoutDashboard, Plus, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function TopNavigation() {
   const pathname = usePathname()
+  const { user, isLoading } = useUser()
 
   const navItems = [
     {
@@ -55,10 +67,42 @@ export function TopNavigation() {
             </div>
           </div>
           <div className="flex items-center">
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
+            {isLoading && <Skeleton className="h-8 w-8 rounded-full" />}
+            {!isLoading && !user && (
+              <Button asChild variant="ghost" size="sm">
+                <a href="/api/auth/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </a>
+              </Button>
+            )}
+            {!isLoading && user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.picture ?? undefined} alt={user.name ?? "User avatar"} />
+                      <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href="/api/auth/logout">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>

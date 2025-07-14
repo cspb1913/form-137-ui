@@ -9,8 +9,11 @@ import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { Dashboard } from "@/components/dashboard"
+import { LoginPrompt } from "@/components/login-prompt"
+import { getSession } from "@auth0/nextjs-auth0"
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSession()
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
@@ -47,8 +50,10 @@ export default function Home() {
                 onBackToForm={handleBackToForm}
                 onGoToDashboard={handleGoToDashboard}
               />
-            ) : (
+            ) : session?.user ? (
               <Dashboard />
+            ) : (
+              <LoginPrompt />
             )}
           </main>
         </BotProtection>
@@ -64,16 +69,5 @@ export default function Home() {
         />
       </div>
     </BotIDProvider>
-  )
-}
-
-export function DashboardPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-      <TopNavigation />
-      <main className="container mx-auto px-4 py-8">
-        <Dashboard />
-      </main>
-    </div>
   )
 }

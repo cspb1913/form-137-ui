@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { BotIDProvider } from "@/components/botid-provider"
+import { UserProvider } from "@auth0/nextjs-auth0/client"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   authors: [{ name: "CSPB Form 137 System" }],
   robots: "index, follow",
   viewport: "width=device-width, initial-scale=1",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -26,12 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <BotIDProvider>
-            {children}
-            <Toaster />
-          </BotIDProvider>
-        </ThemeProvider>
+        <UserProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <BotIDProvider>
+              {children}
+              <Toaster />
+            </BotIDProvider>
+          </ThemeProvider>
+        </UserProvider>
       </body>
     </html>
   )
