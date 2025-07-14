@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { SuccessPage } from "@/components/success-page"
-import jest from "jest" // Import jest to fix the undeclared variable error
+import { jest } from "@jest/globals" // Import jest to fix the undeclared variable error
 
 describe("SuccessPage Component", () => {
   const mockOnNewRequest = jest.fn()

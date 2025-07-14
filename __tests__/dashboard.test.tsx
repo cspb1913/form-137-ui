@@ -3,7 +3,7 @@ import { Dashboard } from "@/components/dashboard"
 import { RequestDetail } from "@/components/request-detail"
 import { StatusBadge } from "@/components/status-badge"
 import { useRouter } from "next/navigation"
-import jest from "jest" // Import jest to declare it
+import { jest } from "@jest/globals" // Import jest to declare it
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({

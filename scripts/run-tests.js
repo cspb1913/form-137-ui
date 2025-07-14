@@ -4,7 +4,7 @@ console.log("🧪 Running Form 137 Test Suite...\n")
 
 try {
   // Run tests with coverage
-  execSync("yarn test --coverage --watchAll=false", {
+  execSync("pnpm exec jest --coverage --watchAll=false", {
     stdio: "inherit",
     cwd: process.cwd(),
   })

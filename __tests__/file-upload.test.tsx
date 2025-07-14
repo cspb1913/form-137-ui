@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { FileUpload } from "@/components/file-upload"
-import jest from "jest"
+import { jest } from "@jest/globals"
 
 describe("FileUpload Component", () => {
   const mockOnFileSelect = jest.fn()

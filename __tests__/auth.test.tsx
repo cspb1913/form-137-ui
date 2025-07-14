@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import { TopNavigation } from "@/components/top-navigation"
 import { LoginPrompt } from "@/components/login-prompt"
 import { useUser } from "@auth0/nextjs-auth0/client"
-import jest from "jest" // Declare the jest variable
+import { jest } from "@jest/globals" // Declare the jest variable
 
 // Mock the useUser hook
 jest.mock("@auth0/nextjs-auth0/client")
