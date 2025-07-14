@@ -33,11 +33,11 @@ Continue building your app on:
 
 Use [pnpm](https://pnpm.io/) to manage dependencies and run scripts:
 
-```bash
+\`\`\`bash
 pnpm install
 pnpm dev
 pnpm test:pact
-```
+\`\`\`
 
 ## Pact contracts
 
