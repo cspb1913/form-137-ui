@@ -25,7 +25,7 @@ export class DashboardAPI {
       throw new Error(`Failed to fetch dashboard data: ${response.statusText}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 
   async getRequestDetails(requestId: string, token: string): Promise<RequestStatus> {
@@ -44,7 +44,7 @@ export class DashboardAPI {
       throw new Error(`Failed to fetch request details: ${response.statusText}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 
   async addComment(requestId: string, message: string, token: string): Promise<Comment> {
@@ -62,7 +62,7 @@ export class DashboardAPI {
       throw new Error(`Failed to add comment: ${response.statusText}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 
   async updateRequestStatus(requestId: string, status: string, token: string): Promise<RequestStatus> {
@@ -80,6 +80,6 @@ export class DashboardAPI {
       throw new Error(`Failed to update request status: ${response.statusText}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 }

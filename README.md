@@ -28,3 +28,19 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Local development
+
+Use [Yarn](https://yarnpkg.com/) to manage dependencies and run scripts:
+
+```bash
+yarn install
+yarn dev
+yarn test:pact
+```
+
+## Pact contracts
+
+Generated contracts for the frontend reside in the `pacts/` directory. These
+describe the consumer expectations for both the dashboard API and the form 137
+submission API.

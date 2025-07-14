@@ -1,0 +1,187 @@
+{
+  "consumer": {
+    "name": "Form137Frontend"
+  },
+  "interactions": [
+    {
+      "description": "a valid form submission with all required fields",
+      "providerState": "API is available for form submission",
+      "request": {
+        "method": "POST",
+        "path": "/api/form137/submit",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary"
+        },
+        "body": {
+          "learnerReferenceNumber": "123456789012",
+          "firstName": "Juan",
+          "middleName": "Santos",
+          "lastName": "Dela Cruz",
+          "dateOfBirth": "2000-01-15",
+          "lastGradeLevel": "Grade 12",
+          "lastSchoolYear": "2023",
+          "previousSchool": "Manila High School",
+          "purposeOfRequest": "College application requirements",
+          "deliveryMethod": "Pick-up",
+          "requesterName": "Maria Dela Cruz",
+          "relationshipToLearner": "Parent/Guardian",
+          "emailAddress": "maria.delacruz@email.com",
+          "mobileNumber": "+639123456789"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "success": true,
+          "ticketNumber": "REQ-2025-00123",
+          "message": "Form 137 request submitted successfully",
+          "submittedAt": "2025-01-11T21:52:11.000Z"
+        }
+      }
+    },
+    {
+      "description": "a valid form submission from self-requester",
+      "providerState": "API is available for self-requester form submission",
+      "request": {
+        "method": "POST",
+        "path": "/api/form137/submit",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary"
+        },
+        "body": {
+          "learnerReferenceNumber": "987654321098",
+          "firstName": "Anna",
+          "lastName": "Garcia",
+          "dateOfBirth": "1995-05-20",
+          "lastGradeLevel": "Grade 11",
+          "lastSchoolYear": "2022",
+          "previousSchool": "Quezon City High School",
+          "purposeOfRequest": "Job application",
+          "deliveryMethod": "Courier",
+          "requesterName": "Anna Garcia",
+          "relationshipToLearner": "Self",
+          "emailAddress": "anna.garcia@email.com",
+          "mobileNumber": "+639987654321"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "success": true,
+          "ticketNumber": "REQ-2025-00124",
+          "message": "Form 137 request submitted successfully",
+          "submittedAt": "2025-01-11T21:52:11.000Z"
+        }
+      }
+    },
+    {
+      "description": "an invalid form submission with validation errors",
+      "providerState": "API validates form data",
+      "request": {
+        "method": "POST",
+        "path": "/api/form137/submit",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary"
+        },
+        "body": {
+          "learnerReferenceNumber": "12345",
+          "firstName": "",
+          "lastName": "Test",
+          "dateOfBirth": "2000-01-01",
+          "lastGradeLevel": "Grade 12",
+          "lastSchoolYear": "2023",
+          "previousSchool": "Test School",
+          "purposeOfRequest": "Test purpose",
+          "deliveryMethod": "Pick-up",
+          "requesterName": "Test Requester",
+          "relationshipToLearner": "Self",
+          "emailAddress": "invalid-email",
+          "mobileNumber": "+639123456789"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "error": "Validation Error",
+          "message": "Form validation failed",
+          "statusCode": 400,
+          "details": {
+            "learnerReferenceNumber": ["Must be exactly 12 digits"],
+            "firstName": ["First name is required"],
+            "emailAddress": ["Please enter a valid email address"]
+          }
+        }
+      }
+    },
+    {
+      "description": "a request for submission status",
+      "providerState": "A form submission exists with ticket number REQ-2025-00123",
+      "request": {
+        "method": "GET",
+        "path": "/api/form137/status/REQ-2025-00123",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "ticketNumber": "REQ-2025-00123",
+          "status": "processing",
+          "submittedAt": "2025-01-11T21:52:11.000Z",
+          "updatedAt": "2025-01-12T09:30:00.000Z",
+          "notes": "Documents under review"
+        }
+      }
+    },
+    {
+      "description": "a request for non-existent submission status",
+      "providerState": "No form submission exists with ticket number REQ-2025-99999",
+      "request": {
+        "method": "GET",
+        "path": "/api/form137/status/REQ-2025-99999",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "error": "Not Found",
+          "message": "Submission not found",
+          "statusCode": 404
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "15.0.1"
+    },
+    "pactRust": {
+      "ffi": "0.4.22",
+      "models": "1.2.3"
+    },
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  },
+  "provider": {
+    "name": "Form137API"
+  }
+}
