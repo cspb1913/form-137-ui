@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast"
 import { FileUpload } from "./file-upload"
 import { type FormData, type FormErrors, validateForm } from "@/lib/validation"
 import { formApiService, type FormSubmissionRequest } from "@/services/form-api"
+import { useBotID } from "./botid-provider"
+import { trackFormSubmission } from "@/lib/botid"
 
 interface RequestForm137Props {
   onSuccess: (ticketNumber: string) => void
@@ -21,8 +23,10 @@ interface RequestForm137Props {
 
 export function RequestForm137({ onSuccess }: RequestForm137Props) {
   const { toast } = useToast()
+  const { isBot, botType, confidence, trackActivity } = useBotID()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
+  const [suspiciousActivityCount, setSuspiciousActivityCount] = useState(0)
 
   const [formData, setFormData] = useState<FormData>({
     learnerReferenceNumber: "",
@@ -68,6 +72,18 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
+
+    // Track rapid form filling (potential bot behavior)
+    if (value.length > 10 && Date.now() % 1000 < 100) {
+      setSuspiciousActivityCount((prev) => prev + 1)
+      if (suspiciousActivityCount > 3) {
+        trackActivity("rapid_form_filling", {
+          field,
+          valueLength: value.length,
+          suspiciousCount: suspiciousActivityCount,
+        })
+      }
+    }
   }
 
   const handleMobileNumberChange = (value: string) => {
@@ -83,10 +99,41 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
+
+    // Track file upload activity
+    if (file) {
+      trackActivity("file_upload", {
+        field,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Additional bot protection checks
+    if (isBot && confidence > 0.8) {
+      toast({
+        title: "Submission Blocked",
+        description: "Automated submissions are not allowed.",
+        variant: "destructive",
+      })
+      await trackActivity("blocked_bot_submission", {
+        botType,
+        confidence,
+        formData: Object.keys(formData).reduce(
+          (acc, key) => {
+            acc[key] = !!formData[key as keyof FormData]
+            return acc
+          },
+          {} as Record<string, boolean>,
+        ),
+      })
+      return
+    }
 
     const validationErrors = validateForm(formData)
     if (Object.keys(validationErrors).length > 0) {
@@ -102,6 +149,9 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     setIsSubmitting(true)
 
     try {
+      // Track form submission attempt
+      await trackFormSubmission(formData, { isBot, botType, confidence })
+
       // Prepare API request data
       const apiRequest: FormSubmissionRequest = {
         learnerReferenceNumber: formData.learnerReferenceNumber,
@@ -125,6 +175,12 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       // Submit to API
       const response = await formApiService.submitForm(apiRequest)
 
+      // Track successful submission
+      await trackActivity("successful_submission", {
+        ticketNumber: response.ticketNumber,
+        submittedAt: response.submittedAt,
+      })
+
       toast({
         title: "Request Submitted",
         description: response.message,
@@ -133,6 +189,19 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       onSuccess(response.ticketNumber)
     } catch (error) {
       console.error("Form submission error:", error)
+
+      // Track submission error
+      await trackActivity("submission_error", {
+        error: error instanceof Error ? error.message : "Unknown error",
+        formData: Object.keys(formData).reduce(
+          (acc, key) => {
+            acc[key] = !!formData[key as keyof FormData]
+            return acc
+          },
+          {} as Record<string, boolean>,
+        ),
+      })
+
       toast({
         title: "Submission Error",
         description: error instanceof Error ? error.message : "Please try again later.",
@@ -491,7 +560,7 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
               <div className="pt-6">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (isBot && confidence > 0.8)}
                   className="w-full md:w-auto md:ml-auto md:block bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8"
                 >
                   {isSubmitting ? "Submitting Request..." : "Submit Request"}

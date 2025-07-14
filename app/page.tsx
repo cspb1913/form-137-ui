@@ -3,30 +3,29 @@
 import { useState } from "react"
 import { RequestForm137 } from "@/components/request-form-137"
 import { SuccessPage } from "@/components/success-page"
-import { Toaster } from "@/components/ui/toaster"
+import { BotProtection } from "@/components/bot-protection"
 
 export default function Home() {
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const [ticketNumber, setTicketNumber] = useState("")
 
   const handleSuccess = (ticket: string) => {
     setTicketNumber(ticket)
-    setIsSuccess(true)
+    setIsSubmitted(true)
   }
 
-  const handleNewRequest = () => {
-    setIsSuccess(false)
+  const handleBackToForm = () => {
+    setIsSubmitted(false)
     setTicketNumber("")
   }
 
   return (
-    <>
-      {isSuccess ? (
-        <SuccessPage ticketNumber={ticketNumber} onNewRequest={handleNewRequest} />
+    <BotProtection blockBots={true} showWarning={true}>
+      {isSubmitted ? (
+        <SuccessPage ticketNumber={ticketNumber} onBackToForm={handleBackToForm} />
       ) : (
         <RequestForm137 onSuccess={handleSuccess} />
       )}
-      <Toaster />
-    </>
+    </BotProtection>
   )
 }
