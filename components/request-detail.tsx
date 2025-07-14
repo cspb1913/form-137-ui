@@ -1,198 +1,125 @@
-"use client"
-
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { FileText, Mail, MessageSquare, Phone, Send, User, Clock, CheckCircle, XCircle, Archive } from "lucide-react"
-import type { RequestDetailData } from "@/types/dashboard"
-import { StatusBadge } from "@/components/status-badge"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { FileText, User, Clock, Calendar, Mail, MessageSquare, Send, Paperclip, Phone } from "lucide-react"
+import type { RequestDetail as RequestDetailType } from "@/types/dashboard"
+import StatusBadge from "./status-badge"
+import { format } from "date-fns"
 
-const timelineEvents = [
-  {
-    status: "Completed",
-    date: "2023-10-27T10:00:00Z",
-    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-    description: "Request fulfilled and documents sent.",
-  },
-  {
-    status: "In Progress",
-    date: "2023-10-26T14:30:00Z",
-    icon: <Clock className="h-5 w-5 text-yellow-500" />,
-    description: "Registrar is processing the request.",
-  },
-  {
-    status: "Submitted",
-    date: "2023-10-25T09:00:00Z",
-    icon: <FileText className="h-5 w-5 text-blue-500" />,
-    description: "Request submitted successfully.",
-  },
-]
-
-const comments = [
-  {
-    author: "Registrar's Office",
-    avatar: "/placeholder-logo.png",
-    text: "We have received your request. Please allow 3-5 business days for processing. We have a high volume of requests at the moment.",
-    timestamp: "2 days ago",
-  },
-  {
-    author: "Jason Calalang",
-    avatar: "/placeholder-user.jpg",
-    text: "Thank you for the update. I'll wait for the documents.",
-    timestamp: "1 day ago",
-  },
-]
-
-export function RequestDetail({ request }: { request: RequestDetailData }) {
-  const [newComment, setNewComment] = useState("")
-  const [commentsList, setCommentsList] = useState(request.comments || [])
-
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      const comment = {
-        id: Date.now().toString(),
-        author: "You",
-        content: newComment,
-        timestamp: new Date().toISOString(),
-        isFromRegistrar: false,
-      }
-      setCommentsList([...commentsList, comment])
-      setNewComment("")
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "completed":
-        return "text-green-600"
-      case "in_progress":
-        return "text-blue-600"
-      case "pending":
-        return "text-yellow-600"
-      case "rejected":
-        return "text-red-600"
-      default:
-        return "text-gray-600"
-    }
-  }
-
+export function RequestDetailComponent({
+  request,
+}: {
+  request: RequestDetailType
+}) {
   return (
-    <div className="grid md:grid-cols-3 gap-8 p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
-      <div className="md:col-span-2 space-y-8">
-        {/* Request Header */}
-        <Card className="bg-white dark:bg-gray-800 shadow-lg border-l-4 border-green-700">
-          <CardHeader>
-            <div className="flex justify-between items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="lg:col-span-2 space-y-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border-l-8 border-[#1B4332]">
+          <CardHeader className="bg-gray-50 dark:bg-gray-700/50 p-6">
+            <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white">
-                  Request ID: {request.id}
-                </CardTitle>
-                <CardDescription className="text-gray-500 dark:text-gray-400">
-                  Form 137 Request for {request.studentName}
-                </CardDescription>
+                <div className="flex items-center gap-3">
+                  <FileText className="h-8 w-8 text-[#1B4332] dark:text-green-400" />
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                      Request Details
+                    </CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-gray-400">
+                      Ticket #{request.ticketNumber}
+                    </CardDescription>
+                  </div>
+                </div>
               </div>
               <StatusBadge status={request.status} />
             </div>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300">Date Submitted:</p>
-              <p className="text-gray-600 dark:text-gray-400">{request.dateSubmitted}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300">Last Updated:</p>
-              <p className="text-gray-600 dark:text-gray-400">{request.lastUpdated}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300">Purpose:</p>
-              <p className="text-gray-600 dark:text-gray-400">{request.purpose}</p>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300">Destination School:</p>
-              <p className="text-gray-600 dark:text-gray-400">{request.destinationSchool}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Timeline */}
-        <Card className="bg-white dark:bg-gray-800 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white">Request Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative pl-6">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-              {timelineEvents.map((event, index) => (
-                <div key={index} className="flex items-start gap-4 mb-6 last:mb-0">
-                  <div className="z-10 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full h-10 w-10 ring-4 ring-white dark:ring-gray-800">
-                    {event.icon}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-700 dark:text-gray-300">{event.status}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{event.description}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{new Date(event.date).toLocaleString()}</p>
-                  </div>
+          <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <User className="h-5 w-5 text-gray-500 mr-3 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">Learner Name</p>
+                  <p className="text-gray-600 dark:text-gray-400">{request.learnerName}</p>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-start">
+                <Calendar className="h-5 w-5 text-gray-500 mr-3 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">Submitted</p>
+                  <p className="text-gray-600 dark:text-gray-400">{format(new Date(request.submittedDate), "PPP p")}</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Clock className="h-5 w-5 text-gray-500 mr-3 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">Estimated Completion</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {format(new Date(request.estimatedCompletion), "PPP")}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <p className="font-semibold text-gray-700 dark:text-gray-300 w-32">Purpose</p>
+                <p className="text-gray-600 dark:text-gray-400">{request.purpose}</p>
+              </div>
+              <div className="flex items-start">
+                <p className="font-semibold text-gray-700 dark:text-gray-300 w-32">Delivery</p>
+                <p className="text-gray-600 dark:text-gray-400 capitalize">{request.deliveryMethod}</p>
+              </div>
+              <div className="flex items-start">
+                <p className="font-semibold text-gray-700 dark:text-gray-300 w-32">Requester</p>
+                <p className="text-gray-600 dark:text-gray-400">{request.formData.requesterName}</p>
+              </div>
+              <div className="flex items-start">
+                <Mail className="h-5 w-5 text-gray-500 mr-3 mt-1" />
+                <div>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300">Requester Email</p>
+                  <p className="text-gray-600 dark:text-gray-400">{request.requesterEmail}</p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Comments/Communication */}
-        <Card className="bg-white dark:bg-gray-800 shadow-lg">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white">Communication Log</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-800 dark:text-gray-100">
+              <MessageSquare className="text-[#1B4332] dark:text-green-400" />
+              Communication History
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-              {commentsList.map((comment, index) => (
-                <div key={index} className="flex items-start gap-4">
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {request.comments.map((comment) => (
+                <div key={comment.id} className="flex items-start gap-4">
                   <Avatar>
-                    <AvatarImage src={comment.avatar || "/placeholder.svg"} alt={comment.author} />
+                    <AvatarImage src="/placeholder-user.jpg" />
                     <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
-                    <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">{comment.author}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{comment.content}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
-                      {formatDate(comment.timestamp)}
-                    </p>
+                  <div className="w-full rounded-lg border bg-gray-50 dark:bg-gray-700/50 p-3 text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-semibold text-gray-800 dark:text-gray-200">{comment.author}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {format(new Date(comment.timestamp), "PPp")}
+                      </p>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300">{comment.message}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <Separator />
-            <div className="flex items-start gap-4">
-              <Avatar>
-                <AvatarImage src="/placeholder-user.jpg" alt="Jason Calalang" />
-                <AvatarFallback>JC</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 relative">
-                <Textarea
-                  placeholder="Type your message to the registrar..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="w-full pr-12"
-                />
-                <Button
-                  size="icon"
-                  className="absolute right-2 top-2 h-8 w-8 bg-green-700 hover:bg-green-800"
-                  onClick={handleAddComment}
-                >
-                  <Send className="h-4 w-4" />
+            <div className="relative">
+              <Textarea placeholder="Type your message here..." className="pr-24" />
+              <div className="absolute top-2 right-2 flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-700">
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+                <Button size="sm" className="bg-[#1B4332] hover:bg-[#2d6a4f] text-white">
+                  Send
+                  <Send className="h-4 w-4 ml-2" />
                 </Button>
               </div>
             </div>
@@ -200,51 +127,42 @@ export function RequestDetail({ request }: { request: RequestDetailData }) {
         </Card>
       </div>
 
-      {/* Right Sidebar */}
-      <div className="space-y-8">
-        {/* Quick Actions */}
-        <Card className="bg-white dark:bg-gray-800 shadow-lg">
+      <div className="space-y-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Quick Actions</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800 dark:text-gray-100">Timeline</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col space-y-2">
-            <Button variant="outline" className="justify-start bg-transparent">
-              <MessageSquare className="mr-2 h-4 w-4" /> Send a Follow-up
-            </Button>
-            <Button variant="outline" className="justify-start bg-transparent">
-              <FileText className="mr-2 h-4 w-4" /> View Submitted Docs
-            </Button>
-            <Button
-              variant="outline"
-              className="justify-start text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-400 bg-transparent"
-            >
-              <XCircle className="mr-2 h-4 w-4" /> Cancel Request
-            </Button>
-            <Button variant="outline" className="justify-start bg-transparent">
-              <Archive className="mr-2 h-4 w-4" /> Archive Request
-            </Button>
+          <CardContent>
+            <ul className="space-y-4">
+              {request.timeline.map((event, index) => (
+                <li key={index} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-4 h-4 rounded-full bg-[#1B4332] dark:bg-green-400 mt-1" />
+                    {index < request.timeline.length - 1 && (
+                      <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-700 dark:text-gray-300">{event.description}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{format(new Date(event.date), "PPp")}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
-
-        {/* Contact Info */}
-        <Card className="bg-white dark:bg-gray-800 shadow-lg">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">Registrar Contact</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800 dark:text-gray-100">Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">Ms. Jane Doe</span>
+              <Mail className="h-5 w-5 text-gray-500" />
+              <p className="text-gray-600 dark:text-gray-400">{request.requesterEmail}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              <a href="mailto:registrar@school.edu" className="text-green-700 hover:underline dark:text-green-500">
-                registrar@school.edu
-              </a>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300">(123) 456-7890</span>
+              <Phone className="h-5 w-5 text-gray-500" />
+              <p className="text-gray-600 dark:text-gray-400">{request.formData.mobileNumber}</p>
             </div>
           </CardContent>
         </Card>
@@ -253,5 +171,4 @@ export function RequestDetail({ request }: { request: RequestDetailData }) {
   )
 }
 
-// Named export for the component
-export default RequestDetail
+export { RequestDetailComponent as RequestDetail }

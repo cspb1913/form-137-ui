@@ -1,79 +1,43 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { TopNavigation } from "@/components/top-navigation"
-import { RequestDetail } from "@/components/request-detail"
-import { mockRequestDetail } from "@/lib/mock-data"
-import type { RequestDetail as RequestDetailType } from "@/types/dashboard"
+import { RequestDetailComponent } from "@/components/request-detail"
+import TopNavigation from "@/components/top-navigation"
+import { mockRequestDetails } from "@/lib/mock-data"
+import { notFound } from "next/navigation"
+import { useEffect, useState } from "react"
+import type { RequestDetail } from "@/types/dashboard"
 
-interface RequestDetailPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function RequestDetailPage({ params }: RequestDetailPageProps) {
-  const router = useRouter()
-  const [request, setRequest] = useState<RequestDetailType | null>(null)
+export default function RequestDetailPage({ params }: { params: { id: string } }) {
+  const [request, setRequest] = useState<RequestDetail | undefined>(undefined)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // In real app, fetch request details from API
-    const fetchRequest = async () => {
-      try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500))
-        setRequest(mockRequestDetail)
-      } catch (error) {
-        console.error("Error fetching request:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchRequest()
+    // Simulate API call
+    const foundRequest = mockRequestDetails.find((r) => r.id === params.id)
+    setRequest(foundRequest)
+    setLoading(false)
   }, [params.id])
-
-  const handleBack = () => {
-    router.push("/dashboard")
-  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+      <div className="flex min-h-screen w-full flex-col bg-gray-100 dark:bg-gray-900">
         <TopNavigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading request details...</p>
-            </div>
-          </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 flex items-center justify-center">
+          <p>Loading...</p>
         </main>
       </div>
     )
   }
 
   if (!request) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <TopNavigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Request Not Found</h1>
-            <p className="mt-2 text-gray-600">The requested Form 137 submission could not be found.</p>
-          </div>
-        </main>
-      </div>
-    )
+    notFound()
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+    <div className="flex min-h-screen w-full flex-col bg-gray-100 dark:bg-gray-900">
       <TopNavigation />
-      <main className="container mx-auto px-4 py-8">
-        <RequestDetail requestId={params.id} />
+      <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <RequestDetailComponent request={request} />
       </main>
     </div>
   )
