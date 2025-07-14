@@ -75,7 +75,7 @@ export class FormApiService {
       throw new Error(`API Error: ${errorData.message}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 
   async getSubmissionStatus(ticketNumber: string): Promise<{
@@ -85,14 +85,16 @@ export class FormApiService {
     updatedAt: string
     notes?: string
   }> {
-    const response = await fetch(`${this.baseUrl}/api/form137/status/${ticketNumber}`)
+    const response = await fetch(
+      `${this.baseUrl}/api/form137/status/${ticketNumber}`,
+    )
 
     if (!response.ok) {
       const errorData: ApiError = await response.json()
       throw new Error(`API Error: ${errorData.message}`)
     }
 
-    return response.json()
+    return await response.json()
   }
 }
 

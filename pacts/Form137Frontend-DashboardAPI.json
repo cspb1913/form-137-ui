@@ -1,0 +1,343 @@
+{
+  "consumer": {
+    "name": "Form137Frontend"
+  },
+  "interactions": [
+    {
+      "description": "a request for dashboard data",
+      "providerState": "user has form 137 requests",
+      "request": {
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer token123"
+        },
+        "matchingRules": {
+          "$.header.Authorization": {
+            "match": "type"
+          }
+        },
+        "method": "GET",
+        "path": "/api/dashboard/requests"
+      },
+      "response": {
+        "body": {
+          "requests": [
+            {
+              "comments": [
+                {
+                  "id": "comment_001",
+                  "message": "Your request has been received",
+                  "registrarName": "Ms. Santos",
+                  "requiresResponse": false,
+                  "timestamp": "2024-01-15T10:35:00Z",
+                  "type": "info"
+                }
+              ],
+              "deliveryMethod": "pickup",
+              "estimatedCompletion": "2024-01-22T17:00:00Z",
+              "id": "req_001",
+              "learnerName": "Juan Dela Cruz",
+              "learnerReferenceNumber": "123456789012",
+              "requestType": "Original Copy",
+              "requesterEmail": "maria@email.com",
+              "requesterName": "Maria Dela Cruz",
+              "status": "submitted",
+              "submittedDate": "2024-01-15T10:30:00Z",
+              "ticketNumber": "F137-2024-001"
+            }
+          ],
+          "statistics": {
+            "averageProcessingTime": 7,
+            "completedRequests": 3,
+            "pendingRequests": 2,
+            "totalRequests": 5
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body.requests": {
+            "match": "type",
+            "min": 1
+          },
+          "$.body.requests[*].comments": {
+            "match": "type",
+            "min": 1
+          },
+          "$.body.requests[*].comments[*].id": {
+            "match": "type"
+          },
+          "$.body.requests[*].comments[*].message": {
+            "match": "type"
+          },
+          "$.body.requests[*].comments[*].registrarName": {
+            "match": "type"
+          },
+          "$.body.requests[*].comments[*].requiresResponse": {
+            "match": "type"
+          },
+          "$.body.requests[*].comments[*].timestamp": {
+            "match": "type"
+          },
+          "$.body.requests[*].comments[*].type": {
+            "match": "type"
+          },
+          "$.body.requests[*].deliveryMethod": {
+            "match": "type"
+          },
+          "$.body.requests[*].estimatedCompletion": {
+            "match": "type"
+          },
+          "$.body.requests[*].id": {
+            "match": "type"
+          },
+          "$.body.requests[*].learnerName": {
+            "match": "type"
+          },
+          "$.body.requests[*].learnerReferenceNumber": {
+            "match": "type"
+          },
+          "$.body.requests[*].requestType": {
+            "match": "type"
+          },
+          "$.body.requests[*].requesterEmail": {
+            "match": "type"
+          },
+          "$.body.requests[*].requesterName": {
+            "match": "type"
+          },
+          "$.body.requests[*].status": {
+            "match": "type"
+          },
+          "$.body.requests[*].submittedDate": {
+            "match": "type"
+          },
+          "$.body.requests[*].ticketNumber": {
+            "match": "type"
+          },
+          "$.body.statistics.averageProcessingTime": {
+            "match": "type"
+          },
+          "$.body.statistics.completedRequests": {
+            "match": "type"
+          },
+          "$.body.statistics.pendingRequests": {
+            "match": "type"
+          },
+          "$.body.statistics.totalRequests": {
+            "match": "type"
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request for non-existent request",
+      "providerState": "request does not exist",
+      "request": {
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer token123"
+        },
+        "matchingRules": {
+          "$.header.Authorization": {
+            "match": "type"
+          }
+        },
+        "method": "GET",
+        "path": "/api/dashboard/request/nonexistent"
+      },
+      "response": {
+        "body": {
+          "code": "REQUEST_NOT_FOUND",
+          "error": "Request not found"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body.code": {
+            "match": "type"
+          },
+          "$.body.error": {
+            "match": "type"
+          }
+        },
+        "status": 404
+      }
+    },
+    {
+      "description": "a request for specific request details",
+      "providerState": "request exists",
+      "request": {
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer token123"
+        },
+        "matchingRules": {
+          "$.header.Authorization": {
+            "match": "type"
+          }
+        },
+        "method": "GET",
+        "path": "/api/dashboard/request/req_001"
+      },
+      "response": {
+        "body": {
+          "comments": [
+            {
+              "id": "comment_001",
+              "message": "Your request has been received",
+              "registrarName": "Ms. Santos",
+              "requiresResponse": false,
+              "timestamp": "2024-01-15T10:35:00Z",
+              "type": "info"
+            }
+          ],
+          "deliveryMethod": "pickup",
+          "estimatedCompletion": "2024-01-22T17:00:00Z",
+          "id": "req_001",
+          "learnerName": "Juan Dela Cruz",
+          "learnerReferenceNumber": "123456789012",
+          "requestType": "Original Copy",
+          "requesterEmail": "maria@email.com",
+          "requesterName": "Maria Dela Cruz",
+          "status": "submitted",
+          "submittedDate": "2024-01-15T10:30:00Z",
+          "ticketNumber": "F137-2024-001"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body.comments": {
+            "match": "type",
+            "min": 1
+          },
+          "$.body.comments[*].id": {
+            "match": "type"
+          },
+          "$.body.comments[*].message": {
+            "match": "type"
+          },
+          "$.body.comments[*].registrarName": {
+            "match": "type"
+          },
+          "$.body.comments[*].requiresResponse": {
+            "match": "type"
+          },
+          "$.body.comments[*].timestamp": {
+            "match": "type"
+          },
+          "$.body.comments[*].type": {
+            "match": "type"
+          },
+          "$.body.deliveryMethod": {
+            "match": "type"
+          },
+          "$.body.estimatedCompletion": {
+            "match": "type"
+          },
+          "$.body.id": {
+            "match": "type"
+          },
+          "$.body.learnerName": {
+            "match": "type"
+          },
+          "$.body.learnerReferenceNumber": {
+            "match": "type"
+          },
+          "$.body.requestType": {
+            "match": "type"
+          },
+          "$.body.requesterEmail": {
+            "match": "type"
+          },
+          "$.body.requesterName": {
+            "match": "type"
+          },
+          "$.body.status": {
+            "match": "type"
+          },
+          "$.body.submittedDate": {
+            "match": "type"
+          },
+          "$.body.ticketNumber": {
+            "match": "type"
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request to add a comment",
+      "providerState": "request exists and accepts comments",
+      "request": {
+        "body": {
+          "message": "I need to update my contact information"
+        },
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer token123",
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body.message": {
+            "match": "type"
+          },
+          "$.header.Authorization": {
+            "match": "type"
+          }
+        },
+        "method": "POST",
+        "path": "/api/dashboard/request/req_001/comment"
+      },
+      "response": {
+        "body": {
+          "author": "Maria Dela Cruz",
+          "id": "comment_002",
+          "message": "I need to update my contact information",
+          "timestamp": "2024-01-16T14:30:00Z",
+          "type": "user-response"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "$.body.author": {
+            "match": "type"
+          },
+          "$.body.id": {
+            "match": "type"
+          },
+          "$.body.message": {
+            "match": "type"
+          },
+          "$.body.timestamp": {
+            "match": "type"
+          },
+          "$.body.type": {
+            "match": "type"
+          }
+        },
+        "status": 201
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "15.0.1"
+    },
+    "pactRust": {
+      "ffi": "0.4.22",
+      "models": "1.2.3"
+    },
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  },
+  "provider": {
+    "name": "DashboardAPI"
+  }
+}
