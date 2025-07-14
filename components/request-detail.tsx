@@ -1,396 +1,337 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { StatusBadge } from "@/components/status-badge"
-import { mockRequests } from "@/lib/mock-data"
-import type { RequestStatus, RegistrarComment } from "@/types/dashboard"
-import {
-  ArrowLeft,
-  Calendar,
-  User,
-  Mail,
-  Phone,
-  FileText,
-  MapPin,
-  MessageCircle,
-  AlertTriangle,
-  Info,
-  CheckCircle,
-  Clock,
-  Send,
-} from "lucide-react"
-import { format } from "date-fns"
+import { Separator } from "@/components/ui/separator"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Clock, FileText, MessageSquare, Send, User, ArrowLeft, Download, Eye } from "lucide-react"
+import { StatusBadge } from "./status-badge"
+import type { FormRequest } from "@/types/dashboard"
+import Link from "next/link"
 
 interface RequestDetailProps {
-  requestId: string
+  request: FormRequest
 }
 
-export function RequestDetail({ requestId }: RequestDetailProps) {
-  const router = useRouter()
-  const [request] = useState<RequestStatus | undefined>(mockRequests.find((r) => r.id === requestId))
+export function RequestDetail({ request }: RequestDetailProps) {
   const [newComment, setNewComment] = useState("")
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [comments, setComments] = useState(request.comments || [])
 
-  if (!request) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <FileText className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Request not found</h3>
-          <p className="mt-1 text-sm text-gray-500">The request you're looking for doesn't exist.</p>
-          <div className="mt-6">
-            <Button onClick={() => router.push("/dashboard")} className="bg-primary hover:bg-primary/90">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      const comment = {
+        id: Date.now().toString(),
+        author: "You",
+        content: newComment,
+        timestamp: new Date().toISOString(),
+        isFromRegistrar: false,
+      }
+      setComments([...comments, comment])
+      setNewComment("")
+    }
   }
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "MMMM dd, yyyy - h:mm a")
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
-  const getCommentIcon = (type: RegistrarComment["type"]) => {
-    switch (type) {
-      case "clarification-needed":
-        return <AlertTriangle className="h-4 w-4 text-red-500" />
-      case "completion":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "update":
-        return <Clock className="h-4 w-4 text-blue-500" />
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "completed":
+        return "text-green-600"
+      case "in_progress":
+        return "text-blue-600"
+      case "pending":
+        return "text-yellow-600"
+      case "rejected":
+        return "text-red-600"
       default:
-        return <Info className="h-4 w-4 text-gray-500" />
-    }
-  }
-
-  const getCommentBgColor = (type: RegistrarComment["type"]) => {
-    switch (type) {
-      case "clarification-needed":
-        return "bg-red-50 border-red-200"
-      case "completion":
-        return "bg-green-50 border-green-200"
-      case "update":
-        return "bg-blue-50 border-blue-200"
-      default:
-        return "bg-gray-50 border-gray-200"
-    }
-  }
-
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) return
-
-    setIsSubmittingComment(true)
-    try {
-      // In real app, call API to submit comment
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setNewComment("")
-    } catch (error) {
-      console.error("Error submitting comment:", error)
-    } finally {
-      setIsSubmittingComment(false)
+        return "text-gray-600"
     }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/dashboard")}
-            className="border-primary/30 text-primary hover:bg-primary hover:text-white bg-transparent"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-primary">{request.ticketNumber}</h1>
-            <p className="text-sm text-gray-500">Request Details</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="mb-4 text-green-700 hover:text-green-800 hover:bg-green-100">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-green-800">Request Details</h1>
+              <p className="text-green-600 mt-1">Request ID: {request.id}</p>
+            </div>
+            <StatusBadge status={request.status} />
           </div>
         </div>
-        <StatusBadge status={request.status} />
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Request Information */}
-          <Card className="border-primary/20">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-              <CardTitle className="text-primary flex items-center">
-                <FileText className="mr-2 h-5 w-5" />
-                Request Information
-              </CardTitle>
-              <CardDescription>Details about your Form 137 request</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Learner Name</label>
-                  <p className="text-sm font-medium">{request.learnerName}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">LRN</label>
-                  <p className="text-sm font-medium">{request.learnerReferenceNumber}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Request Type</label>
-                  <p className="text-sm">{request.requestType}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Delivery Method</label>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm capitalize">{request.deliveryMethod}</span>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Requester</label>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm">{request.requesterName}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm">{request.requesterEmail}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Important Dates</label>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-xs">Submitted: {formatDate(request.submittedDate)}</span>
-                    </div>
-                    {request.estimatedCompletion && (
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-gray-400" />
-                        <span className="text-xs">Est. completion: {formatDate(request.estimatedCompletion)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Comments/Updates */}
-          <Card className="border-primary/20">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-              <CardTitle className="flex items-center space-x-2 text-primary">
-                <MessageCircle className="h-5 w-5" />
-                <span>Updates & Comments</span>
-              </CardTitle>
-              <CardDescription>Communication from the registrar's office</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              {request.comments && request.comments.length > 0 ? (
-                <div className="space-y-4">
-                  {request.comments.map((comment) => (
-                    <div key={comment.id} className={`rounded-lg border p-4 ${getCommentBgColor(comment.type)}`}>
-                      <div className="flex items-start space-x-3">
-                        <div className="flex-shrink-0 mt-0.5">{getCommentIcon(comment.type)}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-gray-900">{comment.registrarName}</p>
-                            <p className="text-xs text-gray-500">{formatDate(comment.timestamp)}</p>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-700">{comment.message}</p>
-                          {comment.requiresResponse && (
-                            <div className="mt-2">
-                              <Badge variant="destructive" className="text-xs">
-                                Response Required
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">No updates yet</h3>
-                  <p className="mt-1 text-sm text-gray-500">Updates from the registrar will appear here.</p>
-                </div>
-              )}
-
-              {/* Add Comment Form */}
-              {request.status === "requires-clarification" && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Add Response</h4>
-                  <div className="space-y-3">
-                    <Textarea
-                      placeholder="Type your response here..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      className="min-h-[100px] border-primary/20 focus:border-primary"
-                    />
-                    <Button
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim() || isSubmittingComment}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      {isSubmittingComment ? "Sending..." : "Send Response"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Status Timeline */}
-          <Card className="border-primary/20">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-              <CardTitle className="text-primary">Status Timeline</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Request Submitted</p>
-                    <p className="text-xs text-gray-500">{formatDate(request.submittedDate)}</p>
-                  </div>
-                </div>
-
-                {request.status !== "submitted" && (
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Under Review</p>
-                      <p className="text-xs text-gray-500">In progress</p>
-                    </div>
-                  </div>
-                )}
-
-                {(request.status === "processing" ||
-                  request.status === "completed" ||
-                  request.status === "ready-for-pickup") && (
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Processing</p>
-                      <p className="text-xs text-gray-500">Document preparation</p>
-                    </div>
-                  </div>
-                )}
-
-                {(request.status === "completed" || request.status === "ready-for-pickup") && (
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Ready</p>
-                      <p className="text-xs text-gray-500">Available for {request.deliveryMethod}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="border-primary/20">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-              <CardTitle className="text-primary text-sm">Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2 text-sm">
-                  <User className="h-4 w-4 text-primary" />
-                  <span className="text-gray-700">{request.requesterName}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <span className="text-gray-700">{request.requesterEmail}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <Phone className="h-4 w-4 text-primary" />
-                  <span className="text-gray-700">+63 912 345 6789</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="border-primary/20">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-              <CardTitle className="text-primary text-sm">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 p-4">
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-transparent border-primary/30 text-primary hover:bg-primary hover:text-white"
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Contact Registrar
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-transparent border-primary/30 text-primary hover:bg-primary hover:text-white"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Download Receipt
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Action Required Alert */}
-          {request.status === "requires-clarification" && (
-            <Card className="border-red-200 bg-red-50/50">
-              <CardHeader>
-                <CardTitle className="text-red-800 text-sm flex items-center">
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Action Required
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Request Information */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Request Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
-                <p className="text-sm text-red-700 mb-3">
-                  Your request needs additional information. Please respond to the registrar's message above.
-                </p>
-                <div className="text-xs text-red-600">
-                  <p>
-                    <strong>Contact the registrar:</strong>
-                  </p>
-                  <p>Email: registrar@school.edu</p>
-                  <p>Phone: (02) 123-4567</p>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Student Name</label>
+                    <p className="text-lg font-semibold text-gray-900">{request.studentName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Student ID</label>
+                    <p className="text-lg font-semibold text-gray-900">{request.studentId}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Email</label>
+                    <p className="text-lg text-gray-900">{request.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Phone</label>
+                    <p className="text-lg text-gray-900">{request.phone}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium text-gray-600">Purpose</label>
+                    <p className="text-lg text-gray-900">{request.purpose}</p>
+                  </div>
+                  {request.additionalNotes && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-600">Additional Notes</label>
+                      <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{request.additionalNotes}</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          )}
+
+            {/* Timeline */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle className="flex items-center">
+                  <Clock className="mr-2 h-5 w-5" />
+                  Request Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="font-medium text-gray-900">Request Submitted</p>
+                      <p className="text-sm text-gray-600">{formatDate(request.submittedAt)}</p>
+                    </div>
+                  </div>
+                  {request.status !== "pending" && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-medium text-gray-900">Under Review</p>
+                        <p className="text-sm text-gray-600">Being processed by registrar</p>
+                      </div>
+                    </div>
+                  )}
+                  {request.status === "completed" && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-medium text-gray-900">Completed</p>
+                        <p className="text-sm text-gray-600">Form 137 is ready for pickup</p>
+                      </div>
+                    </div>
+                  )}
+                  {request.status === "rejected" && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="font-medium text-gray-900">Request Rejected</p>
+                        <p className="text-sm text-gray-600">Please check comments for details</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Comments Section */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle className="flex items-center">
+                  <MessageSquare className="mr-2 h-5 w-5" />
+                  Communication
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4 mb-6">
+                  {comments.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No comments yet</p>
+                  ) : (
+                    comments.map((comment) => (
+                      <div key={comment.id} className="flex space-x-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={comment.isFromRegistrar ? "/placeholder-user.jpg" : undefined} />
+                          <AvatarFallback
+                            className={
+                              comment.isFromRegistrar ? "bg-blue-100 text-blue-600" : "bg-green-100 text-green-600"
+                            }
+                          >
+                            {comment.author.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <p className="font-medium text-gray-900">{comment.author}</p>
+                            {comment.isFromRegistrar && (
+                              <Badge variant="secondary" className="text-xs">
+                                Registrar
+                              </Badge>
+                            )}
+                            <p className="text-xs text-gray-500">{formatDate(comment.timestamp)}</p>
+                          </div>
+                          <p className="text-gray-700 mt-1">{comment.content}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-700">Add a comment</label>
+                  <Textarea
+                    placeholder="Type your message here..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="min-h-[100px] border-green-200 focus:border-green-500"
+                  />
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Message
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {request.status === "completed" && (
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Form 137
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full border-green-200 text-green-700 hover:bg-green-50 bg-transparent"
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    View Submitted Documents
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Request Summary */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle>Request Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Status:</span>
+                    <span className={`text-sm font-medium ${getStatusColor(request.status)}`}>
+                      {request.status.replace("_", " ").toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Submitted:</span>
+                    <span className="text-sm text-gray-900">{new Date(request.submittedAt).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Priority:</span>
+                    <Badge
+                      variant={
+                        request.priority === "high"
+                          ? "destructive"
+                          : request.priority === "medium"
+                            ? "default"
+                            : "secondary"
+                      }
+                    >
+                      {request.priority}
+                    </Badge>
+                  </div>
+                  {request.estimatedCompletion && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Est. Completion:</span>
+                      <span className="text-sm text-gray-900">
+                        {new Date(request.estimatedCompletion).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Information */}
+            <Card className="border-green-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <CardTitle className="flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  Contact Registrar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <strong>Office Hours:</strong>
+                  </p>
+                  <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
+                  <p>
+                    <strong>Phone:</strong> (02) 8123-4567
+                  </p>
+                  <p>
+                    <strong>Email:</strong> registrar@school.edu.ph
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+// Named export for the component
