@@ -33,11 +33,11 @@ Continue building your app on:
 
 Use [Yarn](https://yarnpkg.com/) to manage dependencies and run scripts:
 
-```bash
+\`\`\`bash
 yarn install
 yarn dev
 yarn test:pact
-```
+\`\`\`
 
 ## Pact contracts
 

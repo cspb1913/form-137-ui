@@ -11,16 +11,16 @@ export function TopNavigation() {
 
   const navItems = [
     {
-      href: "/dashboard",
+      href: "/",
       label: "Dashboard",
       icon: LayoutDashboard,
-      active: pathname === "/dashboard",
+      active: pathname === "/",
     },
     {
-      href: "/",
+      href: "/request",
       label: "New Request",
       icon: Plus,
-      active: pathname === "/",
+      active: pathname === "/request",
     },
   ]
 
