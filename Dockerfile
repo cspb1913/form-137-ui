@@ -5,10 +5,10 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package.json yarn.lock ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN corepack enable && pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -21,10 +21,10 @@ ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_BOTID_API_KEY=$NEXT_PUBLIC_BOTID_API_KEY
 
 # Build the application
-RUN yarn build
+RUN pnpm build
 
 # Export static files
-RUN yarn export
+RUN pnpm exec next export
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine3.21

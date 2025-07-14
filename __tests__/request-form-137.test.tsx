@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { RequestForm137 } from "@/components/request-form-137"
-import jest from "jest"
+import { jest } from "@jest/globals"
 
 // Mock the toast hook
 jest.mock("@/hooks/use-toast", () => ({

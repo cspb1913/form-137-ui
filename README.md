@@ -31,13 +31,13 @@ Continue building your app on:
 
 ## Local development
 
-Use [Yarn](https://yarnpkg.com/) to manage dependencies and run scripts:
+Use [pnpm](https://pnpm.io/) to manage dependencies and run scripts:
 
-\`\`\`bash
-yarn install
-yarn dev
-yarn test:pact
-\`\`\`
+```bash
+pnpm install
+pnpm dev
+pnpm test:pact
+```
 
 ## Pact contracts
 
