@@ -9,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "4.8.0",
+    "@auth0/nextjs-auth0": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@jest/globals": "latest",
     "@pact-foundation/pact": "latest",
@@ -58,9 +58,9 @@
     "next-themes": "latest",
     "node-notifier": "latest",
     "path": "latest",
-    "react": "18.2.0",
+    "react": "^19",
     "react-day-picker": "latest",
-    "react-dom": "18.2.0",
+    "react-dom": "^19",
     "react-hook-form": "latest",
     "react-resizable-panels": "latest",
     "recharts": "latest",
@@ -72,8 +72,8 @@
   },
   "devDependencies": {
     "@types/node": "^22",
-    "@types/react": "^18.2.25",
-    "@types/react-dom": "^18.2.25",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "cross-fetch": "^4.1.0",
     "jest-environment-jsdom": "^30.0.4",
     "node-fetch": "^3.3.2",
