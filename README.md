@@ -39,6 +39,23 @@ pnpm dev
 pnpm test:pact
 \`\`\`
 
+### Auth0 configuration
+
+The sign-in flow relies on Auth0. Copy `.env.example` to `.env.local` and set your credentials:
+
+```bash
+cp .env.example .env.local
+# edit .env.local
+```
+
+Required variables:
+- `AUTH0_SECRET`
+- `AUTH0_BASE_URL`
+- `AUTH0_ISSUER_BASE_URL`
+- `AUTH0_CLIENT_ID`
+- `AUTH0_CLIENT_SECRET`
+- `NEXT_PUBLIC_API_BASE_URL`
+
 ## Pact contracts
 
 Generated contracts for the frontend reside in the `pacts/` directory. These
