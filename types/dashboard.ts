@@ -1,69 +1,57 @@
-export interface DashboardStats {
-  totalRequests: number
-  pendingRequests: number
-  completedRequests: number
-  rejectedRequests: number
-}
+export type RequestStatus = "submitted" | "processing" | "completed" | "rejected"
+export type Priority = "low" | "normal" | "high"
+export type PaymentStatus = "pending" | "paid" | "refunded"
 
-export interface DashboardRequest {
+export interface Document {
   id: string
-  studentName: string
-  requestType: string
-  status: "pending" | "in_progress" | "completed" | "rejected" | "under_review" | "cancelled"
-  submittedDate: string
-  lastUpdated: string
-  priority: "low" | "normal" | "high"
-}
-
-export interface ContactInfo {
-  email: string
-  phone: string
-  address: string
-}
-
-export interface RequestDetails {
-  purpose: string
-  copies: number
-  deliveryMethod: "pickup" | "mail" | "email"
-  urgentRequest: boolean
-  notes?: string
+  name: string
+  type: string
+  size: number
+  uploadedAt: string
+  url: string
 }
 
 export interface TimelineEvent {
   id: string
-  status: string
+  status: RequestStatus
   timestamp: string
   description: string
-  actor: string
+  user: string
 }
 
 export interface Comment {
   id: string
   author: string
-  message: string
+  content: string
   timestamp: string
   isInternal: boolean
 }
 
-export interface Attachment {
-  id: string
-  name: string
-  size: string
-  uploadedAt: string
-}
-
-export interface RequestDetail {
+export interface Form137Request {
   id: string
   studentName: string
   studentId: string
   requestType: string
-  status: "pending" | "in_progress" | "completed" | "rejected" | "under_review" | "cancelled"
+  status: RequestStatus
+  priority: Priority
   submittedDate: string
-  lastUpdated: string
-  priority: "low" | "normal" | "high"
-  contactInfo: ContactInfo
-  requestDetails: RequestDetails
+  completedDate?: string
+  estimatedCompletion?: string
+  registrarNotes?: string
+  purpose: string
+  contactEmail: string
+  contactPhone: string
+  deliveryMethod: string
+  paymentStatus: PaymentStatus
+  documents: Document[]
   timeline: TimelineEvent[]
   comments: Comment[]
-  attachments: Attachment[]
+}
+
+export interface DashboardStats {
+  total: number
+  submitted: number
+  processing: number
+  completed: number
+  rejected: number
 }

@@ -9,7 +9,7 @@ interface RequestDetailClientPageProps {
   requestId: string
 }
 
-const RequestDetailClientPage = ({ requestId }: RequestDetailClientPageProps) => {
+export function RequestDetailClientPage({ requestId }: RequestDetailClientPageProps) {
   return (
     <BotIDProvider>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">

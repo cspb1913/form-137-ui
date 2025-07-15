@@ -1,62 +1,66 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, LogIn, Shield, Users } from "lucide-react"
+import { FileText, Shield, Clock, CheckCircle } from "lucide-react"
 
 export function LoginPrompt() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <FileText className="h-12 w-12 text-primary" />
-            </div>
+            <FileText className="h-16 w-16 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Form 137 Portal</h1>
-          <p className="mt-2 text-gray-600">Learner's Permanent Record Request System</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Form 137 Request Portal</h1>
+          <p className="text-xl text-gray-600">Secure access to your academic records</p>
         </div>
 
-        <Card className="border-primary/20 shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl text-primary">Welcome Back</CardTitle>
-            <CardDescription>Please sign in to access your dashboard and manage your Form 137 requests</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 text-sm text-gray-600">
-                <Shield className="h-4 w-4 text-primary" />
-                <span>Secure authentication with Auth0</span>
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <Card className="border-primary/20">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Welcome Back</CardTitle>
+                <CardDescription>Sign in to access your Form 137 requests and track their status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button asChild className="w-full" size="lg">
+                  <a href="/api/auth/login">Sign In to Continue</a>
+                </Button>
+                <p className="text-sm text-gray-500 text-center">Secure authentication powered by Auth0</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
-              <div className="flex items-center space-x-3 text-sm text-gray-600">
-                <FileText className="h-4 w-4 text-primary" />
-                <span>Track your Form 137 requests</span>
-              </div>
-              <div className="flex items-center space-x-3 text-sm text-gray-600">
-                <Users className="h-4 w-4 text-primary" />
-                <span>Communicate with registrar office</span>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Secure & Private</h3>
+                <p className="text-gray-600">Your personal information is protected with enterprise-grade security</p>
               </div>
             </div>
 
-            <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
-              <a href="/api/auth/login">
-                <LogIn className="mr-2 h-4 w-4" />
-                Sign In to Continue
-              </a>
-            </Button>
-
-            <div className="text-center text-xs text-gray-500">
-              By signing in, you agree to our Terms of Service and Privacy Policy
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <Clock className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Real-time Tracking</h3>
+                <p className="text-gray-600">Monitor the status of your Form 137 requests in real-time</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="text-center text-sm text-gray-500">
-          Need help? Contact the registrar office at{" "}
-          <a href="mailto:registrar@school.edu" className="text-primary hover:underline">
-            registrar@school.edu
-          </a>
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <CheckCircle className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Easy Process</h3>
+                <p className="text-gray-600">Submit requests quickly with our streamlined digital process</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

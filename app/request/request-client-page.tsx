@@ -10,7 +10,7 @@ import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 
-export default function RequestClientPage() {
+export function RequestClientPage() {
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
@@ -66,3 +66,5 @@ export default function RequestClientPage() {
     </BotIDProvider>
   )
 }
+
+export default RequestClientPage

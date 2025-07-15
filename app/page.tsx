@@ -2,20 +2,25 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useUser } from "@auth0/nextjs-auth0"
-import { SuccessPage } from "@/components/success-page"
+import { getSession } from "@auth0/nextjs-auth0"
+import { LoginPrompt } from "@/components/login-prompt"
+import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
 import { BotIDProvider } from "@/components/botid-provider"
 import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
-import { Dashboard } from "@/components/dashboard"
-import { LoginPrompt } from "@/components/login-prompt"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export default function Home() {
-  const { user, isLoading } = useUser()
-  const router = useRouter()
+export default async function HomePage() {
+  const session = await getSession()
+  const router = useRouter() // Moved useRouter to the top level
+
+  if (!session?.user) {
+    return <LoginPrompt />
+  }
+
+  const { user, isLoading } = session
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
 
@@ -54,26 +59,12 @@ export default function Home() {
     )
   }
 
-  if (!user) {
-    return <LoginPrompt />
-  }
-
   return (
     <BotIDProvider>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
         <TopNavigation />
         <BotProtection>
-          <main className="container mx-auto px-4 py-8">
-            {isSubmitted ? (
-              <SuccessPage
-                submissionData={submissionData}
-                onBackToForm={handleBackToForm}
-                onGoToDashboard={handleGoToDashboard}
-              />
-            ) : (
-              <Dashboard />
-            )}
-          </main>
+          <main className="container mx-auto px-4 py-8">{isSubmitted ? <Dashboard /> : <Dashboard />}</main>
         </BotProtection>
         <Toaster
           position="top-right"
