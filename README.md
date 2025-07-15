@@ -43,10 +43,10 @@ pnpm test:pact
 
 The sign-in flow relies on Auth0. Copy `.env.example` to `.env.local` and set your credentials:
 
-```bash
+\`\`\`bash
 cp .env.example .env.local
 # edit .env.local
-```
+\`\`\`
 
 Required variables:
 - `AUTH0_SECRET`
