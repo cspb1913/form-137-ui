@@ -1,4 +1,6 @@
-import { getSession } from "@auth0/nextjs-auth0"
+"use client"
+
+import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
 import { RequestDetailClientPage } from "./request-detail-client-page"
 
@@ -8,10 +10,14 @@ interface RequestDetailPageProps {
   }
 }
 
-export default async function RequestDetailPage({ params }: RequestDetailPageProps) {
-  const session = await getSession()
+export default function RequestDetailPage({ params }: RequestDetailPageProps) {
+  const { user, isLoading } = useCurrentUser()
 
-  if (!session?.user) {
+  if (isLoading) {
+    return null
+  }
+
+  if (!user) {
     return <LoginPrompt />
   }
 

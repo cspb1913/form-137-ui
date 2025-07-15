@@ -83,3 +83,11 @@ export class DashboardAPI {
     return await response.json()
   }
 }
+
+// Temporary client-side helper used by RequestDetailClientPage
+import { getMockRequestById } from "@/lib/mock-data"
+import type { Form137Request } from "@/types/dashboard"
+
+export async function getRequestById(id: string): Promise<Form137Request | null> {
+  return getMockRequestById(id) || null
+}

@@ -8,12 +8,12 @@ import { BotIDProvider } from "@/components/botid-provider"
 import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
-import { getSession } from "@auth0/nextjs-auth0"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
 import { RequestClientPage } from "./request-client-page"
 
-export default async function RequestPage() {
-  const session = await getSession()
+export default function RequestPage() {
+  const { user, isLoading } = useCurrentUser()
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
@@ -38,7 +38,11 @@ export default async function RequestPage() {
     router.push("/")
   }
 
-  if (!session?.user) {
+  if (isLoading) {
+    return null
+  }
+
+  if (!user) {
     return <LoginPrompt />
   }
 
