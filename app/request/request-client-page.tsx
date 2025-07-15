@@ -10,7 +10,11 @@ import { BotProtection } from "@/components/bot-protection"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 
-export function RequestClientPage() {
+interface RequestClientPageProps {
+  onSubmit: (data: any) => void
+}
+
+export function RequestClientPage({ onSubmit }: RequestClientPageProps) {
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)

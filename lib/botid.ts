@@ -9,7 +9,6 @@ interface BotDetectionResult {
 }
 
 interface BotDetectionConfig {
-  apiKey?: string
   environment?: string
   debug?: boolean
   config?: {
@@ -154,7 +153,6 @@ class BotIDService {
 
 // Initialize BotID service
 export const botid = new BotIDService({
-  apiKey: process.env.NEXT_PUBLIC_BOTID_API_KEY || "",
   environment: process.env.NODE_ENV || "development",
   debug: process.env.NODE_ENV === "development",
   config: {
