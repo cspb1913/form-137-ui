@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Form 137 Request Portal",
-  description: "Submit and track your Form 137 requests",
+  description: "A streamlined portal for requesting and managing Form 137.",
     generator: 'v0.dev'
 }
 
