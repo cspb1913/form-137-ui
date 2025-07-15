@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { RequestForm137 } from "@/components/request-form-137"
 import { SuccessPage } from "@/components/success-page"
 import { TopNavigation } from "@/components/top-navigation"
 import { BotIDProvider } from "@/components/botid-provider"
@@ -11,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { getSession } from "@auth0/nextjs-auth0"
 import { LoginPrompt } from "@/components/login-prompt"
+import { RequestClientPage } from "./request-client-page"
 
 export default async function RequestPage() {
   const session = await getSession()
@@ -38,24 +38,24 @@ export default async function RequestPage() {
     router.push("/")
   }
 
+  if (!session?.user) {
+    return <LoginPrompt />
+  }
+
   return (
     <BotIDProvider>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
         <TopNavigation />
         <BotProtection>
           <main className="container mx-auto px-4 py-8">
-            {session?.user ? (
-              isSubmitted ? (
-                <SuccessPage
-                  submissionData={submissionData}
-                  onBackToForm={handleBackToForm}
-                  onGoToDashboard={handleGoToDashboard}
-                />
-              ) : (
-                <RequestForm137 onSubmit={handleFormSubmit} />
-              )
+            {isSubmitted ? (
+              <SuccessPage
+                submissionData={submissionData}
+                onBackToForm={handleBackToForm}
+                onGoToDashboard={handleGoToDashboard}
+              />
             ) : (
-              <LoginPrompt />
+              <RequestClientPage onSubmit={handleFormSubmit} />
             )}
           </main>
         </BotProtection>

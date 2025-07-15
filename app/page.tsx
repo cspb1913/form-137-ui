@@ -38,6 +38,10 @@ export default async function Home() {
     router.push("/dashboard")
   }
 
+  if (!session?.user) {
+    return <LoginPrompt />
+  }
+
   return (
     <BotIDProvider>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
@@ -50,10 +54,13 @@ export default async function Home() {
                 onBackToForm={handleBackToForm}
                 onGoToDashboard={handleGoToDashboard}
               />
-            ) : session?.user ? (
-              <Dashboard />
             ) : (
-              <LoginPrompt />
+              <div className="min-h-screen bg-gray-50">
+                <TopNavigation />
+                <main className="py-8">
+                  <Dashboard />
+                </main>
+              </div>
             )}
           </main>
         </BotProtection>

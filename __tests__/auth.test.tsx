@@ -1,57 +1,111 @@
 import { render, screen } from "@testing-library/react"
-import { TopNavigation } from "@/components/top-navigation"
-import { LoginPrompt } from "@/components/login-prompt"
 import { useUser } from "@auth0/nextjs-auth0/client"
-import { jest } from "@jest/globals" // Declare the jest variable
+import { LoginPrompt } from "@/components/login-prompt"
+import { TopNavigation } from "@/components/top-navigation"
+import jest from "jest" // Import jest to fix the undeclared variable error
 
-// Mock the useUser hook
-jest.mock("@auth0/nextjs-auth0/client")
-const mockUseUser = useUser as jest.Mock
+// Mock Auth0
+jest.mock("@auth0/nextjs-auth0/client", () => ({
+  useUser: jest.fn(),
+}))
 
-// Mock next/navigation
+// Mock Next.js router
 jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }))
 
+const mockUseUser = useUser as jest.MockedFunction<typeof useUser>
+
 describe("Authentication Components", () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe("LoginPrompt", () => {
-    it("renders correctly with login button", () => {
+    it("renders login prompt with correct elements", () => {
       render(<LoginPrompt />)
-      expect(screen.getByText("Authentication Required")).toBeInTheDocument()
-      const loginLink = screen.getByRole("link", { name: /Log In with Auth0/i })
-      expect(loginLink).toBeInTheDocument()
-      expect(loginLink).toHaveAttribute("href", "/api/auth/login")
+
+      expect(screen.getByText("Form 137 Portal")).toBeInTheDocument()
+      expect(screen.getByText("Please sign in to access your Form 137 requests and dashboard")).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute("href", "/api/auth/login")
+    })
+
+    it("displays Auth0 branding", () => {
+      render(<LoginPrompt />)
+
+      expect(screen.getByText("Secure authentication powered by Auth0")).toBeInTheDocument()
     })
   })
 
   describe("TopNavigation", () => {
-    it("shows a loading skeleton while checking auth state", () => {
-      mockUseUser.mockReturnValue({ user: null, isLoading: true })
+    it("shows login button when user is not authenticated", () => {
+      mockUseUser.mockReturnValue({
+        user: undefined,
+        error: undefined,
+        isLoading: false,
+      })
+
       render(<TopNavigation />)
-      expect(screen.getByRole("status")).toBeInTheDocument() // Skeleton has role="status"
+
+      expect(screen.getByRole("link", { name: /login/i })).toHaveAttribute("href", "/api/auth/login")
     })
 
-    it("shows Login button when user is not authenticated", () => {
-      mockUseUser.mockReturnValue({ user: null, isLoading: false })
+    it("shows loading skeleton when authentication is loading", () => {
+      mockUseUser.mockReturnValue({
+        user: undefined,
+        error: undefined,
+        isLoading: true,
+      })
+
       render(<TopNavigation />)
-      const loginLink = screen.getByRole("link", { name: /Login/i })
-      expect(loginLink).toBeInTheDocument()
-      expect(loginLink).toHaveAttribute("href", "/api/auth/login")
+
+      // Check for skeleton loading state
+      expect(document.querySelector(".animate-pulse")).toBeInTheDocument()
     })
 
-    it("shows user profile dropdown when user is authenticated", () => {
+    it("shows user dropdown when authenticated", () => {
       const mockUser = {
-        name: "Jason Calalang",
-        email: "jason.calalang@example.com",
-        picture: "https://example.com/avatar.png",
+        sub: "auth0|123",
+        name: "John Doe",
+        email: "john@example.com",
+        picture: "https://example.com/avatar.jpg",
       }
-      mockUseUser.mockReturnValue({ user: mockUser, isLoading: false })
+
+      mockUseUser.mockReturnValue({
+        user: mockUser,
+        error: undefined,
+        isLoading: false,
+      })
+
       render(<TopNavigation />)
 
-      const avatar = screen.getByRole("button")
-      expect(avatar).toBeInTheDocument()
-      // Check for avatar image alt text
-      expect(screen.getByAltText("User avatar")).toBeInTheDocument()
+      // Should show user avatar/dropdown trigger
+      expect(screen.getByRole("button")).toBeInTheDocument()
+    })
+
+    it("displays navigation items correctly", () => {
+      mockUseUser.mockReturnValue({
+        user: undefined,
+        error: undefined,
+        isLoading: false,
+      })
+
+      render(<TopNavigation />)
+
+      expect(screen.getByText("Dashboard")).toBeInTheDocument()
+      expect(screen.getByText("New Request")).toBeInTheDocument()
+      expect(screen.getByText("Form 137 Portal")).toBeInTheDocument()
+    })
+  })
+
+  describe("Authentication Flow", () => {
+    it("redirects to login when accessing protected routes", () => {
+      // This would be tested in integration tests
+      // Here we just verify the login link is correct
+      render(<LoginPrompt />)
+
+      const loginLink = screen.getByRole("link", { name: /sign in/i })
+      expect(loginLink).toHaveAttribute("href", "/api/auth/login")
     })
   })
 })

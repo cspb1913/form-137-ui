@@ -2,56 +2,43 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { TopNavigation } from "@/components/top-navigation"
 import { RequestForm137 } from "@/components/request-form-137"
 import { SuccessPage } from "@/components/success-page"
-import { BotProtection } from "@/components/bot-protection"
-import { Toaster } from "@/components/ui/sonner"
-import { toast } from "sonner"
+import { toast } from "@/hooks/use-toast"
 
 export default function RequestClientPage() {
-  const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
+  const router = useRouter()
 
-  const handleFormSubmit = (data: any) => {
+  const handleSubmissionSuccess = (data: any) => {
     setSubmissionData(data)
     setIsSubmitted(true)
-    toast.success("Form 137 request submitted successfully!", {
-      description: "Your request has been received and is being processed.",
+
+    // Show success toast
+    toast({
+      title: "Request Submitted Successfully",
+      description: "Your Form 137 request has been submitted and is being processed.",
       duration: 5000,
     })
+
+    // Navigate back to dashboard after a delay
+    setTimeout(() => {
+      router.push("/")
+    }, 3000)
   }
 
-  const handleBackToForm = () => {
-    setIsSubmitted(false)
-    setSubmissionData(null)
-  }
-
-  const handleGoToDashboard = () => {
-    router.push("/")
+  if (isSubmitted) {
+    return <SuccessPage data={submissionData} />
   }
 
   return (
-    <BotProtection>
-      {isSubmitted ? (
-        <SuccessPage
-          submissionData={submissionData}
-          onBackToForm={handleBackToForm}
-          onGoToDashboard={handleGoToDashboard}
-        />
-      ) : (
-        <RequestForm137 onSubmit={handleFormSubmit} />
-      )}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "white",
-            border: "1px solid #1B4332",
-            color: "#1B4332",
-          },
-        }}
-      />
-    </BotProtection>
+    <div className="min-h-screen bg-gray-50">
+      <TopNavigation />
+      <main className="py-8">
+        <RequestForm137 onSubmissionSuccess={handleSubmissionSuccess} />
+      </main>
+    </div>
   )
 }

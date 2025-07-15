@@ -1,87 +1,81 @@
-export type RequestStatusType =
-  | "submitted"
-  | "under-review"
-  | "processing"
-  | "requires-clarification"
-  | "completed"
-  | "ready-for-pickup"
-  | "cancelled"
+export interface DashboardStats {
+  totalRequests: number
+  pendingRequests: number
+  approvedRequests: number
+  rejectedRequests: number
+}
 
-export interface RegistrarComment {
+export interface DashboardRequest {
   id: string
-  message: string
-  registrarName: string
-  timestamp: string
-  type: "info" | "clarification-needed" | "completion" | "update"
-  requiresResponse: boolean
+  studentName: string
+  requestType: string
+  status: "pending" | "processing" | "approved" | "completed" | "rejected"
+  submittedDate: string
+  lastUpdated: string
+  priority: "low" | "normal" | "high"
+}
+
+export interface StudentInfo {
+  fullName: string
+  studentId: string
+  yearLevel: string
+  section: string
+  schoolYear: string
+  contactNumber: string
+  email: string
+  address: string
+}
+
+export interface RequestDetails {
+  purpose: string
+  urgency: string
+  copies: number
+  deliveryMethod: string
+  specialInstructions?: string
+}
+
+export interface TimelineEvent {
+  date: string
+  status: string
+  description: string
+  actor: string
 }
 
 export interface Comment {
   id: string
-  message: string
   author: string
+  message: string
   timestamp: string
-  type: "info" | "clarification-needed" | "completion" | "update" | "user-response"
+  isInternal: boolean
 }
 
-export interface TimelineEvent {
-  description: string
-  date: string
-  status: RequestStatusType
-}
-
-export interface FormData {
-  learnerReferenceNumber: string
-  learnerFirstName: string
-  learnerMiddleName?: string
-  learnerLastName: string
-  lastGradeLevel: string
-  lastSchoolYear: string
-  previousSchool: string
-  requesterName: string
-  relationshipToLearner: string
-  mobileNumber: string
-  purpose: string
-}
-
-export interface Request {
+export interface Attachment {
   id: string
-  ticketNumber: string
-  learnerName: string
-  learnerReferenceNumber: string
-  status: RequestStatusType
-  submittedDate: string
-  estimatedCompletion?: string
-  requestType: string
-  deliveryMethod: "pickup" | "mail"
-  requesterName: string
-  requesterEmail: string
-  comments?: RegistrarComment[]
+  name: string
+  size: string
+  uploadedDate: string
+}
+
+export interface RegistrarInfo {
+  assignedTo: string
+  office: string
+  contactNumber: string
+  email: string
+  officeHours: string
 }
 
 export interface RequestDetail {
   id: string
-  ticketNumber: string
-  learnerName: string
-  status: RequestStatusType
+  studentName: string
+  requestType: string
+  status: "pending" | "processing" | "approved" | "completed" | "rejected"
   submittedDate: string
-  estimatedCompletion?: string
-  deliveryMethod: "pickup" | "mail"
-  purpose: string
-  requesterEmail: string
-  formData: FormData
-  comments: Comment[]
+  lastUpdated: string
+  priority: "low" | "normal" | "high"
+  studentInfo: StudentInfo
+  requestDetails: RequestDetails
   timeline: TimelineEvent[]
-}
-
-export interface DashboardStatistics {
-  totalRequests: number
-  pendingRequests: number
-  completedRequests: number
-  averageProcessingTime: number
-}
-
-export interface DashboardData {
-  requests: Request[]
-  statistics: DashboardStatistics
+  comments: Comment[]
+  attachments?: Attachment[]
+  registrarInfo: RegistrarInfo
 }

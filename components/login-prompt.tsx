@@ -1,24 +1,34 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { LogIn } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileText, LogIn } from "lucide-react"
 
 export function LoginPrompt() {
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <Card className="w-full max-w-md text-center shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-gray-800">Authentication Required</CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-primary/10 rounded-full">
+              <FileText className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Form 137 Portal</CardTitle>
           <CardDescription className="text-gray-600">
-            Please log in to access the dashboard and manage your requests.
+            Please sign in to access your Form 137 requests and dashboard
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+        <CardContent className="space-y-4">
+          <Button asChild className="w-full" size="lg">
             <a href="/api/auth/login">
               <LogIn className="mr-2 h-5 w-5" />
-              Log In with Auth0
+              Sign In
             </a>
           </Button>
+          <div className="text-center text-sm text-gray-500">
+            <p>Secure authentication powered by Auth0</p>
+          </div>
         </CardContent>
       </Card>
     </div>
