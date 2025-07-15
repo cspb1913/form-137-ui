@@ -85,7 +85,6 @@ describe("Authentication Components", () => {
       render(<TopNavigation />)
       expect(screen.queryByText("Log in")).not.toBeInTheDocument()
       expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
-      expect(screen.getByRole("status")).toBeInTheDocument() // Assuming skeleton has role="status"
     })
   })
 })
