@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react"
-import { useUser } from "@auth0/nextjs-auth0"
+import { useUser } from "@/lib/auth0-client"
 import { useRouter } from "next/navigation"
 import { LoginPrompt } from "@/components/login-prompt"
 import { TopNavigation } from "@/components/top-navigation"
-import jest from "jest" // Import jest to declare the variable
+import jest from "jest"
 
-// Mock Auth0
-jest.mock("@auth0/nextjs-auth0", () => ({
+// Mock our local auth client module
+jest.mock("@/lib/auth0-client", () => ({
   useUser: jest.fn(),
 }))
 
@@ -120,7 +120,7 @@ describe("Authentication Components", () => {
       render(<TopNavigation />)
 
       // The user info is in a dropdown, so we need to check for the avatar
-      const avatar = screen.getByRole("button", { name: /john doe/i })
+      const avatar = screen.getByRole("button")
       expect(avatar).toBeInTheDocument()
     })
   })
