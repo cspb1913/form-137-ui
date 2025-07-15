@@ -1,6 +1,6 @@
 "use client"
 
-import { useUser } from "@/lib/auth0-client"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
 import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
@@ -8,7 +8,7 @@ import { BotProtection } from "@/components/bot-protection"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function HomePage() {
-  const { user, isLoading } = useUser()
+  const { user, isLoading } = useCurrentUser()
 
   if (isLoading) {
     return (

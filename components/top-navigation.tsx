@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useUser } from "@/lib/auth0-client"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -14,10 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FileText, LayoutDashboard, LogOut, User } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function TopNavigation() {
   const pathname = usePathname()
-  const { user, isLoading } = useUser()
+  const { user, isLoading } = useCurrentUser()
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true
@@ -37,6 +38,7 @@ export function TopNavigation() {
           </div>
 
           <div className="flex items-center space-x-4">
+            {isLoading && <Skeleton className="h-8 w-24 rounded-md" />}
             {!isLoading && user && (
               <>
                 <div className="hidden md:flex items-center space-x-1">
