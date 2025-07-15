@@ -5,7 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { BotIDProvider } from "@/components/botid-provider"
-import { UserProvider } from "@auth0/nextjs-auth0/client"
+import { UserProvider } from "@auth0/nextjs-auth0"
 
 const inter = Inter({ subsets: ["latin"] })
 

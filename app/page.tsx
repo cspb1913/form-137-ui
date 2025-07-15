@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useUser } from "@auth0/nextjs-auth0"
 import { SuccessPage } from "@/components/success-page"
 import { TopNavigation } from "@/components/top-navigation"
 import { BotIDProvider } from "@/components/botid-provider"
@@ -10,10 +11,10 @@ import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { Dashboard } from "@/components/dashboard"
 import { LoginPrompt } from "@/components/login-prompt"
-import { getSession } from "@auth0/nextjs-auth0"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default async function Home() {
-  const session = await getSession()
+export default function Home() {
+  const { user, isLoading } = useUser()
   const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
@@ -35,10 +36,25 @@ export default async function Home() {
   }
 
   const handleGoToDashboard = () => {
-    router.push("/dashboard")
+    router.push("/")
   }
 
-  if (!session?.user) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+        <TopNavigation />
+        <main className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!user) {
     return <LoginPrompt />
   }
 
@@ -55,12 +71,7 @@ export default async function Home() {
                 onGoToDashboard={handleGoToDashboard}
               />
             ) : (
-              <div className="min-h-screen bg-gray-50">
-                <TopNavigation />
-                <main className="py-8">
-                  <Dashboard />
-                </main>
-              </div>
+              <Dashboard />
             )}
           </main>
         </BotProtection>

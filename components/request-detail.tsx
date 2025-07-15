@@ -1,181 +1,161 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
 import { StatusBadge } from "@/components/status-badge"
-import { ArrowLeft, Calendar, Clock, Download, FileText, Mail, MessageSquare, Phone, Send, User } from "lucide-react"
 import { mockRequestDetail } from "@/lib/mock-data"
-import type { RequestDetail as RequestDetailType } from "@/types/dashboard"
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  Clock,
+  MessageSquare,
+  Paperclip,
+  Send,
+  Download,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+} from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
+import { Separator } from "@/components/ui/separator"
 
 interface RequestDetailProps {
   requestId: string
 }
 
 export function RequestDetail({ requestId }: RequestDetailProps) {
-  const [request, setRequest] = useState<RequestDetailType | null>(null)
   const [newComment, setNewComment] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
 
-  useEffect(() => {
+  // In a real app, you would fetch the request detail based on requestId
+  const request = mockRequestDetail
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return
+
+    setIsSubmittingComment(true)
     // Simulate API call
-    setTimeout(() => {
-      setRequest(mockRequestDetail)
-      setIsLoading(false)
-    }, 1000)
-  }, [requestId])
-
-  const handleAddComment = () => {
-    if (!newComment.trim() || !request) return
-
-    const comment = {
-      id: Date.now().toString(),
-      author: "You",
-      message: newComment,
-      timestamp: new Date().toISOString(),
-      isInternal: false,
-    }
-
-    setRequest({
-      ...request,
-      comments: [...request.comments, comment],
-    })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     setNewComment("")
+    setIsSubmittingComment(false)
   }
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <Button variant="ghost" asChild>
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  const getTimelineIcon = (status: string) => {
+    switch (status) {
+      case "submitted":
+        return <FileText className="h-4 w-4 text-blue-600" />
+      case "under_review":
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />
+      case "in_progress":
+        return <Clock className="h-4 w-4 text-blue-600" />
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-600" />
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-600" />
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-600" />
+    }
   }
 
-  if (!request) {
-    return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Request Not Found</h2>
-          <p className="text-gray-600 mb-6">The requested Form 137 request could not be found.</p>
-          <Button asChild>
-            <Link href="/">Return to Dashboard</Link>
-          </Button>
-        </div>
-      </div>
-    )
+  const getTimelineColor = (status: string) => {
+    switch (status) {
+      case "submitted":
+        return "border-blue-200 bg-blue-50"
+      case "under_review":
+        return "border-yellow-200 bg-yellow-50"
+      case "in_progress":
+        return "border-blue-200 bg-blue-50"
+      case "completed":
+        return "border-green-200 bg-green-50"
+      case "rejected":
+        return "border-red-200 bg-red-50"
+      default:
+        return "border-gray-200 bg-gray-50"
+    }
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <Button variant="ghost" asChild className="mb-4">
+      <div className="flex items-center gap-4">
+        <Button asChild variant="ghost" size="sm">
           <Link href="/">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
         </Button>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{request.id}</h1>
-            <p className="text-gray-600 mt-1">Form 137 Request Details</p>
-          </div>
-          <div className="mt-4 sm:mt-0">
-            <StatusBadge status={request.status} />
-          </div>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-gray-900">Request Details</h1>
+          <p className="text-gray-600">{request.id}</p>
         </div>
+        <StatusBadge status={request.status} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Student Information */}
+          {/* Request Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2 text-primary" />
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
                 Student Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="text-gray-900">{request.studentInfo.fullName}</p>
+                  <label className="text-sm font-medium text-gray-600">Student Name</label>
+                  <p className="text-lg font-semibold text-gray-900">{request.studentName}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Student ID</label>
-                  <p className="text-gray-900">{request.studentInfo.studentId}</p>
+                  <label className="text-sm font-medium text-gray-600">Student ID</label>
+                  <p className="text-lg font-semibold text-gray-900">{request.studentId}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Year Level</label>
-                  <p className="text-gray-900">{request.studentInfo.yearLevel}</p>
+                  <label className="text-sm font-medium text-gray-600">Request Type</label>
+                  <p className="text-lg font-semibold text-gray-900">{request.requestType}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Section</label>
-                  <p className="text-gray-900">{request.studentInfo.section}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">School Year</label>
-                  <p className="text-gray-900">{request.studentInfo.schoolYear}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Contact Number</label>
-                  <p className="text-gray-900">{request.studentInfo.contactNumber}</p>
+                  <label className="text-sm font-medium text-gray-600">Priority</label>
+                  <Badge
+                    className={`${request.priority === "high" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}`}
+                  >
+                    {request.priority.toUpperCase()}
+                  </Badge>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Email Address</label>
-                <p className="text-gray-900">{request.studentInfo.email}</p>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-primary" />
+                Contact Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-gray-500" />
+                <span>{request.contactInfo.email}</span>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Address</label>
-                <p className="text-gray-900">{request.studentInfo.address}</p>
+              <div className="flex items-center gap-3">
+                <Phone className="h-4 w-4 text-gray-500" />
+                <span>{request.contactInfo.phone}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-gray-500 mt-1" />
+                <span>{request.contactInfo.address}</span>
               </div>
             </CardContent>
           </Card>
@@ -183,36 +163,34 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
           {/* Request Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-primary" />
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
                 Request Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Purpose</label>
+                  <label className="text-sm font-medium text-gray-600">Purpose</label>
                   <p className="text-gray-900">{request.requestDetails.purpose}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Urgency</label>
-                  <Badge variant={request.requestDetails.urgency === "Urgent" ? "destructive" : "default"}>
-                    {request.requestDetails.urgency}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Number of Copies</label>
+                  <label className="text-sm font-medium text-gray-600">Number of Copies</label>
                   <p className="text-gray-900">{request.requestDetails.copies}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Delivery Method</label>
-                  <p className="text-gray-900">{request.requestDetails.deliveryMethod}</p>
+                  <label className="text-sm font-medium text-gray-600">Delivery Method</label>
+                  <p className="text-gray-900 capitalize">{request.requestDetails.deliveryMethod}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Urgent Request</label>
+                  <p className="text-gray-900">{request.requestDetails.urgentRequest ? "Yes" : "No"}</p>
                 </div>
               </div>
-              {request.requestDetails.specialInstructions && (
+              {request.requestDetails.notes && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Special Instructions</label>
-                  <p className="text-gray-900">{request.requestDetails.specialInstructions}</p>
+                  <label className="text-sm font-medium text-gray-600">Additional Notes</label>
+                  <p className="text-gray-900 mt-1">{request.requestDetails.notes}</p>
                 </div>
               )}
             </CardContent>
@@ -221,25 +199,28 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
           {/* Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-primary" />
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
                 Request Timeline
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {request.timeline.map((event, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-3 h-3 bg-primary rounded-full mt-2"></div>
+                  <div key={event.id} className="flex gap-4">
+                    <div
+                      className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center ${getTimelineColor(event.status)}`}
+                    >
+                      {getTimelineIcon(event.status)}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <StatusBadge status={event.status} />
-                        <span className="text-sm text-gray-500">{format(new Date(event.date), "MMM dd, yyyy")}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-900">{event.description}</p>
+                        <p className="text-xs text-gray-500">
+                          {format(new Date(event.timestamp), "MMM dd, yyyy 'at' h:mm a")}
+                        </p>
                       </div>
-                      <p className="text-gray-900 mt-1">{event.description}</p>
-                      <p className="text-sm text-gray-500">by {event.actor}</p>
+                      <p className="text-xs text-gray-600">by {event.actor}</p>
                     </div>
                   </div>
                 ))}
@@ -250,37 +231,48 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
           {/* Comments */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2 text-primary" />
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
                 Comments & Communication
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4 mb-6">
+            <CardContent className="space-y-4">
+              {/* Existing Comments */}
+              <div className="space-y-4 max-h-96 overflow-y-auto">
                 {request.comments.map((comment) => (
-                  <div key={comment.id} className="border rounded-lg p-4">
+                  <div
+                    key={comment.id}
+                    className={`p-4 rounded-lg ${comment.author === "Registrar Office" ? "bg-primary/5 border-l-4 border-l-primary" : "bg-gray-50"}`}
+                  >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">{comment.author}</span>
-                      <span className="text-sm text-gray-500">
+                      <span className="font-medium text-sm text-gray-900">{comment.author}</span>
+                      <span className="text-xs text-gray-500">
                         {format(new Date(comment.timestamp), "MMM dd, yyyy 'at' h:mm a")}
                       </span>
                     </div>
-                    <p className="text-gray-700">{comment.message}</p>
+                    <p className="text-gray-700 text-sm">{comment.message}</p>
                   </div>
                 ))}
               </div>
-              <Separator className="my-4" />
+
+              <Separator />
+
+              {/* New Comment */}
               <div className="space-y-3">
                 <label className="text-sm font-medium text-gray-700">Add a comment</label>
                 <Textarea
                   placeholder="Type your message here..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
+                  className="min-h-[100px]"
                 />
-                <Button onClick={handleAddComment} disabled={!newComment.trim()}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Comment
+                <Button
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || isSubmittingComment}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  {isSubmittingComment ? "Sending..." : "Send Comment"}
                 </Button>
               </div>
             </CardContent>
@@ -292,82 +284,109 @@ export function RequestDetail({ requestId }: RequestDetailProps) {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full bg-transparent" variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Download Request
+              <Button variant="outline" className="w-full justify-start bg-transparent">
+                <Download className="mr-2 h-4 w-4" />
+                Download Receipt
               </Button>
-              <Button className="w-full bg-transparent" variant="outline">
-                <Mail className="h-4 w-4 mr-2" />
-                Email Update
+              <Button variant="outline" className="w-full justify-start bg-transparent">
+                <Mail className="mr-2 h-4 w-4" />
+                Email Registrar
               </Button>
-              <Button className="w-full bg-transparent" variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Pickup
+              <Button variant="outline" className="w-full justify-start bg-transparent">
+                <Phone className="mr-2 h-4 w-4" />
+                Call Office
               </Button>
             </CardContent>
           </Card>
 
-          {/* Registrar Information */}
+          {/* Request Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Registrar Contact</CardTitle>
-              <CardDescription>For questions about this request</CardDescription>
+              <CardTitle className="text-lg">Request Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-500">Assigned To</label>
-                <p className="text-gray-900">{request.registrarInfo.assignedTo}</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Submitted:</span>
+                <span className="font-medium">{format(new Date(request.submittedDate), "MMM dd, yyyy")}</span>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Office</label>
-                <p className="text-gray-900">{request.registrarInfo.office}</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Last Updated:</span>
+                <span className="font-medium">{format(new Date(request.lastUpdated), "MMM dd, yyyy")}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-900">{request.registrarInfo.contactNumber}</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Status:</span>
+                <StatusBadge status={request.status} />
               </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-900">{request.registrarInfo.email}</span>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Office Hours</label>
-                <p className="text-sm text-gray-900">{request.registrarInfo.officeHours}</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Priority:</span>
+                <Badge
+                  className={`text-xs ${request.priority === "high" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}`}
+                >
+                  {request.priority.toUpperCase()}
+                </Badge>
               </div>
             </CardContent>
           </Card>
 
           {/* Attachments */}
-          {request.attachments && request.attachments.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Attachments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {request.attachments.map((attachment) => (
-                    <div key={attachment.id} className="flex items-center justify-between p-2 border rounded">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-gray-400" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{attachment.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {attachment.size} • {format(new Date(attachment.uploadedDate), "MMM dd, yyyy")}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Paperclip className="h-4 w-4" />
+                Attachments
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {request.attachments.map((attachment) => (
+                <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{attachment.name}</p>
+                      <p className="text-xs text-gray-500">{attachment.size}</p>
                     </div>
-                  ))}
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <Download className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Registrar Office</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-gray-500" />
+                <span>+63 2 8123 4567</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gray-500" />
+                <span>registrar@school.edu</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                <span>
+                  Registrar Office, 2nd Floor
+                  <br />
+                  Main Building
+                  <br />
+                  School Campus
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span>Mon-Fri: 8:00 AM - 5:00 PM</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

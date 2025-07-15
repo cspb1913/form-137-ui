@@ -8,54 +8,41 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const getStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status) {
       case "pending":
         return {
           label: "Pending",
-          variant: "secondary" as const,
-          className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+          className: "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200",
         }
-      case "processing":
+      case "in_progress":
         return {
-          label: "Processing",
-          variant: "default" as const,
-          className: "bg-blue-100 text-blue-800 border-blue-200",
+          label: "In Progress",
+          className: "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
         }
-      case "approved":
+      case "under_review":
         return {
-          label: "Approved",
-          variant: "default" as const,
-          className: "bg-green-100 text-green-800 border-green-200",
+          label: "Under Review",
+          className: "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200",
         }
       case "completed":
         return {
           label: "Completed",
-          variant: "default" as const,
-          className: "bg-emerald-100 text-emerald-800 border-emerald-200",
+          className: "bg-green-100 text-green-800 border-green-200 hover:bg-green-200",
         }
       case "rejected":
         return {
           label: "Rejected",
-          variant: "destructive" as const,
-          className: "bg-red-100 text-red-800 border-red-200",
+          className: "bg-red-100 text-red-800 border-red-200 hover:bg-red-200",
         }
-      case "submitted":
+      case "cancelled":
         return {
-          label: "Submitted",
-          variant: "outline" as const,
-          className: "bg-gray-100 text-gray-800 border-gray-200",
-        }
-      case "received":
-        return {
-          label: "Received",
-          variant: "outline" as const,
-          className: "bg-indigo-100 text-indigo-800 border-indigo-200",
+          label: "Cancelled",
+          className: "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200",
         }
       default:
         return {
-          label: status,
-          variant: "outline" as const,
-          className: "bg-gray-100 text-gray-800 border-gray-200",
+          label: "Unknown",
+          className: "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200",
         }
     }
   }
@@ -63,7 +50,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = getStatusConfig(status)
 
   return (
-    <Badge variant={config.variant} className={cn(config.className, className)}>
+    <Badge variant="outline" className={cn("font-medium text-xs px-2 py-1 border", config.className, className)}>
       {config.label}
     </Badge>
   )

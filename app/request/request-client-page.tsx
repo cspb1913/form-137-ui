@@ -5,40 +5,64 @@ import { useRouter } from "next/navigation"
 import { TopNavigation } from "@/components/top-navigation"
 import { RequestForm137 } from "@/components/request-form-137"
 import { SuccessPage } from "@/components/success-page"
-import { toast } from "@/hooks/use-toast"
+import { BotIDProvider } from "@/components/botid-provider"
+import { BotProtection } from "@/components/bot-protection"
+import { Toaster } from "@/components/ui/sonner"
+import { toast } from "sonner"
 
 export default function RequestClientPage() {
+  const router = useRouter()
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
-  const router = useRouter()
 
-  const handleSubmissionSuccess = (data: any) => {
+  const handleFormSubmit = (data: any) => {
     setSubmissionData(data)
     setIsSubmitted(true)
 
     // Show success toast
-    toast({
-      title: "Request Submitted Successfully",
-      description: "Your Form 137 request has been submitted and is being processed.",
+    toast.success("Form 137 request submitted successfully!", {
+      description: "Your request has been received and is being processed.",
       duration: 5000,
     })
-
-    // Navigate back to dashboard after a delay
-    setTimeout(() => {
-      router.push("/")
-    }, 3000)
   }
 
-  if (isSubmitted) {
-    return <SuccessPage data={submissionData} />
+  const handleBackToForm = () => {
+    setIsSubmitted(false)
+    setSubmissionData(null)
+  }
+
+  const handleGoToDashboard = () => {
+    router.push("/")
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNavigation />
-      <main className="py-8">
-        <RequestForm137 onSubmissionSuccess={handleSubmissionSuccess} />
-      </main>
-    </div>
+    <BotIDProvider>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+        <TopNavigation />
+        <BotProtection>
+          <main className="container mx-auto px-4 py-8">
+            {isSubmitted ? (
+              <SuccessPage
+                submissionData={submissionData}
+                onBackToForm={handleBackToForm}
+                onGoToDashboard={handleGoToDashboard}
+              />
+            ) : (
+              <RequestForm137 onSuccess={handleFormSubmit} />
+            )}
+          </main>
+        </BotProtection>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "white",
+              border: "1px solid #1B4332",
+              color: "#1B4332",
+            },
+          }}
+        />
+      </div>
+    </BotIDProvider>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useUser } from "@auth0/nextjs-auth0"
 import { Button } from "@/components/ui/button"
 import { FileText, LayoutDashboard, Plus, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"

@@ -2,6 +2,8 @@
 
 import { TopNavigation } from "@/components/top-navigation"
 import { RequestDetail } from "@/components/request-detail"
+import { BotIDProvider } from "@/components/botid-provider"
+import { BotProtection } from "@/components/bot-protection"
 
 interface RequestDetailClientPageProps {
   requestId: string
@@ -9,12 +11,16 @@ interface RequestDetailClientPageProps {
 
 const RequestDetailClientPage = ({ requestId }: RequestDetailClientPageProps) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopNavigation />
-      <main className="py-8">
-        <RequestDetail requestId={requestId} />
-      </main>
-    </div>
+    <BotIDProvider>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+        <TopNavigation />
+        <BotProtection>
+          <main className="container mx-auto px-4 py-8">
+            <RequestDetail requestId={requestId} />
+          </main>
+        </BotProtection>
+      </div>
+    </BotIDProvider>
   )
 }
 

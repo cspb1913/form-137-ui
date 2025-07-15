@@ -1,7 +1,7 @@
 export interface DashboardStats {
   totalRequests: number
   pendingRequests: number
-  approvedRequests: number
+  completedRequests: number
   rejectedRequests: number
 }
 
@@ -9,34 +9,30 @@ export interface DashboardRequest {
   id: string
   studentName: string
   requestType: string
-  status: "pending" | "processing" | "approved" | "completed" | "rejected"
+  status: "pending" | "in_progress" | "completed" | "rejected" | "under_review" | "cancelled"
   submittedDate: string
   lastUpdated: string
   priority: "low" | "normal" | "high"
 }
 
-export interface StudentInfo {
-  fullName: string
-  studentId: string
-  yearLevel: string
-  section: string
-  schoolYear: string
-  contactNumber: string
+export interface ContactInfo {
   email: string
+  phone: string
   address: string
 }
 
 export interface RequestDetails {
   purpose: string
-  urgency: string
   copies: number
-  deliveryMethod: string
-  specialInstructions?: string
+  deliveryMethod: "pickup" | "mail" | "email"
+  urgentRequest: boolean
+  notes?: string
 }
 
 export interface TimelineEvent {
-  date: string
+  id: string
   status: string
+  timestamp: string
   description: string
   actor: string
 }
@@ -53,29 +49,21 @@ export interface Attachment {
   id: string
   name: string
   size: string
-  uploadedDate: string
-}
-
-export interface RegistrarInfo {
-  assignedTo: string
-  office: string
-  contactNumber: string
-  email: string
-  officeHours: string
+  uploadedAt: string
 }
 
 export interface RequestDetail {
   id: string
   studentName: string
+  studentId: string
   requestType: string
-  status: "pending" | "processing" | "approved" | "completed" | "rejected"
+  status: "pending" | "in_progress" | "completed" | "rejected" | "under_review" | "cancelled"
   submittedDate: string
   lastUpdated: string
   priority: "low" | "normal" | "high"
-  studentInfo: StudentInfo
+  contactInfo: ContactInfo
   requestDetails: RequestDetails
   timeline: TimelineEvent[]
   comments: Comment[]
-  attachments?: Attachment[]
-  registrarInfo: RegistrarInfo
+  attachments: Attachment[]
 }
