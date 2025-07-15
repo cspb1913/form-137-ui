@@ -42,7 +42,7 @@ describe("Authentication Components", () => {
     it("has correct login link", () => {
       render(<LoginPrompt />)
       const loginButton = screen.getByRole("link", { name: /sign in to continue/i })
-      expect(loginButton).toHaveAttribute("href", "/api/auth/login")
+      expect(loginButton).toHaveAttribute("href", "/auth/login")
     })
   })
 
