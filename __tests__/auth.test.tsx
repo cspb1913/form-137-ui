@@ -1,49 +1,91 @@
 import { render, screen } from "@testing-library/react"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import { useRouter } from "next/navigation"
+import { LoginPrompt } from "@/components/login-prompt"
 import { TopNavigation } from "@/components/top-navigation"
-import HomePage from "@/app/page"
-import jest from "jest" // Declare the jest variable
+import jest from "jest"
 
-// Mock the useUser hook
-jest.mock("@auth0/nextjs-auth0/client", () => ({
-  useUser: jest.fn(),
+// Mock our custom user hook
+jest.mock("@/hooks/use-current-user", () => ({
+  useCurrentUser: jest.fn(),
 }))
 
-const mockUseUser = useUser as jest.Mock
+// Mock Next.js router
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(),
+  usePathname: jest.fn(() => "/"),
+}))
+
+const mockUseCurrentUser = useCurrentUser as jest.MockedFunction<typeof useCurrentUser>
+const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>
 
 describe("Authentication Components", () => {
-  describe("TopNavigation", () => {
-    it("shows Login button when user is not authenticated", () => {
-      mockUseUser.mockReturnValue({ user: null, isLoading: false })
-      render(<TopNavigation />)
-      expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument()
+  beforeEach(() => {
+    mockUseRouter.mockReturnValue({
+      push: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+      forward: jest.fn(),
+      refresh: jest.fn(),
+    } as any)
+  })
+
+  describe("LoginPrompt", () => {
+    it("renders login prompt with correct content", () => {
+      render(<LoginPrompt />)
+      expect(screen.getByText("Form 137 Request Portal")).toBeInTheDocument()
+      expect(screen.getByText("Secure access to your academic records")).toBeInTheDocument()
+      expect(screen.getByText("Sign In to Continue")).toBeInTheDocument()
     })
 
-    it("shows user avatar when user is authenticated", () => {
-      const mockUser = {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        picture: "https://example.com/avatar.jpg",
-      }
-      mockUseUser.mockReturnValue({ user: mockUser, isLoading: false })
-      render(<TopNavigation />)
-      expect(screen.getByRole("img", { name: /john doe/i })).toBeInTheDocument()
-      expect(screen.queryByRole("link", { name: /login/i })).not.toBeInTheDocument()
+    it("has correct login link", () => {
+      render(<LoginPrompt />)
+      const loginButton = screen.getByRole("link", { name: /sign in to continue/i })
+      expect(loginButton).toHaveAttribute("href", "/api/auth/login")
     })
   })
 
-  describe("HomePage", () => {
-    it('renders "Login to Get Started" button for logged-out users', () => {
-      mockUseUser.mockReturnValue({ user: null, isLoading: false })
-      render(<HomePage />)
-      expect(screen.getByRole("link", { name: /login to get started/i })).toBeInTheDocument()
+  describe("TopNavigation", () => {
+    it("shows login button when user is not authenticated", () => {
+      mockUseCurrentUser.mockReturnValue({
+        user: undefined,
+        isLoading: false,
+        isError: false,
+      })
+      render(<TopNavigation />)
+      expect(screen.getByText("Log in")).toBeInTheDocument()
+      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
     })
 
-    it('renders "Go to Dashboard" button for logged-in users', () => {
-      const mockUser = { name: "Jane Doe" }
-      mockUseUser.mockReturnValue({ user: mockUser, isLoading: false })
-      render(<HomePage />)
-      expect(screen.getByRole("link", { name: /go to dashboard/i })).toBeInTheDocument()
+    it("shows navigation and user menu when authenticated", () => {
+      const mockUser = {
+        sub: "auth0|123",
+        name: "John Doe",
+        email: "john@example.com",
+        picture: "https://example.com/avatar.jpg",
+      }
+      mockUseCurrentUser.mockReturnValue({
+        user: mockUser,
+        isLoading: false,
+        isError: false,
+      })
+      render(<TopNavigation />)
+      expect(screen.getByText("Dashboard")).toBeInTheDocument()
+      expect(screen.getByText("New Request")).toBeInTheDocument()
+      expect(screen.queryByText("Log in")).not.toBeInTheDocument()
+    })
+
+    it("shows loading state", () => {
+      mockUseCurrentUser.mockReturnValue({
+        user: undefined,
+        isLoading: true,
+        isError: false,
+      })
+      render(<TopNavigation />)
+      expect(screen.queryByText("Log in")).not.toBeInTheDocument()
+      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument()
+      expect(screen.getByRole("status")).toBeInTheDocument() // Assuming skeleton has role="status"
     })
   })
 })
