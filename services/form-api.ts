@@ -34,7 +34,7 @@ export interface ApiError {
 export class FormApiService {
   private baseUrl: string
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001") {
+  constructor(baseUrl: string = process.env.NEXT_PUBLIC_FORM137_API_URL || "http://localhost:3001") {
     this.baseUrl = baseUrl
   }
 
@@ -85,9 +85,7 @@ export class FormApiService {
     updatedAt: string
     notes?: string
   }> {
-    const response = await fetch(
-      `${this.baseUrl}/api/form137/status/${ticketNumber}`,
-    )
+    const response = await fetch(`${this.baseUrl}/api/form137/status/${ticketNumber}`)
 
     if (!response.ok) {
       const errorData: ApiError = await response.json()

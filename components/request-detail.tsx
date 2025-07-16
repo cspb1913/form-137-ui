@@ -1,403 +1,274 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useState } from "react"
+import { useUser } from "@auth0/nextjs-auth0/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { StatusBadge } from "@/components/status-badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  ArrowLeft,
-  Calendar,
-  Mail,
-  Phone,
-  MapPin,
-  FileText,
-  Download,
-  MessageSquare,
-  Send,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-} from "lucide-react"
-import { getMockRequestById } from "@/lib/mock-data"
-import type { Form137Request } from "@/types/dashboard"
+import { StatusBadge } from "@/components/status-badge"
+import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
+import { Calendar, Mail, Phone, MapPin, FileText, MessageSquare, User, Clock } from "lucide-react"
+import { toast } from "sonner"
 
 interface RequestDetailProps {
-  requestId: string
+  request: FormRequest
+  onRequestUpdate?: (updatedRequest: FormRequest) => void
 }
 
-export function RequestDetail({ requestId }: RequestDetailProps) {
-  const [request, setRequest] = useState<Form137Request | null>(null)
+export function RequestDetail({ request: initialRequest, onRequestUpdate }: RequestDetailProps) {
+  const { user, getAccessTokenSilently } = useUser()
+  const [request, setRequest] = useState(initialRequest)
   const [newComment, setNewComment] = useState("")
-  const [loading, setLoading] = useState(true)
+  const [isAddingComment, setIsAddingComment] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
-  useEffect(() => {
-    // Simulate API call
-    const mockRequest = getMockRequestById(requestId)
-    setRequest(mockRequest || null)
-    setLoading(false)
-  }, [requestId])
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !user) return
 
-  const handleAddComment = () => {
-    if (!newComment.trim() || !request) return
+    setIsAddingComment(true)
+    try {
+      const token = await getAccessTokenSilently()
+      const comment = await dashboardApi.addComment(request.id, newComment.trim(), token)
 
-    const comment = {
-      id: `comment-${Date.now()}`,
-      author: "You",
-      content: newComment,
-      timestamp: new Date().toISOString(),
-      isInternal: false,
-    }
+      const updatedRequest = {
+        ...request,
+        comments: [...request.comments, comment],
+      }
 
-    setRequest({
-      ...request,
-      comments: [...request.comments, comment],
-    })
-    setNewComment("")
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  const getTimelineIcon = (status: string) => {
-    switch (status) {
-      case "submitted":
-        return <FileText className="h-4 w-4" />
-      case "processing":
-        return <Clock className="h-4 w-4" />
-      case "completed":
-        return <CheckCircle className="h-4 w-4" />
-      case "rejected":
-        return <XCircle className="h-4 w-4" />
-      default:
-        return <AlertCircle className="h-4 w-4" />
+      setRequest(updatedRequest)
+      setNewComment("")
+      onRequestUpdate?.(updatedRequest)
+      toast.success("Comment added successfully")
+    } catch (error) {
+      console.error("Failed to add comment:", error)
+      toast.error("Failed to add comment. Please try again.")
+    } finally {
+      setIsAddingComment(false)
     }
   }
 
-  const getTimelineColor = (status: string) => {
-    switch (status) {
-      case "submitted":
-        return "text-blue-600 bg-blue-100"
-      case "processing":
-        return "text-yellow-600 bg-yellow-100"
-      case "completed":
-        return "text-green-600 bg-green-100"
-      case "rejected":
-        return "text-red-600 bg-red-100"
-      default:
-        return "text-gray-600 bg-gray-100"
+  const handleStatusUpdate = async (newStatus: FormRequest["status"]) => {
+    if (!user) return
+
+    setIsUpdatingStatus(true)
+    try {
+      const token = await getAccessTokenSilently()
+      const updatedRequest = await dashboardApi.updateRequestStatus(request.id, newStatus, token)
+
+      setRequest(updatedRequest)
+      onRequestUpdate?.(updatedRequest)
+      toast.success(`Status updated to ${newStatus}`)
+    } catch (error) {
+      console.error("Failed to update status:", error)
+      toast.error("Failed to update status. Please try again.")
+    } finally {
+      setIsUpdatingStatus(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-6">
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="h-48 bg-gray-200 rounded"></div>
-            </div>
-            <div className="space-y-6">
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!request) {
-    return (
-      <div className="text-center py-12">
-        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Request Not Found</h2>
-        <p className="text-gray-600 mb-4">The requested Form 137 request could not be found.</p>
-        <Link href="/">
-          <Button>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </Link>
-      </div>
-    )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{request.id}</h1>
-            <p className="text-gray-600">Form 137 Request Details</p>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Request Details</h1>
+          <p className="text-muted-foreground">Ticket #{request.ticketNumber}</p>
         </div>
-        <StatusBadge status={request.status} />
+        <div className="flex items-center gap-4">
+          <StatusBadge status={request.status} />
+          {user && (
+            <Select value={request.status} onValueChange={handleStatusUpdate} disabled={isUpdatingStatus}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Request Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Request Information</CardTitle>
-              <CardDescription>Details about this Form 137 request</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Student Name</label>
-                  <p className="text-lg font-semibold">{request.studentName}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Student ID</label>
-                  <p className="text-lg font-semibold">{request.studentId}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Request Type</label>
-                  <p className="text-lg">{request.requestType}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Purpose</label>
-                  <p className="text-lg">{request.purpose}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Priority</label>
-                  <Badge variant={request.priority === "high" ? "destructive" : "secondary"}>{request.priority}</Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Payment Status</label>
-                  <Badge variant={request.paymentStatus === "paid" ? "default" : "secondary"}>
-                    {request.paymentStatus}
-                  </Badge>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Student Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                <p className="font-medium">{request.studentName}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Student ID</label>
+                <p className="font-medium">{request.studentId}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Program</label>
+                <p className="font-medium">{request.program}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Graduation Year</label>
+                <p className="font-medium">{request.graduationYear}</p>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>{request.email}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>{request.phoneNumber}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Request Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Purpose</label>
+              <p className="font-medium">{request.purpose}</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Delivery Method</label>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="capitalize">
+                  {request.deliveryMethod}
+                </Badge>
+              </div>
+            </div>
+
+            {request.deliveryAddress && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Delivery Address</label>
+                <div className="flex items-start gap-2 mt-1">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <p className="text-sm">{request.deliveryAddress}</p>
                 </div>
               </div>
+            )}
 
-              {request.registrarNotes && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Registrar Notes</label>
-                  <p className="text-sm bg-gray-50 p-3 rounded-md mt-1">{request.registrarNotes}</p>
+            <Separator />
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <label className="text-muted-foreground">Submitted</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(request.submittedAt).toLocaleString()}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+              <div>
+                <label className="text-muted-foreground">Last Updated</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(request.updatedAt).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Request Timeline</CardTitle>
-              <CardDescription>Track the progress of your request</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {request.timeline.map((event, index) => (
-                  <div key={event.id} className="flex items-start space-x-4">
-                    <div
-                      className={`flex items-center justify-center w-8 h-8 rounded-full ${getTimelineColor(event.status)}`}
-                    >
-                      {getTimelineIcon(event.status)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900">{event.description}</p>
-                        <p className="text-xs text-gray-500">{formatDate(event.timestamp)}</p>
-                      </div>
-                      <p className="text-xs text-gray-500">by {event.user}</p>
-                    </div>
+      {request.documents && request.documents.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Uploaded Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {request.documents.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{doc.name}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(doc.uploadedAt).toLocaleDateString()}</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Documents */}
-          {request.documents.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Documents</CardTitle>
-                <CardDescription>Files related to this request</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {request.documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm font-medium">{doc.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {(doc.size / 1024 / 1024).toFixed(2)} MB • {formatDate(doc.uploadedAt)}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                      View
+                    </a>
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Comments & Updates
+          </CardTitle>
+          <CardDescription>Communication history for this request</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {user && (
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Add a comment or update..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                rows={3}
+              />
+              <Button onClick={handleAddComment} disabled={!newComment.trim() || isAddingComment}>
+                {isAddingComment ? "Adding..." : "Add Comment"}
+              </Button>
+            </div>
           )}
 
-          {/* Comments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Comments</CardTitle>
-              <CardDescription>Communication history for this request</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {request.comments.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No comments yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {request.comments.map((comment) => (
-                    <div key={comment.id} className="flex space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm font-medium">{comment.author}</p>
-                          <p className="text-xs text-gray-500">{formatDate(comment.timestamp)}</p>
-                        </div>
-                        <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
-                      </div>
+          <Separator />
+
+          <div className="space-y-4">
+            {request.comments.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No comments yet.</p>
+            ) : (
+              request.comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium">{comment.author}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(comment.createdAt).toLocaleString()}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Textarea
-                  placeholder="Add a comment..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  rows={3}
-                />
-                <Button onClick={handleAddComment} disabled={!newComment.trim()}>
-                  <Send className="h-4 w-4 mr-2" />
-                  Add Comment
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full bg-transparent" variant="outline">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Contact Registrar
-              </Button>
-              {request.status === "completed" && (
-                <Button className="w-full">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Document
-                </Button>
-              )}
-              <Button className="w-full bg-transparent" variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Print Details
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">Email</p>
-                  <p className="text-sm text-gray-600">{request.contactEmail}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">Phone</p>
-                  <p className="text-sm text-gray-600">{request.contactPhone}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">Delivery Method</p>
-                  <p className="text-sm text-gray-600">{request.deliveryMethod}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Important Dates */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Important Dates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium">Submitted</p>
-                  <p className="text-sm text-gray-600">{formatDate(request.submittedDate)}</p>
-                </div>
-              </div>
-              {request.estimatedCompletion && (
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium">Estimated Completion</p>
-                    <p className="text-sm text-gray-600">{formatDate(request.estimatedCompletion)}</p>
+                    <p className="text-sm">{comment.message}</p>
                   </div>
                 </div>
-              )}
-              {request.completedDate && (
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <div>
-                    <p className="text-sm font-medium">Completed</p>
-                    <p className="text-sm text-gray-600">{formatDate(request.completedDate)}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

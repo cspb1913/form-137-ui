@@ -1,10 +1,12 @@
-import type { NextRequest } from "next/server"
-import { auth0 } from "@/lib/auth0"
+import { handleAuth, handleLogin, handleLogout, handleCallback, handleProfile } from "@auth0/nextjs-auth0"
 
-export async function GET(req: NextRequest) {
-  return auth0.middleware(req)
-}
-
-export async function POST(req: NextRequest) {
-  return auth0.middleware(req)
-}
+export const GET = handleAuth({
+  login: handleLogin({
+    returnTo: "/dashboard",
+  }),
+  logout: handleLogout({
+    returnTo: "/",
+  }),
+  callback: handleCallback(),
+  profile: handleProfile(),
+})

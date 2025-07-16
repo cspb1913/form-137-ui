@@ -1,93 +1,99 @@
-import type { RequestStatus, DashboardStatistics, Comment } from "@/types/dashboard"
+const API_BASE_URL = process.env.NEXT_PUBLIC_FORM137_API_URL || "http://localhost:3001"
 
-export interface DashboardResponse {
-  requests: RequestStatus[]
-  statistics: DashboardStatistics
+export interface DashboardStats {
+  totalRequests: number
+  pendingRequests: number
+  completedRequests: number
+  rejectedRequests: number
 }
 
-export class DashboardAPI {
-  private baseUrl: string
+export interface FormRequest {
+  id: string
+  ticketNumber: string
+  studentName: string
+  studentId: string
+  email: string
+  phoneNumber: string
+  graduationYear: string
+  program: string
+  purpose: string
+  deliveryMethod: "pickup" | "email" | "mail"
+  deliveryAddress?: string
+  status: "pending" | "processing" | "completed" | "rejected"
+  submittedAt: string
+  updatedAt: string
+  comments: Comment[]
+  documents: Document[]
+}
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_API_BASE_URL || "") {
-    this.baseUrl = baseUrl
-  }
+export interface Comment {
+  id: string
+  message: string
+  author: string
+  createdAt: string
+}
 
-  async getDashboardData(token: string): Promise<DashboardResponse> {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/requests`, {
-      method: "GET",
+export interface Document {
+  id: string
+  name: string
+  url: string
+  uploadedAt: string
+}
+
+class DashboardApiService {
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`
+
+    const response = await fetch(url, {
+      ...options,
       headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...options.headers,
       },
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch dashboard data: ${response.statusText}`)
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json()
+    return response.json()
   }
 
-  async getRequestDetails(requestId: string, token: string): Promise<RequestStatus> {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/request/${requestId}`, {
-      method: "GET",
+  async getDashboardData(token: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
+    return this.makeRequest("/api/dashboard/requests", {
       headers: {
-        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
     })
+  }
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Request not found")
-      }
-      throw new Error(`Failed to fetch request details: ${response.statusText}`)
-    }
-
-    return await response.json()
+  async getRequestById(id: string, token: string): Promise<FormRequest> {
+    return this.makeRequest(`/api/dashboard/request/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
   }
 
   async addComment(requestId: string, message: string, token: string): Promise<Comment> {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/request/${requestId}/comment`, {
+    return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, {
       method: "POST",
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ message }),
     })
-
-    if (!response.ok) {
-      throw new Error(`Failed to add comment: ${response.statusText}`)
-    }
-
-    return await response.json()
   }
 
-  async updateRequestStatus(requestId: string, status: string, token: string): Promise<RequestStatus> {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/request/${requestId}/status`, {
+  async updateRequestStatus(requestId: string, status: FormRequest["status"], token: string): Promise<FormRequest> {
+    return this.makeRequest(`/api/dashboard/request/${requestId}/status`, {
       method: "PATCH",
       headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ status }),
     })
-
-    if (!response.ok) {
-      throw new Error(`Failed to update request status: ${response.statusText}`)
-    }
-
-    return await response.json()
   }
 }
 
-// Temporary client-side helper used by RequestDetailClientPage
-import { getMockRequestById } from "@/lib/mock-data"
-import type { Form137Request } from "@/types/dashboard"
-
-export async function getRequestById(id: string): Promise<Form137Request | null> {
-  return getMockRequestById(id) || null
-}
+export const dashboardApi = new DashboardApiService()
