@@ -6,11 +6,11 @@ import { SuccessPage } from "@/components/success-page"
 import { TopNavigation } from "@/components/top-navigation"
 import { BotIDProvider } from "@/components/botid-provider"
 import { BotProtection } from "@/components/bot-protection"
+import { RequestForm137 } from "@/components/request-form-137"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
-import { RequestClientPage } from "./request-client-page"
 
 export default function RequestPage() {
   const { user, isLoading } = useCurrentUser()
@@ -18,8 +18,8 @@ export default function RequestPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionData, setSubmissionData] = useState<any>(null)
 
-  const handleFormSubmit = (data: any) => {
-    setSubmissionData(data)
+  const handleFormSubmit = (ticketNumber: string) => {
+    setSubmissionData({ ticketNumber })
     setIsSubmitted(true)
 
     // Show success toast
@@ -73,7 +73,16 @@ export default function RequestPage() {
                 onGoToDashboard={handleGoToDashboard}
               />
             ) : (
-              <RequestClientPage onSubmit={handleFormSubmit} />
+              <div className="max-w-4xl mx-auto">
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Request Form 137</h1>
+                  <p className="text-gray-600">
+                    Please fill out the form below to request your Form 137. All fields marked with an asterisk (*) are
+                    required.
+                  </p>
+                </div>
+                <RequestForm137 onSuccess={handleFormSubmit} />
+              </div>
             )}
           </main>
         </BotProtection>

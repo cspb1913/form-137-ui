@@ -3,10 +3,10 @@
 import { RequestForm137 } from "@/components/request-form-137"
 
 interface RequestClientPageProps {
-  onSubmit: (data: any) => void
+  onSubmit: (ticketNumber: string) => void
 }
 
-const RequestClientPage = ({ onSubmit }: RequestClientPageProps) => {
+export function RequestClientPage({ onSubmit }: RequestClientPageProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
@@ -16,7 +16,7 @@ const RequestClientPage = ({ onSubmit }: RequestClientPageProps) => {
         </p>
       </div>
 
-      <RequestForm137 onSubmit={onSubmit} />
+      <RequestForm137 onSuccess={onSubmit} />
     </div>
   )
 }
