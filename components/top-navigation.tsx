@@ -89,7 +89,7 @@ export function TopNavigation() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <a href="/auth/logout" className="flex items-center">
+                      <a href="/api/auth/logout" className="flex items-center">
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
                       </a>
@@ -101,7 +101,7 @@ export function TopNavigation() {
 
             {!isLoading && !user && (
               <Button asChild>
-                <a href="/auth/login">Log in</a>
+                <a href="/api/auth/login">Log in</a>
               </Button>
             )}
           </div>

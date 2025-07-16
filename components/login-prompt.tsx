@@ -23,7 +23,7 @@ export function LoginPrompt() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button asChild className="w-full" size="lg">
-                  <a href="/auth/login">Sign In to Continue</a>
+                  <a href="/api/auth/login">Sign In to Continue</a>
                 </Button>
                 <p className="text-sm text-gray-500 text-center">Secure authentication powered by Auth0</p>
               </CardContent>

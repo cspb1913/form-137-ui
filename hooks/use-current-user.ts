@@ -14,7 +14,7 @@ async function fetcher(url: string) {
 }
 
 export function useCurrentUser() {
-  const { data, error, isLoading } = useSWR<UserProfile | null>("/auth/me", fetcher)
+  const { data, error, isLoading } = useSWR<UserProfile | null>("/api/auth/me", fetcher)
 
   return {
     user: data,
