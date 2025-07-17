@@ -1,6 +1,14 @@
-import { auth0 } from "@/lib/auth0"
+import { handleLogin } from "@auth0/nextjs-auth0"
 import type { NextRequest } from "next/server"
 
-export function GET(req: NextRequest) {
-  return auth0.handleLogin(req, { returnTo: "/dashboard" })
+export async function GET(req: NextRequest) {
+  try {
+    return await handleLogin(req, {
+      returnTo: "/dashboard",
+    })
+  } catch (error) {
+    console.error(error)
+    // Handle error appropriately
+    return new Response("Error during login", { status: 500 })
+  }
 }
