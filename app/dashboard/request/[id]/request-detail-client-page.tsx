@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useUser } from "@auth0/nextjs-auth0"
 import { RequestDetail } from "@/components/request-detail"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { Skeleton } from "@/components/ui/skeleton"

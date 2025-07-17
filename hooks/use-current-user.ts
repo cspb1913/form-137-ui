@@ -1,5 +1,5 @@
 import useSWR from "swr"
-import type { UserProfile } from "@auth0/nextjs-auth0/client"
+import type { UserProfile } from "@auth0/nextjs-auth0"
 
 async function fetcher(url: string) {
   const res = await fetch(url)
