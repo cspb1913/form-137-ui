@@ -9,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^2.2.0",
+    "@auth0/nextjs-auth0": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@jest/globals": "latest",
     "@pact-foundation/pact": "latest",
