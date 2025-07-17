@@ -55,6 +55,7 @@ Required variables:
 - `AUTH0_CLIENT_ID`
 - `AUTH0_CLIENT_SECRET`
 - `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_PROFILE_ROUTE`
 
 ## Pact contracts
 
