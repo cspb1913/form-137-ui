@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_FORM137_API_URL || "http://localhost:3001"
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_FORM137_API_URL ||
+  "/api"
 
 export interface DashboardStats {
   totalRequests: number

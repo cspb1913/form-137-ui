@@ -34,7 +34,12 @@ export interface ApiError {
 export class FormApiService {
   private baseUrl: string
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_FORM137_API_URL || "http://localhost:3001") {
+  constructor(
+    baseUrl: string =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_FORM137_API_URL ||
+      "/api",
+  ) {
     this.baseUrl = baseUrl
   }
 
