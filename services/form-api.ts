@@ -35,9 +35,7 @@ export class FormApiService {
   private baseUrl: string
 
   constructor(
-    baseUrl: string =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_FORM137_API_URL ||
+    baseUrl: string = process.env.NEXT_PUBLIC_FORM137_API_URL ||
       "",
   ) {
     this.baseUrl = baseUrl
