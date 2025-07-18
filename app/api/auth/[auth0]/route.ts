@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const route = request.nextUrl.pathname.split("/").pop()
+  const segments = request.nextUrl.pathname.split("/")
+  let route = segments.pop() || segments.pop()
   switch (route) {
     case "login":
       return auth0.handleLogin(request, { returnTo: "/dashboard" })
