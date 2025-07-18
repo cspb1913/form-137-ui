@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@auth0/nextjs-auth0"
+import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
 import { RequestDetail } from "@/components/request-detail"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,7 +15,7 @@ interface RequestDetailClientPageProps {
 }
 
 export default function RequestDetailClientPage({ requestId }: RequestDetailClientPageProps) {
-  const { user, isLoading: userLoading, getAccessTokenSilently } = useUser()
+  const { user, isLoading: userLoading } = useUser()
   const [request, setRequest] = useState<FormRequest | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +26,7 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
       try {
         setError(null)
-        const token = await getAccessTokenSilently()
+        const token = await getAccessToken()
         const requestData = await dashboardApi.getRequestById(requestId, token)
         setRequest(requestData)
       } catch (err) {
@@ -40,7 +40,7 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
     if (!userLoading) {
       fetchRequest()
     }
-  }, [requestId, user, userLoading, getAccessTokenSilently])
+  }, [requestId, user, userLoading])
 
   const handleRequestUpdate = (updatedRequest: FormRequest) => {
     setRequest(updatedRequest)

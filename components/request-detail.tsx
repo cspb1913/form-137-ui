@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUser } from "@auth0/nextjs-auth0"
+import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ interface RequestDetailProps {
 }
 
 export function RequestDetail({ request: initialRequest, onRequestUpdate }: RequestDetailProps) {
-  const { user, getAccessTokenSilently } = useUser()
+  const { user } = useUser()
   const [request, setRequest] = useState(initialRequest)
   const [newComment, setNewComment] = useState("")
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -30,7 +30,7 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsAddingComment(true)
     try {
-      const token = await getAccessTokenSilently()
+      const token = await getAccessToken()
       const comment = await dashboardApi.addComment(request.id, newComment.trim(), token)
 
       const updatedRequest = {
@@ -55,7 +55,7 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsUpdatingStatus(true)
     try {
-      const token = await getAccessTokenSilently()
+      const token = await getAccessToken()
       const updatedRequest = await dashboardApi.updateRequestStatus(request.id, newStatus, token)
 
       setRequest(updatedRequest)
