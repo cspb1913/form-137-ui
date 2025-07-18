@@ -1,10 +1,24 @@
-import { handleAuth, handleLogin, handleLogout } from "@auth0/nextjs-auth0"
+import { auth0 } from "@/lib/auth0"
+import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 
-export const GET = handleAuth({
-  login: handleLogin({
-    returnTo: "/dashboard",
-  }),
-  logout: handleLogout({
-    returnTo: "/",
-  }),
-})
+export async function GET(request: NextRequest) {
+  const route = request.nextUrl.pathname.split("/").pop()
+  switch (route) {
+    case "login":
+      return auth0.handleLogin(request, { returnTo: "/dashboard" })
+    case "logout":
+      return auth0.handleLogout(request, { returnTo: "/" })
+    case "callback":
+      return auth0.handleCallback(request)
+    case "me":
+    case "profile":
+      return auth0.handleProfile(request)
+    case "access-token":
+      return auth0.handleAccessToken(request)
+    case "backchannel-logout":
+      return auth0.handleBackChannelLogout(request)
+    default:
+      return NextResponse.json({ error: "Not Found" }, { status: 404 })
+  }
+}
