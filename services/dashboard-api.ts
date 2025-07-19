@@ -60,11 +60,44 @@ export class DashboardAPI {
   }
 
   async getDashboardData(token: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
-    return this.makeRequest("/api/dashboard/requests", {
+    const data = await this.makeRequest<any>("/api/dashboard/requests", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
+
+    const requests: FormRequest[] = (data.requests || []).map((r: any) => ({
+      id: r.id,
+      ticketNumber: r.ticketNumber,
+      studentName: r.learnerName,
+      studentId: r.learnerReferenceNumber,
+      email: r.requesterEmail,
+      phoneNumber: r.requesterPhoneNumber ?? "",
+      graduationYear: r.graduationYear ?? "",
+      program: r.requestType ?? "",
+      purpose: r.purpose ?? "",
+      deliveryMethod: (r.deliveryMethod || "").toLowerCase(),
+      deliveryAddress: r.deliveryAddress ?? undefined,
+      status: r.status,
+      submittedAt: r.submittedDate,
+      updatedAt: r.updatedDate ?? r.submittedDate,
+      comments: (r.comments || []).map((c: any) => ({
+        id: c.id ?? "",
+        message: c.message,
+        author: c.registrarName ?? "",
+        createdAt: c.timestamp,
+      })),
+      documents: r.documents ?? [],
+    }))
+
+    const stats: DashboardStats = {
+      totalRequests: data.statistics?.totalRequests ?? 0,
+      pendingRequests: data.statistics?.pendingRequests ?? 0,
+      completedRequests: data.statistics?.completedRequests ?? 0,
+      rejectedRequests: data.statistics?.rejectedRequests ?? 0,
+    }
+
+    return { requests, stats }
   }
 
   async getRequestById(id: string, token: string): Promise<FormRequest> {
