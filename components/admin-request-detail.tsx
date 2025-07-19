@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useState } from "react"
 import type { RequestStatus } from "@/types/dashboard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

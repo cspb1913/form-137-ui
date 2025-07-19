@@ -1,5 +1,6 @@
 import AdminRequestDetail from "@/components/admin-request-detail"
 
-export default function AdminRequestDetailPage({ params }: { params: { ticketNumber: string } }) {
-  return <AdminRequestDetail ticketNumber={params.ticketNumber} />
+export default async function AdminRequestDetailPage({ params }: { params: { ticketNumber: string } }) {
+  const { ticketNumber } = await params
+  return <AdminRequestDetail ticketNumber={ticketNumber} />
 }
