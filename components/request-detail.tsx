@@ -30,7 +30,9 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsAddingComment(true)
     try {
-      const token = await getAccessToken()
+      const token = await getAccessToken({
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      })
       const comment = await dashboardApi.addComment(request.id, newComment.trim(), token)
 
       const updatedRequest = {
@@ -55,7 +57,9 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsUpdatingStatus(true)
     try {
-      const token = await getAccessToken()
+      const token = await getAccessToken({
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      })
       const updatedRequest = await dashboardApi.updateRequestStatus(request.id, newStatus, token)
 
       setRequest(updatedRequest)

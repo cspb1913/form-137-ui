@@ -7,4 +7,7 @@ export const auth0 = new Auth0Client({
     callback: "/api/auth/callback",
     profile: "/api/auth/me",
   },
+  authorizationParams: {
+    audience: process.env.AUTH0_AUDIENCE,
+  },
 })

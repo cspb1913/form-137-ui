@@ -29,7 +29,9 @@ export function Dashboard() {
 
     try {
       setError(null)
-      const token = await getAccessToken()
+      const token = await getAccessToken({
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      })
       const data = await dashboardApi.getDashboardData(token)
       setRequests(data.requests)
       setStats(data.stats)

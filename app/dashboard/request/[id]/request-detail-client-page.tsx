@@ -26,7 +26,9 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
       try {
         setError(null)
-        const token = await getAccessToken()
+        const token = await getAccessToken({
+          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+        })
         const requestData = await dashboardApi.getRequestById(requestId, token)
         setRequest(requestData)
       } catch (err) {
