@@ -45,10 +45,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
       <TopNavigation />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Form 137 Dashboard</h1>
-          <p className="text-gray-600">Track your Form 137 requests and submit new applications.</p>
-        </div>
         <Dashboard onNewRequest={handleNewRequest} onViewRequest={handleViewRequest} />
       </main>
       <Toaster
