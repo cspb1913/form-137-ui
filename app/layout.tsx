@@ -4,6 +4,19 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
+// Log Auth0 environment variables on app start
+if (typeof window === "undefined") {
+  // Only log on server side to avoid exposing secrets to the browser
+  // eslint-disable-next-line no-console
+  console.log("Auth0 ENV:", {
+    AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE,
+    AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
+    AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
+    AUTH0_CALLBACK_URL: process.env.AUTH0_CALLBACK_URL,
+    AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
+  })
+}
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
