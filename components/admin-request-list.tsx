@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge } from "@/components/status-badge"
 import { useRouter } from "next/navigation"
+import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
+import { useCurrentUser } from "@/hooks/use-current-user"
 
 interface Request {
   ticketNumber: string
@@ -17,16 +19,67 @@ export default function AdminRequestList() {
   const [requests, setRequests] = useState<Request[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const { user, isLoading: userLoading } = useCurrentUser()
 
   useEffect(() => {
-    fetch("/api/requests")
-      .then((res) => res.json())
-      .then((data) => {
-        setRequests(data.requests || [])
+    if (userLoading) return
+    
+    async function loadRequests() {
+      try {
+        if (user) {
+          // TODO: Get proper auth token for API call
+          // For now, simulate a delay to show loading state
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // The external API requires authentication which is not set up yet
+          // In a real implementation, you would call:
+          // const { requests } = await dashboardApi.getDashboardData(authToken)
+          
+          // For now, use mock data to demonstrate the intended behavior
+          const mockRequests: Request[] = [
+            {
+              ticketNumber: "REQ-2025-00001",
+              learnerReferenceNumber: "123456789012", 
+              requesterName: "John Doe",
+              status: "submitted",
+              submittedAt: "2025-01-15T10:30:00Z"
+            },
+            {
+              ticketNumber: "REQ-2025-00002",
+              learnerReferenceNumber: "234567890123",
+              requesterName: "Jane Smith", 
+              status: "processing",
+              submittedAt: "2025-01-14T14:20:00Z"
+            },
+            {
+              ticketNumber: "REQ-2025-00003",
+              learnerReferenceNumber: "345678901234",
+              requesterName: "Bob Johnson",
+              status: "completed", 
+              submittedAt: "2025-01-13T09:15:00Z"
+            },
+            {
+              ticketNumber: "REQ-2025-00004",
+              learnerReferenceNumber: "456789012345",
+              requesterName: "Alice Brown",
+              status: "rejected",
+              submittedAt: "2025-01-12T16:45:00Z"
+            }
+          ]
+          setRequests(mockRequests)
+        } else {
+          setRequests([])
+        }
+      } catch (error) {
+        console.error('Failed to load requests:', error)
+        setRequests([])
+      } finally {
         setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
+      }
+    }
+    
+    loadRequests()
+  }, [user, userLoading])
 
   if (loading) {
     return <div className="text-center py-12">Loading requests...</div>
