@@ -3,7 +3,7 @@ import { useCurrentUser } from "@/hooks/use-current-user"
 import { useRouter } from "next/navigation"
 import { LoginPrompt } from "@/components/login-prompt"
 import { TopNavigation } from "@/components/top-navigation"
-import jest from "jest"
+import { jest } from "@jest/globals"
 
 // Mock our custom user hook
 jest.mock("@/hooks/use-current-user", () => ({

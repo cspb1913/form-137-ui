@@ -78,7 +78,14 @@ export class FormApiService {
       throw new Error(`API Error: ${errorData.message}`)
     }
 
-    return await response.json()
+    const data = await response.json()
+
+    return {
+      success: data.status === "submitted",
+      ticketNumber: data.ticketNumber,
+      message: data.notes ?? "",
+      submittedAt: data.submittedAt,
+    }
   }
 
   async getSubmissionStatus(ticketNumber: string): Promise<{

@@ -3,6 +3,10 @@
 import { jest } from "@jest/globals"
 import "@testing-library/jest-dom"
 
+// Mock Auth0 module to avoid ESM issues in tests
+jest.mock("@auth0/nextjs-auth0")
+jest.mock("@/components/botid-provider")
+
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter() {

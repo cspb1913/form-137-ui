@@ -84,10 +84,11 @@ describe("Form137 API Pact Tests", () => {
             "Content-Type": "application/json",
           },
           body: {
-            success: true,
             ticketNumber: "REQ-2025-00123",
-            message: "Form 137 request submitted successfully",
+            status: "submitted",
             submittedAt: "2025-01-11T21:52:11.000Z",
+            updatedAt: "2025-01-11T21:52:11.000Z",
+            notes: "Request for urgent processing.",
           },
         },
       })
@@ -96,7 +97,7 @@ describe("Form137 API Pact Tests", () => {
 
       expect(response.success).toBe(true)
       expect(response.ticketNumber).toBe("REQ-2025-00123")
-      expect(response.message).toBe("Form 137 request submitted successfully")
+      expect(response.message).toBe("Request for urgent processing.")
       expect(response.submittedAt).toBe("2025-01-11T21:52:11.000Z")
     })
 
@@ -151,10 +152,11 @@ describe("Form137 API Pact Tests", () => {
             "Content-Type": "application/json",
           },
           body: {
-            success: true,
             ticketNumber: "REQ-2025-00124",
-            message: "Form 137 request submitted successfully",
+            status: "submitted",
             submittedAt: "2025-01-11T21:52:11.000Z",
+            updatedAt: "2025-01-11T21:52:11.000Z",
+            notes: "Request for urgent processing.",
           },
         },
       })
@@ -163,6 +165,7 @@ describe("Form137 API Pact Tests", () => {
 
       expect(response.success).toBe(true)
       expect(response.ticketNumber).toBe("REQ-2025-00124")
+      expect(response.message).toBe("Request for urgent processing.")
     })
 
     test("should handle validation errors from API", async () => {
