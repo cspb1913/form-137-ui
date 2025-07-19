@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_FORM137_API_URL
+  process.env.NEXT_PUBLIC_FORM137_API_URL || ""
 
 export interface DashboardStats {
   totalRequests: number
@@ -41,14 +41,21 @@ export interface Document {
   uploadedAt: string
 }
 
-class DashboardApiService {
+export class DashboardAPI {
+  private baseUrl: string
+
+  constructor(baseUrl: string = API_BASE_URL) {
+    this.baseUrl = baseUrl
+  }
+
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`
+    const url = `${this.baseUrl}${endpoint}`
 
     const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         ...options.headers,
       },
     })
@@ -60,20 +67,36 @@ class DashboardApiService {
     return response.json()
   }
 
-  async getDashboardData(token: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
-    return this.makeRequest("/api/dashboard/requests", {
+  async getDashboardData(token: string): Promise<{
+    requests: FormRequest[]
+    statistics: DashboardStats
+    stats: DashboardStats
+  }> {
+    const data = await this.makeRequest<{
+      requests: FormRequest[]
+      statistics: DashboardStats
+    }>("/api/dashboard/requests", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    return { ...data, stats: data.statistics }
+  }
+
+  async getRequestDetails(id: string, token: string): Promise<FormRequest> {
+    return this.makeRequest(`/api/dashboard/request/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
   }
 
+  /**
+   * @deprecated Use getRequestDetails instead
+   */
   async getRequestById(id: string, token: string): Promise<FormRequest> {
-    return this.makeRequest(`/api/dashboard/request/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    return this.getRequestDetails(id, token)
   }
 
   async addComment(requestId: string, message: string, token: string): Promise<Comment> {
@@ -97,4 +120,4 @@ class DashboardApiService {
   }
 }
 
-export const dashboardApi = new DashboardApiService()
+export const dashboardApi = new DashboardAPI()
