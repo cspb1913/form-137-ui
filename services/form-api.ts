@@ -71,9 +71,6 @@ export class FormApiService {
     const response = await fetch(`${this.baseUrl}/api/form137/submit`, {
       method: "POST",
       body: formDataPayload,
-      headers: {
-        Accept: "application/json",
-      },
     })
 
     if (!response.ok) {
@@ -91,11 +88,7 @@ export class FormApiService {
     updatedAt: string
     notes?: string
   }> {
-    const response = await fetch(`${this.baseUrl}/api/form137/status/${ticketNumber}`, {
-      headers: {
-        Accept: "application/json",
-      },
-    })
+    const response = await fetch(`${this.baseUrl}/api/form137/status/${ticketNumber}`)
 
     if (!response.ok) {
       const errorData: ApiError = await response.json()
