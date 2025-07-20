@@ -1,4 +1,10 @@
-export type RequestStatus = "submitted" | "processing" | "completed" | "rejected"
+export type RequestStatus =
+  | "submitted"
+  | "processing"
+  | "completed"
+  | "rejected"
+  | "requires-clarification"
+  | "ready-for-pickup"
 export type Priority = "low" | "normal" | "high"
 export type PaymentStatus = "pending" | "paid" | "refunded"
 

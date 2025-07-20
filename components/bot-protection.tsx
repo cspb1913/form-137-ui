@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Shield, AlertTriangle, X } from "lucide-react"
-import { useBotID } from "./botid-provider"
+import { useBotID } from "@/components/botid-provider"
 
 interface BotProtectionProps {
   children: React.ReactNode
