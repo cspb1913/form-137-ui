@@ -46,13 +46,38 @@ export class DashboardAPI {
   constructor(baseUrl: string = DEFAULT_BASE_URL) {
     this.baseUrl = baseUrl
   }
-
+  private transformRequest(data: any): FormRequest {
+    return {
+      id: data.id,
+      ticketNumber: data.ticketNumber,
+      studentName: data.learnerName,
+      studentId: data.learnerReferenceNumber,
+      email: data.requesterEmail,
+      phoneNumber: data.requesterPhoneNumber ?? "",
+      graduationYear: data.graduationYear ?? "",
+      program: data.requestType ?? "",
+      purpose: data.purpose ?? "",
+      deliveryMethod: (data.deliveryMethod || "").toLowerCase(),
+      deliveryAddress: data.deliveryAddress ?? undefined,
+      status: data.status,
+      submittedAt: data.submittedDate,
+      updatedAt: data.updatedDate ?? data.submittedDate,
+      comments: (data.comments || []).map((c: any) => ({
+        id: c.id ?? "",
+        message: c.message,
+        author: c.registrarName ?? "",
+        createdAt: c.timestamp,
+      })),
+      documents: data.documents ?? [],
+    }
+  }
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
 
     const response = await fetch(url, {
       ...options,
       headers: {
+        Accept: "application/json",
         "Content-Type": "application/json",
         ...options.headers,
       },
@@ -72,29 +97,9 @@ export class DashboardAPI {
       },
     })
 
-    const requests: FormRequest[] = (data.requests || []).map((r: any) => ({
-      id: r.id,
-      ticketNumber: r.ticketNumber,
-      studentName: r.learnerName,
-      studentId: r.learnerReferenceNumber,
-      email: r.requesterEmail,
-      phoneNumber: r.requesterPhoneNumber ?? "",
-      graduationYear: r.graduationYear ?? "",
-      program: r.requestType ?? "",
-      purpose: r.purpose ?? "",
-      deliveryMethod: (r.deliveryMethod || "").toLowerCase(),
-      deliveryAddress: r.deliveryAddress ?? undefined,
-      status: r.status,
-      submittedAt: r.submittedDate,
-      updatedAt: r.updatedDate ?? r.submittedDate,
-      comments: (r.comments || []).map((c: any) => ({
-        id: c.id ?? "",
-        message: c.message,
-        author: c.registrarName ?? "",
-        createdAt: c.timestamp,
-      })),
-      documents: r.documents ?? [],
-    }))
+    const requests: FormRequest[] = (data.requests || []).map((r: any) =>
+      this.transformRequest(r),
+    )
 
     const stats: DashboardStats = {
       totalRequests: data.statistics?.totalRequests ?? 0,
@@ -107,11 +112,17 @@ export class DashboardAPI {
   }
 
   async getRequestById(id: string, token: string): Promise<FormRequest> {
-    return this.makeRequest(`/api/dashboard/request/${id}`, {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
+    return this.transformRequest(data)
+  }
+
+  // Alias for backwards compatibility with older tests
+  async getRequestDetails(id: string, token: string): Promise<FormRequest> {
+    return this.getRequestById(id, token)
   }
 
   async addComment(requestId: string, message: string, token: string): Promise<Comment> {

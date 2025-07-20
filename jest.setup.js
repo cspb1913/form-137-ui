@@ -5,7 +5,23 @@ import "@testing-library/jest-dom"
 
 // Mock Auth0 module to avoid ESM issues in tests
 jest.mock("@auth0/nextjs-auth0")
-jest.mock("@/components/botid-provider")
+jest.mock("@/components/botid-provider", () => ({
+  BotIDProvider: ({ children }) => children,
+  useBotID: () => ({
+    isBot: false,
+    botType: null,
+    confidence: 0,
+    isLoading: false,
+    trackActivity: jest.fn(),
+  }),
+}))
+jest.mock("@/hooks/use-current-user", () => ({
+  useCurrentUser: jest.fn(() => ({
+    user: undefined,
+    isLoading: false,
+    isError: false,
+  })),
+}))
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
