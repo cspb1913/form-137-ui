@@ -1,14 +1,12 @@
 import { render, screen } from "@testing-library/react"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import * as currentUserHook from "@/hooks/use-current-user"
 import { useRouter } from "next/navigation"
 import { LoginPrompt } from "@/components/login-prompt"
 import { TopNavigation } from "@/components/top-navigation"
 import { jest } from "@jest/globals"
 
 // Mock our custom user hook
-jest.mock("@/hooks/use-current-user", () => ({
-  useCurrentUser: jest.fn(),
-}))
+jest.mock("@/hooks/use-current-user")
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
@@ -16,7 +14,7 @@ jest.mock("next/navigation", () => ({
   usePathname: jest.fn(() => "/"),
 }))
 
-const mockUseCurrentUser = useCurrentUser as jest.MockedFunction<typeof useCurrentUser>
+const mockUseCurrentUser = currentUserHook.useCurrentUser as jest.MockedFunction<typeof currentUserHook.useCurrentUser>
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>
 
 describe("Authentication Components", () => {

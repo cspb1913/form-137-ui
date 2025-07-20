@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { FileUpload } from "./file-upload"
 import { type FormData, type FormErrors, validateForm } from "@/lib/validation"
 import { formApiService, type FormSubmissionRequest } from "@/services/form-api"
-import { useBotID } from "./botid-provider"
+import { useBotID } from "@/components/botid-provider"
 import { trackFormSubmission } from "@/lib/botid"
 
 interface RequestForm137Props {

@@ -31,7 +31,7 @@ describe("SuccessPage Component", () => {
     )
 
     expect(screen.getByText("Request Submitted Successfully!")).toBeInTheDocument()
-    expect(screen.getByText(data.ticketNumber)).toBeInTheDocument()
+    expect(screen.getAllByText(data.ticketNumber).length).toBeGreaterThan(0)
     expect(screen.getByText(data.learnerName)).toBeInTheDocument()
   })
 

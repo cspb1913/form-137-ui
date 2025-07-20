@@ -10,6 +10,9 @@ jest.mock("@/hooks/use-toast", () => ({
   }),
 }))
 
+// Mock bot detection provider to avoid context errors
+jest.mock("@/components/botid-provider")
+
 describe("RequestForm137 Component", () => {
   const mockOnSuccess = jest.fn()
 
