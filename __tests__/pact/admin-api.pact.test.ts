@@ -2,6 +2,17 @@ import { Pact } from "@pact-foundation/pact"
 import { like, eachLike } from "@pact-foundation/pact/src/dsl/matchers"
 import { DashboardAPI } from "../../services/dashboard-api"
 
+/**
+ * Admin API Pact Tests
+ * 
+ * This file contains pact consumer tests specifically for admin functionality.
+ * Admin users have broader access compared to regular users - they can view all
+ * form 137 requests across the system, not just their own submissions.
+ * 
+ * These tests validate that admin authentication tokens provide access to 
+ * admin-level endpoints and return appropriate data structures.
+ */
+
 const provider = new Pact({
   consumer: "Form137Frontend",
   provider: "AdminAPI",
