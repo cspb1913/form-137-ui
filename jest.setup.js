@@ -5,27 +5,39 @@ import "@testing-library/jest-dom"
 
 // Mock Auth0 module to avoid ESM issues in tests
 jest.mock("@auth0/nextjs-auth0")
-jest.mock("@/components/botid-provider")
+jest.mock("@/components/botid-provider", () => ({
+  BotIDProvider: ({ children }) => children,
+  useBotID: () => ({
+    isBot: false,
+    botType: null,
+    confidence: 0,
+    isLoading: false,
+    trackActivity: jest.fn(),
+  }),
+}))
+jest.mock("@/hooks/use-current-user", () => ({
+  useCurrentUser: jest.fn(() => ({
+    user: undefined,
+    isLoading: false,
+    isError: false,
+  })),
+}))
 
 // Mock Next.js router
-jest.mock("next/navigation", () => ({
-  useRouter() {
-    return {
+jest.mock("next/navigation", () => {
+  return {
+    useRouter: jest.fn(() => ({
       push: jest.fn(),
       replace: jest.fn(),
       prefetch: jest.fn(),
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    }
-  },
-  useSearchParams() {
-    return new URLSearchParams()
-  },
-  usePathname() {
-    return ""
-  },
-}))
+    })),
+    useSearchParams: jest.fn(() => new URLSearchParams()),
+    usePathname: jest.fn(() => ""),
+  }
+})
 
 // Mock file reading
 global.FileReader = class {

@@ -32,6 +32,18 @@ export function StatusBadge({ status }: StatusBadgeProps) {
           variant: "secondary" as const,
           className: "bg-red-100 text-red-800 hover:bg-red-100",
         }
+      case "requires-clarification":
+        return {
+          label: "Requires Clarification",
+          variant: "secondary" as const,
+          className: "bg-red-100 text-red-800 hover:bg-red-100",
+        }
+      case "ready-for-pickup":
+        return {
+          label: "Ready for Pickup",
+          variant: "secondary" as const,
+          className: "bg-purple-100 text-purple-800 hover:bg-purple-100",
+        }
       default:
         return {
           label: "Unknown",

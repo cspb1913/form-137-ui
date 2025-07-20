@@ -135,8 +135,7 @@ export function SuccessPage({ submissionData, onBackToForm, onGoToDashboard }: S
               <div>
                 <h4 className="font-medium text-gray-900">Track Your Request</h4>
                 <p className="text-sm text-gray-600">
-                  Use your ticket number <strong>{submissionData.ticketNumber}</strong> to track the status of your
-                  request.
+                  Use your ticket number to track the status of your request.
                 </p>
               </div>
             </div>
