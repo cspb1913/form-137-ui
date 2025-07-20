@@ -90,4 +90,102 @@ describe("Admin API Pact Tests", () => {
       expect(result.stats.totalRequests).toBeGreaterThan(0)
     })
   })
+
+  describe("PATCH /api/dashboard/request/:id/status - Admin Update", () => {
+    beforeEach(() => {
+      return provider.addInteraction({
+        state: "admin can update any request status",
+        uponReceiving: "a request to update request status from admin",
+        withRequest: {
+          method: "PATCH",
+          path: "/api/dashboard/request/req_001/status",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: like("Bearer admin_token123"),
+          },
+          body: {
+            status: like("completed"),
+          },
+        },
+        willRespondWith: {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            id: like("req_001"),
+            ticketNumber: like("REQ-2025-00001"),
+            learnerName: like("Juan Dela Cruz"),
+            learnerReferenceNumber: like("123456789012"),
+            status: like("completed"),
+            submittedDate: like("2025-01-15T10:30:00Z"),
+            estimatedCompletion: like("2025-01-22T17:00:00Z"),
+            requestType: like("Original Copy"),
+            deliveryMethod: like("pickup"),
+            requesterName: like("Maria Dela Cruz"),
+            requesterEmail: like("maria@email.com"),
+            comments: eachLike({
+              id: like("comment_001"),
+              message: like("Request completed and ready for pickup"),
+              registrarName: like("Ms. Santos"),
+              timestamp: like("2025-01-15T10:35:00Z"),
+              type: like("info"),
+              requiresResponse: like(false),
+            }),
+          },
+        },
+      })
+    })
+
+    it("should allow admin to update request status", async () => {
+      const adminAPI = new DashboardAPI("http://localhost:1236")
+      const result = await adminAPI.updateRequestStatus("req_001", "completed", "admin_token123")
+
+      expect(result).toHaveProperty("id", "req_001")
+      expect(result).toHaveProperty("status", "completed")
+    })
+  })
+
+  describe("POST /api/dashboard/request/:id/comment - Admin Comment", () => {
+    beforeEach(() => {
+      return provider.addInteraction({
+        state: "admin can add comments to any request",
+        uponReceiving: "a request to add admin comment",
+        withRequest: {
+          method: "POST",
+          path: "/api/dashboard/request/req_001/comment",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: like("Bearer admin_token123"),
+          },
+          body: {
+            message: like("Request has been processed and is ready for pickup"),
+          },
+        },
+        willRespondWith: {
+          status: 201,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            id: like("comment_002"),
+            message: like("Request has been processed and is ready for pickup"),
+            author: like("Ms. Santos"),
+            createdAt: like("2025-01-16T14:30:00Z"),
+          },
+        },
+      })
+    })
+
+    it("should allow admin to add comments", async () => {
+      const adminAPI = new DashboardAPI("http://localhost:1236")
+      const result = await adminAPI.addComment("req_001", "Request has been processed and is ready for pickup", "admin_token123")
+
+      expect(result).toHaveProperty("id")
+      expect(result).toHaveProperty("message", "Request has been processed and is ready for pickup")
+      expect(result).toHaveProperty("author", "Ms. Santos")
+    })
+  })
 })
