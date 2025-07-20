@@ -24,20 +24,18 @@ jest.mock("@/hooks/use-current-user", () => ({
 }))
 
 // Mock Next.js router
-jest.mock("next/navigation", () => {
-  return {
-    useRouter: jest.fn(() => ({
-      push: jest.fn(),
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-      back: jest.fn(),
-      forward: jest.fn(),
-      refresh: jest.fn(),
-    })),
-    useSearchParams: jest.fn(() => new URLSearchParams()),
-    usePathname: jest.fn(() => ""),
-  }
-})
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn().mockReturnValue({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  }),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  usePathname: jest.fn(() => ""),
+}))
 
 // Mock file reading
 global.FileReader = class {
