@@ -9,107 +9,73 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
 
 const statusOptions = ["Pending", "Processing", "Completed", "Rejected"]
 
-interface RequestDetail {
-  ticketNumber: string
-  learnerReferenceNumber: string
-  requesterName: string
-  status: string
-  submittedAt: string
-  comments?: string
-}
-
 export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: string }) {
-  const [detail, setDetail] = useState<RequestDetail | null>(null)
+  const [detail, setDetail] = useState<FormRequest | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<RequestStatus>("submitted")
   const [comments, setComments] = useState("")
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
-  const { user, isLoading: userLoading } = useCurrentUser()
+  const { user, isLoading: userLoading } = useUser()
 
   useEffect(() => {
     if (userLoading) return
     
     async function loadRequest() {
       try {
-        // TODO: Get proper auth token for API call
-        // For now, simulate a delay to show loading state
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // The external API requires authentication which is not set up yet
-        // In a real implementation, you would call:
-        // const requestDetail = await dashboardApi.getRequestById(ticketNumber, authToken)
-        
-        // For now, use mock data to demonstrate the intended behavior
-        const mockRequests = [
-          {
-            ticketNumber: "REQ-2025-00001",
-            learnerReferenceNumber: "123456789012",
-            requesterName: "John Doe",
-            status: "submitted",
-            submittedAt: "2025-01-15T10:30:00Z",
-            comments: "Initial submission"
-          },
-          {
-            ticketNumber: "REQ-2025-00002",
-            learnerReferenceNumber: "234567890123",
-            requesterName: "Jane Smith",
-            status: "processing",
-            submittedAt: "2025-01-14T14:20:00Z",
-            comments: "Processing started"
-          },
-          {
-            ticketNumber: "REQ-2025-00003",
-            learnerReferenceNumber: "345678901234",
-            requesterName: "Bob Johnson",
-            status: "completed",
-            submittedAt: "2025-01-13T09:15:00Z",
-            comments: "Request completed successfully"
-          },
-          {
-            ticketNumber: "REQ-2025-00004",
-            learnerReferenceNumber: "456789012345",
-            requesterName: "Alice Brown",
-            status: "rejected",
-            submittedAt: "2025-01-12T16:45:00Z",
-            comments: "Missing required documents"
+        setError(null)
+        if (user) {
+          const token = await getAccessToken({
+            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+          })
+          // Find the request by ticket number from the API
+          const { requests } = await dashboardApi.getDashboardData(token)
+          const requestDetail = requests.find(req => req.ticketNumber === ticketNumber)
+          
+          if (requestDetail) {
+            setDetail(requestDetail)
+            setStatus(requestDetail.status as RequestStatus)
+            // Use the latest comment if any
+            const latestComment = requestDetail.comments[requestDetail.comments.length - 1]
+            setComments(latestComment?.message || "")
+          } else {
+            setError("Request not found.")
           }
-        ]
-        
-        const requestDetail = mockRequests.find(req => req.ticketNumber === ticketNumber)
-        if (requestDetail) {
-          setDetail(requestDetail)
-          // Map status string to RequestStatus type
-          const statusValue = ["submitted", "processing", "completed", "rejected"].includes(requestDetail.status)
-            ? (requestDetail.status as RequestStatus)
-            : "submitted"
-          setStatus(statusValue)
-          setComments(requestDetail.comments || "")
         }
       } catch (error) {
         console.error('Failed to load request:', error)
+        setError('Failed to load request. Please try again.')
       } finally {
         setLoading(false)
       }
     }
     
     loadRequest()
-  }, [ticketNumber, userLoading])
+  }, [ticketNumber, userLoading, user])
 
   const handleSave = async () => {
+    if (!detail || !user) return
+    
     setSaving(true)
     try {
-      // TODO: Get proper auth token for API call
-      // In a real implementation, you would call:
-      // await dashboardApi.updateRequestStatus(detail.id, status, authToken)
-      // await dashboardApi.addComment(detail.id, comments, authToken)
+      const token = await getAccessToken({
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+      })
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Update status if changed
+      if (status !== detail.status) {
+        await dashboardApi.updateRequestStatus(detail.id, status, token)
+      }
+      
+      // Add comment if provided
+      if (comments.trim()) {
+        await dashboardApi.addComment(detail.id, comments, token)
+      }
       
       toast({ title: "Saved", description: "Request updated successfully." })
     } catch (err) {
@@ -120,6 +86,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
   }
 
   if (loading) return <div className="text-center py-12">Loading request...</div>
+  if (error) return <div className="text-center py-12 text-red-500">{error}</div>
   if (!detail) return <div className="text-center py-12 text-red-500">Request not found.</div>
 
   // Ensure status is a valid RequestStatus for StatusBadge
@@ -139,9 +106,14 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <div className="font-semibold">Requester:</div>
-            <div>{detail.requesterName}</div>
-            <div className="text-xs text-gray-500">LRN: {detail.learnerReferenceNumber}</div>
+            <div className="font-semibold">Student:</div>
+            <div>{detail.studentName}</div>
+            <div className="text-xs text-gray-500">Student ID: {detail.studentId}</div>
+          </div>
+          <div>
+            <div className="font-semibold">Contact:</div>
+            <div>{detail.email}</div>
+            <div className="text-xs text-gray-500">Phone: {detail.phoneNumber}</div>
           </div>
         </div>
         <div>
