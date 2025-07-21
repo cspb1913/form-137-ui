@@ -1,11 +1,13 @@
 "use client"
 export const dynamic = "force-dynamic"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
+import { isAdmin, isRequester } from "@/lib/auth-utils"
 
 export default function HomePage() {
   const { user, isLoading } = useCurrentUser()
@@ -18,6 +20,18 @@ export default function HomePage() {
   const handleViewRequest = (requestId: string) => {
     router.push(`/dashboard/request/${requestId}`)
   }
+
+  // Role-based redirect logic
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (isAdmin(user)) {
+        // Admin users should be redirected to /admin
+        router.replace("/admin")
+        return
+      }
+      // Requester users stay on this page
+    }
+  }, [user, isLoading, router])
 
   if (isLoading) {
     return (
@@ -37,6 +51,23 @@ export default function HomePage() {
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
         <TopNavigation />
         <LoginPrompt />
+      </div>
+    )
+  }
+
+  // Only show dashboard if user is a requester
+  if (!isRequester(user)) {
+    // This case should not happen due to the redirect above, but just in case
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+        <TopNavigation />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <p className="text-lg text-gray-600">Redirecting...</p>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }

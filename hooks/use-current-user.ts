@@ -1,5 +1,5 @@
 import useSWR from "swr"
-import type { UserProfile } from "@auth0/nextjs-auth0"
+import type { UserWithRoles } from "@/types/user"
 
 async function fetcher(url: string) {
   const res = await fetch(url)
@@ -14,7 +14,7 @@ async function fetcher(url: string) {
 }
 
 export function useCurrentUser() {
-  const { data, error, isLoading } = useSWR<UserProfile | null>("/api/auth/me", fetcher)
+  const { data, error, isLoading } = useSWR<UserWithRoles | null>("/api/auth/me", fetcher)
 
   return {
     user: data,

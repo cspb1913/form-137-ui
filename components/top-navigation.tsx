@@ -13,8 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { FileText, LayoutDashboard, LogOut, User } from "lucide-react"
+import { FileText, LayoutDashboard, LogOut, User, Settings } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { isAdmin, isRequester } from "@/lib/auth-utils"
 
 export function TopNavigation() {
   const pathname = usePathname()
@@ -31,7 +32,7 @@ export function TopNavigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href={user && isAdmin(user) ? "/admin" : "/"} className="flex items-center space-x-2">
               <FileText className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold text-gray-900">Form 137 Portal</span>
             </Link>
@@ -42,26 +43,42 @@ export function TopNavigation() {
             {!isLoading && user && (
               <>
                 <div className="hidden md:flex items-center space-x-1">
-                  <Link href="/">
-                    <Button
-                      variant={isActive("/") ? "default" : "ghost"}
-                      size="sm"
-                      className="flex items-center space-x-2"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Button>
-                  </Link>
-                  <Link href="/request">
-                    <Button
-                      variant={isActive("/request") ? "default" : "ghost"}
-                      size="sm"
-                      className="flex items-center space-x-2"
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>New Request</span>
-                    </Button>
-                  </Link>
+                  {isRequester(user) && (
+                    <>
+                      <Link href="/">
+                        <Button
+                          variant={isActive("/") ? "default" : "ghost"}
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          <span>Dashboard</span>
+                        </Button>
+                      </Link>
+                      <Link href="/request">
+                        <Button
+                          variant={isActive("/request") ? "default" : "ghost"}
+                          size="sm"
+                          className="flex items-center space-x-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>New Request</span>
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                  {isAdmin(user) && (
+                    <Link href="/admin">
+                      <Button
+                        variant={isActive("/admin") ? "default" : "ghost"}
+                        size="sm"
+                        className="flex items-center space-x-2"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Admin Panel</span>
+                      </Button>
+                    </Link>
+                  )}
                 </div>
 
                 <DropdownMenu>
@@ -78,6 +95,11 @@ export function TopNavigation() {
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.name}</p>
                         <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        {user.roles && user.roles.length > 0 && (
+                          <p className="text-xs leading-none text-blue-600 font-medium">
+                            {user.roles.join(", ")}
+                          </p>
+                        )}
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
