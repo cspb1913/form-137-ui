@@ -11,7 +11,26 @@ jest.mock("@/hooks/use-toast", () => ({
 }))
 
 // Mock bot detection provider to avoid context errors
-jest.mock("@/components/botid-provider")
+jest.mock("@/components/botid-provider", () => ({
+  useBotID: () => ({
+    isBot: false,
+    botType: null,
+    confidence: 0,
+    trackActivity: jest.fn(),
+  }),
+}))
+
+// Mock botid tracking
+jest.mock("@/lib/botid", () => ({
+  trackFormSubmission: jest.fn(),
+}))
+
+// Mock form API service
+jest.mock("@/services/form-api", () => ({
+  formApiService: {
+    submitForm: jest.fn(),
+  },
+}))
 
 describe("RequestForm137 Component", () => {
   const mockOnSuccess = jest.fn()
