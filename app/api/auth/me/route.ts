@@ -23,8 +23,13 @@ export async function GET() {
     let roles: string[] = []
 
     // Try to extract roles from various possible claim locations
+    // The order matters - try most specific first, then fall back to more general
     if (user['https://form137portal.com/roles']) {
       roles = user['https://form137portal.com/roles']
+    } else if (user['https://cspb-form-137-requestor.vercel.app/roles']) {
+      roles = user['https://cspb-form-137-requestor.vercel.app/roles']
+    } else if (user['https://v0-form-137.vercel.app/roles']) {
+      roles = user['https://v0-form-137.vercel.app/roles']
     } else if (user['roles']) {
       roles = user['roles']
     } else if (user['user_roles']) {
@@ -33,11 +38,33 @@ export async function GET() {
       roles = user['app_metadata'].roles
     } else if (user['user_metadata']?.roles) {
       roles = user['user_metadata'].roles
+    } else if (user['authorization']?.roles) {
+      roles = user['authorization'].roles
+    } else if (user['permissions']) {
+      // Sometimes roles are stored as permissions
+      roles = user['permissions']
     }
 
     // Ensure roles is always an array
     if (!Array.isArray(roles)) {
       roles = []
+    }
+
+    // Add debugging to help identify role retrieval issues
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Auth0 user role extraction debug:', {
+        userKeys: Object.keys(user),
+        customClaim: user['https://form137portal.com/roles'],
+        vercelClaim1: user['https://cspb-form-137-requestor.vercel.app/roles'],
+        vercelClaim2: user['https://v0-form-137.vercel.app/roles'],
+        directRoles: user['roles'],
+        userRoles: user['user_roles'],
+        appMetadata: user['app_metadata'],
+        userMetadata: user['user_metadata'],
+        authorization: user['authorization'],
+        permissions: user['permissions'],
+        extractedRoles: roles
+      })
     }
 
     // Default role assignment if no roles found

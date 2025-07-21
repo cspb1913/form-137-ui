@@ -7,7 +7,7 @@ import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { LoginPrompt } from "@/components/login-prompt"
-import { isAdmin, isRequester } from "@/lib/auth-utils"
+import { isAdmin, canAccessDashboard } from "@/lib/auth-utils"
 
 export default function HomePage() {
   const { user, isLoading } = useCurrentUser()
@@ -55,8 +55,8 @@ export default function HomePage() {
     )
   }
 
-  // Only show dashboard if user is a requester
-  if (!isRequester(user)) {
+  // Only show dashboard if user can access it
+  if (!canAccessDashboard(user)) {
     // This case should not happen due to the redirect above, but just in case
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">

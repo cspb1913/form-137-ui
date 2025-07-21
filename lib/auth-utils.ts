@@ -45,5 +45,7 @@ export function canAccessAdmin(user: UserWithRoles | null): boolean {
  * Check if a user can access the dashboard
  */
 export function canAccessDashboard(user: UserWithRoles | null): boolean {
-  return isRequester(user)
+  // Both requesters and admins should be able to access the dashboard
+  // Admins need to see what requesters see for oversight purposes
+  return isRequester(user) || isAdmin(user)
 }
