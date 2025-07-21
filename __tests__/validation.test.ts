@@ -11,13 +11,11 @@ describe("Form Validation", () => {
     lastSchoolYear: "SY 2020-2021",
     previousSchool: "Test School",
     purposeOfRequest: "College application",
-    deliveryMethod: "Pick-up",
+    deliveryMethod: "Email",
     requesterName: "John Doe",
     relationshipToLearner: "Self",
     emailAddress: "john@example.com",
     mobileNumber: "+639123456789",
-    validId: new File(["test"], "id.pdf", { type: "application/pdf" }),
-    authorizationLetter: null,
   }
 
   test("should pass validation with valid data", () => {
@@ -59,39 +57,6 @@ describe("Form Validation", () => {
     const data = { ...validFormData, mobileNumber: "123456789" }
     const errors = validateForm(data)
     expect(errors.mobileNumber).toBe("Please enter a valid Philippine mobile number")
-  })
-
-  test("should require valid ID file", () => {
-    const data = { ...validFormData, validId: null }
-    const errors = validateForm(data)
-    expect(errors.validId).toBe("Valid ID is required")
-  })
-
-  test("should validate file type for valid ID", () => {
-    const invalidFile = new File(["test"], "id.txt", { type: "text/plain" })
-    const data = { ...validFormData, validId: invalidFile }
-    const errors = validateForm(data)
-    expect(errors.validId).toBe("Please upload a PDF, JPG, or PNG file")
-  })
-
-  test("should require authorization letter for non-self relationships", () => {
-    const data = {
-      ...validFormData,
-      relationshipToLearner: "Parent/Guardian",
-      authorizationLetter: null,
-    }
-    const errors = validateForm(data)
-    expect(errors.authorizationLetter).toBe("Authorization Letter is required")
-  })
-
-  test("should not require authorization letter for self relationship", () => {
-    const data = {
-      ...validFormData,
-      relationshipToLearner: "Self",
-      authorizationLetter: null,
-    }
-    const errors = validateForm(data)
-    expect(errors.authorizationLetter).toBeUndefined()
   })
 })
 

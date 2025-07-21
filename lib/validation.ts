@@ -13,8 +13,6 @@ export interface FormData {
   relationshipToLearner: string
   emailAddress: string
   mobileNumber: string
-  validId: File | null
-  authorizationLetter: File | null
 }
 
 export interface FormErrors {
@@ -55,30 +53,6 @@ export const validateForm = (data: FormData): FormErrors => {
     errors.mobileNumber = "Mobile Number is required"
   } else if (!/^\+63\d{10}$/.test(data.mobileNumber)) {
     errors.mobileNumber = "Please enter a valid Philippine mobile number"
-  }
-
-  // File validations
-  if (!data.validId) {
-    errors.validId = "Valid ID is required"
-  } else {
-    const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-    if (!validTypes.includes(data.validId.type)) {
-      errors.validId = "Please upload a PDF, JPG, or PNG file"
-    } else if (data.validId.size > 5 * 1024 * 1024) {
-      errors.validId = "File size must be less than 5MB"
-    }
-  }
-
-  // Authorization letter validation (only if not self)
-  if (data.relationshipToLearner !== "Self" && !data.authorizationLetter) {
-    errors.authorizationLetter = "Authorization Letter is required"
-  } else if (data.authorizationLetter) {
-    const validTypes = ["application/pdf", "image/jpeg", "image/png"]
-    if (!validTypes.includes(data.authorizationLetter.type)) {
-      errors.authorizationLetter = "Please upload a PDF, JPG, or PNG file"
-    } else if (data.authorizationLetter.size > 5 * 1024 * 1024) {
-      errors.authorizationLetter = "File size must be less than 5MB"
-    }
   }
 
   return errors

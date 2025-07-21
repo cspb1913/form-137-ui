@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
-import { FileUpload } from "./file-upload"
 import { type FormData, type FormErrors, validateForm } from "@/lib/validation"
 import { formApiService, type FormSubmissionRequest } from "@/services/form-api"
 import { useBotID } from "@/components/botid-provider"
@@ -43,8 +42,6 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     relationshipToLearner: "",
     emailAddress: "",
     mobileNumber: "+63",
-    validId: null,
-    authorizationLetter: null,
   })
 
   const gradeOptions = [
@@ -65,7 +62,7 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     "Grade 12",
   ]
   const relationshipOptions = ["Self", "Parent/Guardian", "Authorized Representative"]
-  const deliveryOptions = ["Pick-up", "Courier"]
+  const deliveryOptions = ["Email", "Pick-up"]
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -92,23 +89,6 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       value = "+63" + value.replace(/^\+?63?/, "")
     }
     handleInputChange("mobileNumber", value)
-  }
-
-  const handleFileSelect = (field: "validId" | "authorizationLetter", file: File | null) => {
-    setFormData((prev) => ({ ...prev, [field]: file }))
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
-    }
-
-    // Track file upload activity
-    if (file) {
-      trackActivity("file_upload", {
-        field,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-      })
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,8 +132,27 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       // Track form submission attempt
       await trackFormSubmission(formData, { isBot, botType, confidence })
 
+      // Get current timestamp
+      const now = new Date().toISOString()
+
+      // Create learner name by combining first, middle, and last names
+      const learnerName = [formData.firstName, formData.middleName, formData.lastName]
+        .filter(Boolean)
+        .join(" ")
+
       // Prepare API request data
       const apiRequest: FormSubmissionRequest = {
+        status: "submitted",
+        submittedAt: now,
+        updatedAt: now,
+        notes: "Request for urgent processing.",
+        comments: [
+          {
+            author: "System",
+            message: "Form submitted successfully.",
+            timestamp: now,
+          }
+        ],
         learnerReferenceNumber: formData.learnerReferenceNumber,
         firstName: formData.firstName,
         middleName: formData.middleName || undefined,
@@ -164,12 +163,13 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
         previousSchool: formData.previousSchool,
         purposeOfRequest: formData.purposeOfRequest,
         deliveryMethod: formData.deliveryMethod,
+        estimatedCompletion: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+        requestType: "Form137",
+        learnerName: learnerName,
         requesterName: formData.requesterName,
         relationshipToLearner: formData.relationshipToLearner,
         emailAddress: formData.emailAddress,
         mobileNumber: formData.mobileNumber,
-        validId: formData.validId!,
-        authorizationLetter: formData.authorizationLetter || undefined,
       }
 
       // Submit to API
@@ -358,10 +358,9 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
                     <Input
                       id="lastSchoolYear"
                       type="text"
-                      placeholder="e.g., 2023"
-                      maxLength={4}
+                      placeholder="e.g., 2023-2024"
                       value={formData.lastSchoolYear}
-                      onChange={(e) => handleInputChange("lastSchoolYear", e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) => handleInputChange("lastSchoolYear", e.target.value)}
                       className={errors.lastSchoolYear ? "border-red-500" : ""}
                     />
                     {errors.lastSchoolYear && (
@@ -525,35 +524,6 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* File Upload Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                  Required Documents
-                </h3>
-
-                <FileUpload
-                  label="Upload Valid ID"
-                  required
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  maxSize={5 * 1024 * 1024}
-                  onFileSelect={(file) => handleFileSelect("validId", file)}
-                  error={errors.validId}
-                  file={formData.validId}
-                />
-
-                {formData.relationshipToLearner !== "Self" && (
-                  <FileUpload
-                    label="Upload Authorization Letter"
-                    required
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    maxSize={5 * 1024 * 1024}
-                    onFileSelect={(file) => handleFileSelect("authorizationLetter", file)}
-                    error={errors.authorizationLetter}
-                    file={formData.authorizationLetter}
-                  />
-                )}
               </div>
 
               {/* Submit Button */}
