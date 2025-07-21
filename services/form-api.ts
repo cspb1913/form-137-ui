@@ -1,4 +1,13 @@
 export interface FormSubmissionRequest {
+  status: string
+  submittedAt: string
+  updatedAt: string
+  notes: string
+  comments: Array<{
+    author: string
+    message: string
+    timestamp: string
+  }>
   learnerReferenceNumber: string
   firstName: string
   middleName?: string
@@ -9,12 +18,13 @@ export interface FormSubmissionRequest {
   previousSchool: string
   purposeOfRequest: string
   deliveryMethod: string
+  estimatedCompletion: string
+  requestType: string
+  learnerName: string
   requesterName: string
   relationshipToLearner: string
   emailAddress: string
   mobileNumber: string
-  validId: File
-  authorizationLetter?: File
 }
 
 export interface FormSubmissionResponse {
@@ -42,35 +52,12 @@ export class FormApiService {
   }
 
   async submitForm(formData: FormSubmissionRequest): Promise<FormSubmissionResponse> {
-    const formDataPayload = new FormData()
-
-    // Add all text fields
-    formDataPayload.append("learnerReferenceNumber", formData.learnerReferenceNumber)
-    formDataPayload.append("firstName", formData.firstName)
-    if (formData.middleName) {
-      formDataPayload.append("middleName", formData.middleName)
-    }
-    formDataPayload.append("lastName", formData.lastName)
-    formDataPayload.append("dateOfBirth", formData.dateOfBirth)
-    formDataPayload.append("lastGradeLevel", formData.lastGradeLevel)
-    formDataPayload.append("lastSchoolYear", formData.lastSchoolYear)
-    formDataPayload.append("previousSchool", formData.previousSchool)
-    formDataPayload.append("purposeOfRequest", formData.purposeOfRequest)
-    formDataPayload.append("deliveryMethod", formData.deliveryMethod)
-    formDataPayload.append("requesterName", formData.requesterName)
-    formDataPayload.append("relationshipToLearner", formData.relationshipToLearner)
-    formDataPayload.append("emailAddress", formData.emailAddress)
-    formDataPayload.append("mobileNumber", formData.mobileNumber)
-
-    // Add files
-    formDataPayload.append("validId", formData.validId)
-    if (formData.authorizationLetter) {
-      formDataPayload.append("authorizationLetter", formData.authorizationLetter)
-    }
-
     const response = await fetch(`${this.baseUrl}/api/form137/submit`, {
       method: "POST",
-      body: formDataPayload,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
     })
 
     if (!response.ok) {

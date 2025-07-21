@@ -32,7 +32,6 @@ describe("RequestForm137 Component", () => {
     expect(screen.getByText("Academic Information")).toBeInTheDocument()
     expect(screen.getByText("Request Details")).toBeInTheDocument()
     expect(screen.getByText("Requester Information")).toBeInTheDocument()
-    expect(screen.getByText("Required Documents")).toBeInTheDocument()
   })
 
   test("shows validation errors on empty form submission", async () => {

@@ -29,27 +29,35 @@ describe("Form137 API Pact Tests", () => {
 
   describe("Form Submission", () => {
     test("should successfully submit a complete form with all required fields", async () => {
-      // Create mock files
-      const validIdFile = new File(["mock-id-content"], "valid-id.pdf", { type: "application/pdf" })
-      const authLetterFile = new File(["mock-auth-content"], "auth-letter.pdf", { type: "application/pdf" })
-
       const formData: FormSubmissionRequest = {
+        status: "submitted",
+        submittedAt: "2025-01-11T21:52:11.000Z",
+        updatedAt: "2025-01-11T21:52:11.000Z",
+        notes: "Request for urgent processing.",
+        comments: [
+          {
+            author: "System",
+            message: "Form submitted successfully.",
+            timestamp: "2025-01-11T21:52:11.000Z",
+          }
+        ],
         learnerReferenceNumber: "123456789012",
         firstName: "Juan",
         middleName: "Santos",
         lastName: "Dela Cruz",
         dateOfBirth: "2000-01-15",
         lastGradeLevel: "Grade 12",
-        lastSchoolYear: "2023",
+        lastSchoolYear: "2023-2024",
         previousSchool: "Manila High School",
         purposeOfRequest: "College application requirements",
-        deliveryMethod: "Pick-up",
+        deliveryMethod: "Email",
+        estimatedCompletion: "2025-01-20",
+        requestType: "Form137",
+        learnerName: "Juan Santos Dela Cruz",
         requesterName: "Maria Dela Cruz",
         relationshipToLearner: "Parent/Guardian",
         emailAddress: "maria.delacruz@email.com",
         mobileNumber: "+639123456789",
-        validId: validIdFile,
-        authorizationLetter: authLetterFile,
       }
 
       await mockProvider.addInteraction({
@@ -59,24 +67,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
-            "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary",
+            "Content-Type": "application/json",
           },
-          body: {
-            learnerReferenceNumber: "123456789012",
-            firstName: "Juan",
-            middleName: "Santos",
-            lastName: "Dela Cruz",
-            dateOfBirth: "2000-01-15",
-            lastGradeLevel: "Grade 12",
-            lastSchoolYear: "2023",
-            previousSchool: "Manila High School",
-            purposeOfRequest: "College application requirements",
-            deliveryMethod: "Pick-up",
-            requesterName: "Maria Dela Cruz",
-            relationshipToLearner: "Parent/Guardian",
-            emailAddress: "maria.delacruz@email.com",
-            mobileNumber: "+639123456789",
-          },
+          body: formData,
         },
         willRespondWith: {
           status: 201,
@@ -102,23 +95,34 @@ describe("Form137 API Pact Tests", () => {
     })
 
     test("should successfully submit form for self-requester without authorization letter", async () => {
-      const validIdFile = new File(["mock-id-content"], "valid-id.pdf", { type: "application/pdf" })
-
       const formData: FormSubmissionRequest = {
+        status: "submitted",
+        submittedAt: "2025-01-11T21:52:11.000Z",
+        updatedAt: "2025-01-11T21:52:11.000Z",
+        notes: "Request for urgent processing.",
+        comments: [
+          {
+            author: "System",
+            message: "Form submitted successfully.",
+            timestamp: "2025-01-11T21:52:11.000Z",
+          }
+        ],
         learnerReferenceNumber: "987654321098",
         firstName: "Anna",
         lastName: "Garcia",
         dateOfBirth: "1995-05-20",
         lastGradeLevel: "Grade 11",
-        lastSchoolYear: "2022",
+        lastSchoolYear: "2022-2023",
         previousSchool: "Quezon City High School",
         purposeOfRequest: "Job application",
-        deliveryMethod: "Courier",
+        deliveryMethod: "Email",
+        estimatedCompletion: "2025-01-20",
+        requestType: "Form137",
+        learnerName: "Anna Garcia",
         requesterName: "Anna Garcia",
         relationshipToLearner: "Self",
         emailAddress: "anna.garcia@email.com",
         mobileNumber: "+639987654321",
-        validId: validIdFile,
       }
 
       await mockProvider.addInteraction({
@@ -128,23 +132,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
-            "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary",
+            "Content-Type": "application/json",
           },
-          body: {
-            learnerReferenceNumber: "987654321098",
-            firstName: "Anna",
-            lastName: "Garcia",
-            dateOfBirth: "1995-05-20",
-            lastGradeLevel: "Grade 11",
-            lastSchoolYear: "2022",
-            previousSchool: "Quezon City High School",
-            purposeOfRequest: "Job application",
-            deliveryMethod: "Courier",
-            requesterName: "Anna Garcia",
-            relationshipToLearner: "Self",
-            emailAddress: "anna.garcia@email.com",
-            mobileNumber: "+639987654321",
-          },
+          body: formData,
         },
         willRespondWith: {
           status: 201,
@@ -169,23 +159,34 @@ describe("Form137 API Pact Tests", () => {
     })
 
     test("should handle validation errors from API", async () => {
-      const validIdFile = new File(["mock-id-content"], "valid-id.pdf", { type: "application/pdf" })
-
       const invalidFormData: FormSubmissionRequest = {
+        status: "submitted",
+        submittedAt: "2025-01-11T21:52:11.000Z",
+        updatedAt: "2025-01-11T21:52:11.000Z",
+        notes: "Request for urgent processing.",
+        comments: [
+          {
+            author: "System",
+            message: "Form submitted successfully.",
+            timestamp: "2025-01-11T21:52:11.000Z",
+          }
+        ],
         learnerReferenceNumber: "12345", // Invalid - too short
         firstName: "",
         lastName: "Test",
         dateOfBirth: "2000-01-01",
         lastGradeLevel: "Grade 12",
-        lastSchoolYear: "2023",
+        lastSchoolYear: "2023-2024",
         previousSchool: "Test School",
         purposeOfRequest: "Test purpose",
-        deliveryMethod: "Pick-up",
+        deliveryMethod: "Email",
+        estimatedCompletion: "2025-01-20",
+        requestType: "Form137",
+        learnerName: " Test", // Will be missing first name
         requesterName: "Test Requester",
         relationshipToLearner: "Self",
         emailAddress: "invalid-email",
         mobileNumber: "+639123456789",
-        validId: validIdFile,
       }
 
       await mockProvider.addInteraction({
@@ -195,23 +196,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
-            "Content-Type": "multipart/form-data; boundary=----formdata-pact-boundary",
+            "Content-Type": "application/json",
           },
-          body: {
-            learnerReferenceNumber: "12345",
-            firstName: "",
-            lastName: "Test",
-            dateOfBirth: "2000-01-01",
-            lastGradeLevel: "Grade 12",
-            lastSchoolYear: "2023",
-            previousSchool: "Test School",
-            purposeOfRequest: "Test purpose",
-            deliveryMethod: "Pick-up",
-            requesterName: "Test Requester",
-            relationshipToLearner: "Self",
-            emailAddress: "invalid-email",
-            mobileNumber: "+639123456789",
-          },
+          body: invalidFormData,
         },
         willRespondWith: {
           status: 400,
