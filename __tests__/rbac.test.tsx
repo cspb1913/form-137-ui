@@ -13,6 +13,16 @@ jest.mock("next/navigation", () => ({
   usePathname: jest.fn(() => "/"),
 }))
 
+// Mock Auth0 hooks used by AdminRequestList
+jest.mock("@auth0/nextjs-auth0", () => ({
+  useUser: jest.fn(() => ({
+    user: { name: "Admin User", email: "admin@test.com" },
+    isLoading: false,
+    error: undefined,
+  })),
+  getAccessToken: jest.fn().mockResolvedValue("mock-token"),
+}))
+
 // Mock SWR to prevent network requests
 jest.mock("swr", () => ({
   __esModule: true,
@@ -26,6 +36,35 @@ jest.mock("swr", () => ({
 // Mock the services that make API calls
 jest.mock("@/services/dashboard-api", () => ({
   getDashboardData: jest.fn(() => Promise.resolve({ stats: {} })),
+  dashboardApi: {
+    getDashboardData: jest.fn(() => Promise.resolve({
+      requests: [
+        {
+          id: "1",
+          ticketNumber: "REQ-2025-00001",
+          studentName: "John Doe",
+          studentId: "123456789012",
+          email: "john@test.com",
+          phoneNumber: "123-456-7890",
+          graduationYear: "2025",
+          program: "Computer Science",
+          purpose: "Job Application",
+          deliveryMethod: "email",
+          status: "submitted",
+          submittedAt: "2025-01-15T10:30:00Z",
+          updatedAt: "2025-01-15T10:30:00Z",
+          comments: [],
+          documents: []
+        }
+      ],
+      stats: {
+        totalRequests: 1,
+        pendingRequests: 1,
+        completedRequests: 0,
+        rejectedRequests: 0
+      }
+    })),
+  },
 }))
 
 // Mock components that aren't critical for RBAC testing
@@ -202,7 +241,9 @@ describe("Role-Based Access Control", () => {
 
       render(<AdminPage />)
 
-      expect(screen.getByTestId("admin-request-list")).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByTestId("admin-request-list")).toBeInTheDocument()
+      })
       expect(screen.getByText("Admin Requests")).toBeInTheDocument()
       expect(mockRouterReplace).not.toHaveBeenCalledWith("/unauthorized")
     })

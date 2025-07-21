@@ -50,7 +50,7 @@ export default function AdminRequestList() {
   }
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg" data-testid="admin-request-list">
       <CardHeader>
         <CardTitle className="text-xl font-bold">All Requests</CardTitle>
       </CardHeader>

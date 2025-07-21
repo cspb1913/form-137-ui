@@ -135,8 +135,12 @@ describe("Auth Utilities", () => {
       expect(canAccessDashboard(multiRoleUser)).toBe(true)
     })
 
-    it("returns false for non-requester users", () => {
-      expect(canAccessDashboard(adminUser)).toBe(false)
+    it("returns true for admin users", () => {
+      // Admin users should also be able to access the dashboard for oversight
+      expect(canAccessDashboard(adminUser)).toBe(true)
+    })
+
+    it("returns false for users with no valid roles", () => {
       expect(canAccessDashboard(noRolesUser)).toBe(false)
       expect(canAccessDashboard(undefinedRolesUser)).toBe(false)
       expect(canAccessDashboard(null)).toBe(false)
