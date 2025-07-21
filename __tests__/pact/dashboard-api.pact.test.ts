@@ -176,6 +176,62 @@ describe("Dashboard API Pact Tests", () => {
     })
   })
 
+  describe("PATCH /api/dashboard/request/:id/status", () => {
+    beforeEach(() => {
+      return provider.addInteraction({
+        state: "request exists and can be updated",
+        uponReceiving: "a request to update request status",
+        withRequest: {
+          method: "PATCH",
+          path: "/api/dashboard/request/req_001/status",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: like("Bearer token123"),
+          },
+          body: {
+            status: like("processing"),
+          },
+        },
+        willRespondWith: {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            id: like("req_001"),
+            ticketNumber: like("F137-2024-001"),
+            learnerName: like("Juan Dela Cruz"),
+            learnerReferenceNumber: like("123456789012"),
+            status: like("processing"),
+            submittedDate: like("2024-01-15T10:30:00Z"),
+            estimatedCompletion: like("2024-01-22T17:00:00Z"),
+            requestType: like("Original Copy"),
+            deliveryMethod: like("pickup"),
+            requesterName: like("Maria Dela Cruz"),
+            requesterEmail: like("maria@email.com"),
+            comments: eachLike({
+              id: like("comment_001"),
+              message: like("Your request has been received"),
+              registrarName: like("Ms. Santos"),
+              timestamp: like("2024-01-15T10:35:00Z"),
+              type: like("info"),
+              requiresResponse: like(false),
+            }),
+          },
+        },
+      })
+    })
+
+    it("should update request status", async () => {
+      const dashboardAPI = new DashboardAPI("http://localhost:1234")
+      const result = await dashboardAPI.updateRequestStatus("req_001", "processing", "token123")
+
+      expect(result).toHaveProperty("id", "req_001")
+      expect(result).toHaveProperty("status", "processing")
+    })
+  })
+
   describe("Error scenarios", () => {
     beforeEach(() => {
       return provider.addInteraction({

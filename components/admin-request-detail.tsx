@@ -11,7 +11,12 @@ import { useToast } from "@/hooks/use-toast"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
 
-const statusOptions = ["Pending", "Processing", "Completed", "Rejected"]
+const statusOptions = [
+  { label: "Pending", value: "pending" },
+  { label: "Processing", value: "processing" },
+  { label: "Completed", value: "completed" },
+  { label: "Rejected", value: "rejected" },
+]
 
 export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: string }) {
   const [detail, setDetail] = useState<FormRequest | null>(null)
@@ -124,7 +129,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((opt) => (
-                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
