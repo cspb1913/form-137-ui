@@ -25,7 +25,7 @@ export default function AdminPage() {
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace("/api/auth/login")
+      router.replace("/api/auth/login?returnTo=/admin")
     }
   }, [user, isLoading, router])
 
