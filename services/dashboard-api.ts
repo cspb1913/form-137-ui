@@ -136,13 +136,14 @@ export class DashboardAPI {
   }
 
   async updateRequestStatus(requestId: string, status: FormRequest["status"], token: string): Promise<FormRequest> {
-    return this.makeRequest(`/api/dashboard/request/${requestId}/status`, {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ status }),
     })
+    return this.transformRequest(data)
   }
 }
 
