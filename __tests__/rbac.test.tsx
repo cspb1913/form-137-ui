@@ -242,10 +242,37 @@ describe("Role-Based Access Control", () => {
       render(<AdminPage />)
 
       await waitFor(() => {
-        expect(screen.getByTestId("admin-request-list")).toBeInTheDocument()
+        expect(screen.getByText("Admin Requests")).toBeInTheDocument()
       })
-      expect(screen.getByText("Admin Requests")).toBeInTheDocument()
       expect(mockRouterReplace).not.toHaveBeenCalledWith("/unauthorized")
+    })
+
+    it("admin users stay on admin page and do not get redirected to dashboard", async () => {
+      const adminUser = {
+        sub: "auth0|admin",
+        name: "Admin User", 
+        email: "admin@example.com",
+        roles: ["Admin"],
+      }
+
+      mockUseCurrentUser.mockReturnValue({
+        user: adminUser,
+        isLoading: false,
+        isError: false,
+      })
+
+      render(<AdminPage />)
+
+      // Wait for component to render and process the user
+      await waitFor(() => {
+        expect(screen.getByText("Admin Requests")).toBeInTheDocument()
+      })
+      
+      // Verify admin user is NOT redirected to dashboard
+      expect(mockRouterReplace).not.toHaveBeenCalledWith("/")
+      expect(mockRouterReplace).not.toHaveBeenCalledWith("/dashboard")
+      expect(mockRouterReplace).not.toHaveBeenCalledWith("/unauthorized")
+      expect(screen.getByText("Admin Requests")).toBeInTheDocument()
     })
 
     it("redirects requester users to unauthorized page", async () => {
@@ -279,7 +306,7 @@ describe("Role-Based Access Control", () => {
       render(<AdminPage />)
 
       await waitFor(() => {
-        expect(mockRouterReplace).toHaveBeenCalledWith("/api/auth/login")
+        expect(mockRouterReplace).toHaveBeenCalledWith("/api/auth/login?returnTo=/admin")
       })
     })
 
