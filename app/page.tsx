@@ -59,18 +59,7 @@ export default function HomePage() {
   if (!canAccessDashboard(user)) {
     // Redirect users without valid roles to unauthorized page
     router.replace("/unauthorized")
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <TopNavigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <p className="text-lg text-gray-600">Redirecting...</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
+    return
   }
 
   return (
