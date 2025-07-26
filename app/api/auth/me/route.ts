@@ -67,12 +67,15 @@ export async function GET() {
       })
     }
 
-    // Default role assignment if no roles found
-    // This is a fallback for development/testing
+    // Log warning if no roles found - this indicates a configuration issue
     if (roles.length === 0) {
-      // For now, assign "Requester" as default role
-      // In production, this should be managed through Auth0 Role assignment
-      roles = ["Requester"]
+      console.warn('No roles found for user:', {
+        email: user.email,
+        sub: user.sub,
+        userKeys: Object.keys(user)
+      })
+      // Don't assign default roles - let the application handle users without roles
+      // This prevents masking role configuration issues in Auth0
     }
 
     const userWithRoles = {

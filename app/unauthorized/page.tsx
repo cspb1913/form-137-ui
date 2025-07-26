@@ -20,7 +20,10 @@ export default function UnauthorizedPage() {
                 Access Denied
               </h1>
               <p className="text-gray-600 mb-6">
-                You are not authorized to access this page. This area is restricted to administrators only.
+                You are not authorized to access this page. This could be because:
+                <br />• You don't have the required role assigned
+                <br />• Your account needs to be configured by an administrator
+                <br />• You're trying to access admin features without admin privileges
               </p>
               <div className="space-y-3">
                 <Button asChild className="w-full">

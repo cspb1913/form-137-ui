@@ -55,9 +55,10 @@ export default function HomePage() {
     )
   }
 
-  // Only show dashboard if user can access it
+  // Handle users without proper roles
   if (!canAccessDashboard(user)) {
-    // This case should not happen due to the redirect above, but just in case
+    // Redirect users without valid roles to unauthorized page
+    router.replace("/unauthorized")
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
         <TopNavigation />
