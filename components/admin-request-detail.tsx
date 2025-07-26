@@ -12,10 +12,12 @@ import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
 
 const statusOptions = [
-  { label: "Pending", value: "pending" },
+  { label: "Submitted", value: "submitted" },
   { label: "Processing", value: "processing" },
   { label: "Completed", value: "completed" },
+  { label: "Ready for Pickup", value: "ready-for-pickup" },
   { label: "Rejected", value: "rejected" },
+  { label: "Requires Clarification", value: "requires-clarification" },
 ]
 
 export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: string }) {

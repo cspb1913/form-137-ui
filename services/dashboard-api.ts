@@ -19,7 +19,7 @@ export interface FormRequest {
   purpose: string
   deliveryMethod: "pickup" | "email" | "mail"
   deliveryAddress?: string
-  status: "pending" | "processing" | "completed" | "rejected"
+  status: "submitted" | "processing" | "completed" | "rejected" | "requires-clarification" | "ready-for-pickup"
   submittedAt: string
   updatedAt: string
   comments: Comment[]
