@@ -24,6 +24,9 @@ export async function GET() {
 
     // Try to extract roles from various possible claim locations
     // The order matters - try most specific first, then fall back to more general
+    const auth0BaseUrl = process.env.AUTH0_BASE_URL
+    const dynamicRolesClaim = auth0BaseUrl ? `${auth0BaseUrl}/roles` : null
+    
     if (user['https://form137portal.com/roles']) {
       roles = user['https://form137portal.com/roles']
     } else if (user['https://cspb-form-137-requestor.vercel.app/roles']) {
@@ -32,8 +35,8 @@ export async function GET() {
       roles = user['https://v0-form-137.vercel.app/roles']
     } else if (user['https://form-137-ui.vercel.app/roles']) {
       roles = user['https://form-137-ui.vercel.app/roles']
-    } else if (user['https://yourapp.com/roles']) {
-      roles = user['https://yourapp.com/roles']
+    } else if (dynamicRolesClaim && user[dynamicRolesClaim]) {
+      roles = user[dynamicRolesClaim]
     } else if (user['roles']) {
       roles = user['roles']
     } else if (user['user_roles']) {
@@ -80,6 +83,8 @@ export async function GET() {
       customClaim: user['https://form137portal.com/roles'],
       vercelClaim1: user['https://cspb-form-137-requestor.vercel.app/roles'],
       vercelClaim2: user['https://v0-form-137.vercel.app/roles'],
+      dynamicClaim: dynamicRolesClaim ? user[dynamicRolesClaim] : undefined,
+      dynamicClaimUrl: dynamicRolesClaim,
       directRoles: user['roles'],
       userRoles: user['user_roles'],
       appMetadata: user['app_metadata'],
