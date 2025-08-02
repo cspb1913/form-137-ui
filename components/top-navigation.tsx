@@ -97,7 +97,12 @@ export function TopNavigation() {
                         <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                         {user.roles && user.roles.length > 0 && (
                           <p className="text-xs leading-none text-blue-600 font-medium">
-                            {user.roles.join(", ")}
+                            Role: {user.roles.join(", ")}
+                          </p>
+                        )}
+                        {(!user.roles || user.roles.length === 0) && (
+                          <p className="text-xs leading-none text-red-500 font-medium">
+                            No roles assigned
                           </p>
                         )}
                       </div>
