@@ -119,7 +119,31 @@ describe("Authentication Components", () => {
       await user.click(avatarButton)
       
       // Check that the roles are displayed in the dropdown
-      expect(screen.getByText("Admin, Requester")).toBeInTheDocument()
+      expect(screen.getByText("Role: Admin, Requester")).toBeInTheDocument()
+    })
+
+    it("displays no roles message when user has no roles", async () => {
+      const user = userEvent.setup()
+      const mockUser = {
+        sub: "auth0|noRoles",
+        name: "No Roles User",
+        email: "noroles@example.com",
+        picture: "https://example.com/noroles-avatar.jpg",
+        roles: [],
+      }
+      mockUseCurrentUser.mockReturnValue({
+        user: mockUser,
+        isLoading: false,
+        isError: false,
+      })
+      render(<TopNavigation />)
+      
+      // Open the dropdown menu by clicking the avatar
+      const avatarButton = screen.getByRole("button", { expanded: false })
+      await user.click(avatarButton)
+      
+      // Check that the no roles message is displayed in the dropdown
+      expect(screen.getByText("No roles assigned")).toBeInTheDocument()
     })
 
     it("shows loading state", () => {
