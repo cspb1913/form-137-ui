@@ -1,0 +1,10 @@
+{
+  "sub": "auth0|no-roles-user-789",
+  "email": "noroles@university.edu",
+  "name": "No Roles User",
+  "nickname": "noroles",
+  "picture": "https://gravatar.com/avatar/noroles.jpg",
+  "roles": [],
+  "email_verified": true,
+  "updated_at": "2024-01-15T10:00:00.000Z"
+}

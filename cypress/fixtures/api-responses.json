@@ -1,0 +1,109 @@
+{
+  "dashboard": {
+    "emptyRequests": {
+      "requests": [],
+      "total": 0,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 0
+    },
+    "sampleRequests": {
+      "requests": [
+        {
+          "id": "req-001",
+          "ticketNumber": "F137-2024-001",
+          "studentName": "Alice Johnson",
+          "studentId": "2023-11111",
+          "program": "Computer Science",
+          "status": "pending",
+          "createdAt": "2024-01-15T08:00:00Z",
+          "updatedAt": "2024-01-15T08:00:00Z"
+        },
+        {
+          "id": "req-002",
+          "ticketNumber": "F137-2024-002",
+          "studentName": "Bob Smith",
+          "studentId": "2023-22222",
+          "program": "Information Technology",
+          "status": "processing",
+          "createdAt": "2024-01-14T10:30:00Z",
+          "updatedAt": "2024-01-15T09:15:00Z"
+        },
+        {
+          "id": "req-003",
+          "ticketNumber": "F137-2024-003",
+          "studentName": "Carol Davis",
+          "studentId": "2023-33333",
+          "program": "Software Engineering",
+          "status": "completed",
+          "createdAt": "2024-01-13T14:20:00Z",
+          "updatedAt": "2024-01-15T11:45:00Z"
+        }
+      ],
+      "total": 3,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  },
+  "requestSubmission": {
+    "success": {
+      "id": "req-new-001",
+      "ticketNumber": "F137-2024-NEW001",
+      "status": "pending",
+      "message": "Your Form 137 request has been submitted successfully.",
+      "estimatedProcessingTime": "3-5 business days"
+    },
+    "error": {
+      "error": "ValidationError",
+      "message": "Required fields are missing",
+      "details": [
+        "Student ID is required",
+        "Program is required",
+        "Valid email address is required"
+      ]
+    }
+  },
+  "adminRequests": {
+    "allRequests": {
+      "requests": [
+        {
+          "id": "req-001",
+          "ticketNumber": "F137-2024-001",
+          "studentName": "Alice Johnson",
+          "studentId": "2023-11111",
+          "program": "Computer Science",
+          "status": "pending",
+          "contactEmail": "alice.johnson@university.edu",
+          "contactPhone": "+639111111111",
+          "createdAt": "2024-01-15T08:00:00Z",
+          "updatedAt": "2024-01-15T08:00:00Z"
+        },
+        {
+          "id": "req-002",
+          "ticketNumber": "F137-2024-002",
+          "studentName": "Bob Smith",
+          "studentId": "2023-22222",
+          "program": "Information Technology",
+          "status": "processing",
+          "contactEmail": "bob.smith@university.edu",
+          "contactPhone": "+639222222222",
+          "createdAt": "2024-01-14T10:30:00Z",
+          "updatedAt": "2024-01-15T09:15:00Z"
+        }
+      ],
+      "total": 2,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  },
+  "statusUpdate": {
+    "success": {
+      "id": "req-001",
+      "ticketNumber": "F137-2024-001",
+      "status": "processing",
+      "message": "Status updated successfully"
+    }
+  }
+}

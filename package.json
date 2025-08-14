@@ -7,7 +7,21 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:chrome": "cypress run --browser chrome",
+    "cypress:run:firefox": "cypress run --browser firefox",
+    "cypress:run:edge": "cypress run --browser edge",
+    "cypress:run:headless": "cypress run --headless",
+    "cypress:run:record": "cypress run --record --key $CYPRESS_RECORD_KEY",
+    "test:e2e": "start-server-and-test dev 3000 'cypress run'",
+    "test:e2e:open": "start-server-and-test dev 3000 'cypress open'",
+    "test:e2e:ci": "start-server-and-test start 3000 'cypress run --headless --browser chrome'",
+    "test:all": "npm run test && npm run test:e2e",
+    "cypress:verify": "cypress verify",
+    "cypress:info": "cypress info"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "latest",
@@ -70,6 +84,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@cypress/code-coverage": "^3.14.5",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
     "@types/jest": "^30.0.0",
@@ -77,12 +92,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "cross-fetch": "^4.1.0",
+    "cypress": "^14.5.4",
     "eslint": "^9.32.0",
     "eslint-config-next": "^15.4.4",
     "jest": "latest",
     "jest-environment-jsdom": "^30.0.4",
     "node-fetch": "^3.3.2",
     "postcss": "^8.5",
+    "start-server-and-test": "^2.0.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

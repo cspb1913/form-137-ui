@@ -1,0 +1,84 @@
+{
+  "validRequest": {
+    "studentName": "Maria Santos",
+    "studentId": "2023-45678",
+    "graduationYear": "2023",
+    "program": "Bachelor of Science in Computer Science",
+    "purpose": "Employment Application",
+    "contactEmail": "maria.santos@university.edu",
+    "contactPhone": "+639123456789",
+    "additionalNotes": "Urgent request for overseas employment",
+    "documents": []
+  },
+  "incompleteRequest": {
+    "studentName": "John Doe",
+    "studentId": "",
+    "graduationYear": "2024",
+    "program": "",
+    "purpose": "Further Studies",
+    "contactEmail": "invalid-email",
+    "contactPhone": "123",
+    "additionalNotes": "",
+    "documents": []
+  },
+  "longFormData": {
+    "studentName": "Alexander Hamilton Washington Jefferson Roosevelt",
+    "studentId": "2024-99999",
+    "graduationYear": "2024",
+    "program": "Bachelor of Science in Information Technology with specialization in Software Development and Database Management",
+    "purpose": "Graduate School Application for Master of Science in Computer Science with focus on Artificial Intelligence and Machine Learning",
+    "contactEmail": "alexander.hamilton.washington.jefferson@universitynamewithlongnameexample.edu",
+    "contactPhone": "+63912345678901234",
+    "additionalNotes": "This is a very long additional notes section that contains detailed information about the request, including special circumstances, timeline requirements, delivery preferences, and other important details that the student wants to communicate to the registrar's office for proper handling of their Form 137 request.",
+    "documents": []
+  },
+  "validSubmission": {
+    "studentName": "Alice Marie Johnson",
+    "studentId": "2024-11111",
+    "graduationYear": "2024",
+    "program": "Bachelor of Science in Computer Science",
+    "purpose": "Employment Requirements - Software Developer Position",
+    "contactEmail": "alice.johnson@university.edu",
+    "contactPhone": "+639123456789",
+    "additionalNotes": "Requesting expedited processing for job application deadline."
+  },
+  "minimumRequiredFields": {
+    "studentName": "John Minimal",
+    "studentId": "2024-MIN001",
+    "graduationYear": "2024",
+    "program": "Information Technology",
+    "purpose": "Employment",
+    "contactEmail": "minimal@university.edu",
+    "contactPhone": "+639987654321"
+  },
+  "internationalStudent": {
+    "studentName": "José María González-López",
+    "studentId": "2024-INTL001",
+    "graduationYear": "2024",
+    "program": "Master of Science in Data Science",
+    "purpose": "Immigration Documents - Work Permit Application",
+    "contactEmail": "jose.maria@universidad.edu",
+    "contactPhone": "+34912345678",
+    "additionalNotes": "International student requiring certified transcripts for visa processing."
+  },
+  "specialCharacters": {
+    "studentName": "O'Connor, Patrick James-William",
+    "studentId": "2024-SPEC002",
+    "graduationYear": "2023",
+    "program": "Bachelor of Arts in English Literature",
+    "purpose": "Graduate School Application - Master's Program",
+    "contactEmail": "patrick.oconnor@university.edu",
+    "contactPhone": "+1-555-123-4567",
+    "additionalNotes": "Name contains apostrophe and hyphen - please ensure accurate transcription."
+  },
+  "graduateDegree": {
+    "studentName": "Dr. Sarah Michelle Rodriguez-Chen",
+    "studentId": "2021-GRAD004",
+    "graduationYear": "2021",
+    "program": "Master of Business Administration - Finance Concentration",
+    "purpose": "Career Advancement - Executive Position Application",
+    "contactEmail": "sarah.rodriguez-chen@alumni.university.edu",
+    "contactPhone": "+639456789012",
+    "additionalNotes": "Alumni requesting transcripts for C-level executive position. Please include honors and awards received during MBA program."
+  }
+}
