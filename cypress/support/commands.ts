@@ -6,6 +6,27 @@ interface LoginOptions {
   password?: string
   role?: 'admin' | 'requester'
   failOnStatusCode?: boolean
+  scope?: string
+  audience?: string
+}
+
+interface Auth0Tokens {
+  access_token: string
+  id_token: string
+  refresh_token?: string
+  expires_in: number
+}
+
+interface ClientCredentialsTokens {
+  access_token: string
+  token_type: string
+  expires_in: number
+  expires_at?: number
+}
+
+interface AuthOptions {
+  useClientCredentials?: boolean
+  useCachedToken?: boolean
 }
 
 interface UserFixture {
@@ -26,6 +47,92 @@ declare global {
        * @param options Login options including role-based credentials
        */
       loginByAuth0(options?: LoginOptions): Chainable<void>
+      
+      /**
+       * Authenticate using Auth0 Resource Owner Password Grant
+       * @param options Authentication options
+       */
+      auth0Login(options?: LoginOptions): Chainable<Auth0Tokens>
+      
+      /**
+       * Set Auth0 session state in browser
+       * @param tokens Auth0 tokens from authentication
+       */
+      auth0SetSession(tokens: Auth0Tokens): Chainable<void>
+      
+      /**
+       * Complete auth flow: authenticate and set session
+       * @param options Authentication options
+       */
+      auth0LoginAndSetSession(options?: LoginOptions): Chainable<Auth0Tokens>
+      
+      /**
+       * Clear Auth0 session and logout
+       */
+      auth0Logout(): Chainable<void>
+      
+      /**
+       * Authenticate using Auth0 Client Credentials Grant
+       * @param options Client credentials options
+       */
+      auth0ClientCredentials(options?: { audience?: string; useCache?: boolean }): Chainable<ClientCredentialsTokens>
+      
+      /**
+       * Make authenticated request to API using client credentials
+       * @param requestOptions Cypress request options
+       * @param authOptions Authentication options
+       */
+      authenticatedRequest(requestOptions: any, authOptions?: AuthOptions): Chainable<any>
+      
+      /**
+       * Make authenticated request using browser-stored token
+       * @param requestOptions Cypress request options
+       */
+      authenticatedRequestFromBrowser(requestOptions: any): Chainable<any>
+      
+      /**
+       * Clear token cache
+       */
+      clearTokenCache(): Chainable<void>
+      
+      /**
+       * Test API health endpoint with authentication
+       * @param options Request options
+       */
+      testAPIHealth(options?: { baseUrl?: string }): Chainable<any>
+      
+      /**
+       * Create Form 137 request via API
+       * @param requestData Request data
+       */
+      createForm137Request(requestData?: any): Chainable<any>
+      
+      /**
+       * Get Form 137 requests via API
+       * @param options Query options
+       */
+      getForm137Requests(options?: { page?: number; size?: number; [key: string]: any }): Chainable<any>
+      
+      /**
+       * Update Form 137 request status via API
+       * @param ticketNumber Ticket number
+       * @param newStatus New status
+       * @param notes Optional notes
+       */
+      updateForm137Status(ticketNumber: string, newStatus: string, notes?: string): Chainable<any>
+      
+      /**
+       * Make authenticated request to API (legacy)
+       * @param requestOptions Cypress request options
+       */
+      authenticatedApiRequest(requestOptions: any): Chainable<any>
+      
+      /**
+       * Visit page with authentication bypass
+       * @param url URL to visit
+       * @param options Authentication options
+       */
+      visitAuthenticated(url: string, options?: LoginOptions): Chainable<void>
       
       /**
        * Login as admin user

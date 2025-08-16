@@ -37,19 +37,22 @@ Create a `cypress.env.json` file in the project root or set environment variable
 
 ```json
 {
-  "API_BASE_URL": "https://f137-api.jason-test1-2d3fb824a69ea5c326974e87bbe5c52a-0000.jp-tok.containers.appdomain.cloud",
-  "AUTH0_DOMAIN": "your-auth0-domain.auth0.com",
-  "AUTH0_CLIENT_ID": "your-client-id",
-  "AUTH0_CLIENT_SECRET": "your-client-secret",
-  "AUTH0_AUDIENCE": "your-api-audience",
-  "AUTH0_ADMIN_USERNAME": "admin@test.com",
+  "API_BASE_URL": "http://localhost:8080/api",
+  "AUTH0_DOMAIN": "jasoncalalang.auth0.com",
+  "AUTH0_CLIENT_ID": "qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC",
+  "AUTH0_CLIENT_SECRET": "OSUSqi319Jj3ek80o0Rv7ILqriTaTUcZqS2vwtJDQ_-OlgpT1RiRBx8iAWJfahlN",
+  "AUTH0_AUDIENCE": "https://form137.cspb.edu.ph/api",
+  "AUTH0_ADMIN_USERNAME": "admin@cspb.edu.ph",
   "AUTH0_ADMIN_PASSWORD": "secure-admin-password",
-  "AUTH0_REQUESTER_USERNAME": "requester@test.com",
+  "AUTH0_REQUESTER_USERNAME": "requester@cspb.edu.ph",
   "AUTH0_REQUESTER_PASSWORD": "secure-requester-password",
   "SKIP_AUTH0_TESTS": false,
-  "COVERAGE": true
+  "COVERAGE": true,
+  "AUTH_METHOD": "client_credentials"
 }
 ```
+
+**Note**: The `AUTH0_CLIENT_SECRET` is required for client credentials authentication. This should be stored securely in production environments and never committed to version control.
 
 ### Required Dependencies
 
@@ -77,6 +80,11 @@ pnpm cypress:run:edge
 # Run with development server
 pnpm test:e2e:open    # Interactive with dev server
 pnpm test:e2e        # Headless with dev server
+
+# Run client credentials tests specifically
+./test-client-credentials.sh                    # Run with setup validation
+npx cypress run --spec "cypress/e2e/api/*"      # All API tests
+npx cypress run --spec "cypress/e2e/workflows/form-137-client-credentials-integration.cy.ts"  # Integration test
 ```
 
 ### CI/CD
@@ -142,6 +150,16 @@ pnpm cypress:run:record
 The test suite includes custom Cypress commands for common operations:
 
 ### Authentication Commands
+
+#### Client Credentials (Recommended for API Testing)
+```typescript
+cy.auth0ClientCredentials()                         // Get access token via client credentials
+cy.clearTokenCache()                                // Clear cached tokens
+cy.authenticatedRequest(requestOptions, authOptions) // Make authenticated API request
+cy.authenticatedRequestFromBrowser(requestOptions)   // Use browser-stored token
+```
+
+#### User Authentication (For UI Testing)
 ```typescript
 cy.loginByAuth0({ role: 'admin' })     // Login as admin user
 cy.loginAsAdmin()                      // Shorthand for admin login
@@ -154,7 +172,10 @@ cy.mockUserSession(userFixture)        // Mock authentication state
 ```typescript
 cy.fillForm137WithTestData(overrides)  // Fill Form 137 with test data
 cy.setupForm137Interceptors()          // Setup API mocks
-cy.authenticatedRequest(method, url)   // Make authenticated API request
+cy.createForm137Request(requestData)   // Create Form 137 request via API
+cy.getForm137Requests(options)         // Get Form 137 requests via API
+cy.updateForm137Status(ticket, status) // Update request status via API
+cy.testAPIHealth(options)              // Test API health endpoint
 cy.waitForApiResponse(alias)           // Wait for API response
 ```
 
@@ -193,11 +214,19 @@ Test data is stored in `fixtures/` directory:
 - Validate request/response data
 
 ### 4. Authentication Strategy
+- **Client Credentials**: Use for API testing - more reliable and faster
+- **User Authentication**: Use for UI testing that requires specific user context
 - Use `cy.session()` for efficient authentication caching
 - Mock authentication for faster test execution
 - Test both real Auth0 flows and mocked states
 
-### 5. Error Handling
+### 5. Client Credentials Testing
+- Use `cy.auth0ClientCredentials()` for reliable API authentication
+- Tokens are automatically cached for performance
+- No user interaction required - perfect for CI/CD
+- Works with any Auth0 Machine-to-Machine application
+
+### 6. Error Handling
 - Test error scenarios thoroughly
 - Verify user-friendly error messages
 - Check graceful degradation

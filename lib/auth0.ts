@@ -9,7 +9,7 @@ export const auth0 = new Auth0Client({
   },
   authorizationParams: {
     audience: process.env.AUTH0_AUDIENCE,
-    scope: "openid profile email",
+    scope: "openid profile email offline_access",
   },
   session: {
     rollingDuration: 24 * 60 * 60, // 24 hours

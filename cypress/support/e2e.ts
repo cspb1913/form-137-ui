@@ -1,5 +1,7 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
+// Import Auth0 programmatic authentication commands
+import './auth0Commands'
 
 // Import coverage plugin to support code coverage
 import '@cypress/code-coverage/support'
