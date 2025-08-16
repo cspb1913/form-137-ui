@@ -31,15 +31,24 @@ describe('Form 137 Submission Workflows', () => {
       cy.get('[data-cy="request-form"]').should('be.visible')
       cy.get('[data-cy="form-137-fields"]').should('be.visible')
       
-      // Fill out the form with test data
+      // Fill out the form with test data (PACT-compliant)
       cy.fillForm137WithTestData({
-        studentName: 'Alice Johnson',
-        studentId: '2024-11111',
-        graduationYear: '2024',
-        program: 'Bachelor of Science in Computer Science',
-        purpose: 'Employment Requirements - Software Developer Position',
-        contactEmail: 'alice.johnson@university.edu',
-        contactPhone: '+639123456789'
+        learnerReferenceNumber: '123456789012',
+        firstName: 'Alice',
+        middleName: 'Marie',
+        lastName: 'Johnson',
+        dateOfBirth: '2000-01-15',
+        lastGradeLevel: 'Grade 12',
+        lastSchoolYear: '2023-2024',
+        previousSchool: 'Manila High School',
+        purposeOfRequest: 'Employment Requirements - Software Developer Position',
+        deliveryMethod: 'Email',
+        requestType: 'Form137',
+        learnerName: 'Alice Marie Johnson',
+        requesterName: 'Alice Marie Johnson',
+        relationshipToLearner: 'Self',
+        emailAddress: 'alice.johnson@university.edu',
+        mobileNumber: '+639123456789'
       })
       
       // Submit the form
@@ -55,7 +64,7 @@ describe('Form 137 Submission Workflows', () => {
       
       // Verify success feedback
       cy.get('[data-cy="success-message"], [data-cy="toast-success"]').should('be.visible')
-      cy.get('[data-cy="ticket-number"]').should('be.visible').and('contain.text', 'F137-2024')
+      cy.get('[data-cy="ticket-number"]').should('be.visible').and('contain.text', 'REQ-2025')
     })
 
     it('should validate required fields before submission', () => {
@@ -65,9 +74,9 @@ describe('Form 137 Submission Workflows', () => {
       // Try to submit empty form
       cy.get('[data-cy="submit-button"]').should('be.disabled')
       
-      // Fill only some fields
-      cy.get('[data-cy="student-name"], input[name="studentName"]').type('Incomplete User')
-      cy.get('[data-cy="student-id"], input[name="studentId"]').type('2024-99999')
+      // Fill only some fields (PACT-compliant field names)
+      cy.get('[data-cy="first-name"], input[name="firstName"]').type('Incomplete')
+      cy.get('[data-cy="learner-reference-number"], input[name="learnerReferenceNumber"]').type('123456789012')
       
       // Submit button should still be disabled
       cy.get('[data-cy="submit-button"]').should('be.disabled')
@@ -83,8 +92,8 @@ describe('Form 137 Submission Workflows', () => {
       cy.visit('/request')
       cy.wait('@getRequesterUser')
       
-      // Enter invalid email
-      cy.get('[data-cy="contact-email"], input[name="contactEmail"], input[type="email"]')
+      // Enter invalid email (PACT-compliant field names)
+      cy.get('[data-cy="email-address"], input[name="emailAddress"], input[type="email"]')
         .should('be.visible')
         .type('invalid-email')
         .blur()
@@ -94,7 +103,7 @@ describe('Form 137 Submission Workflows', () => {
       cy.get('[data-cy="email-error"], .error-message').should('contain.text', 'valid email')
       
       // Enter invalid phone number
-      cy.get('[data-cy="contact-phone"], input[name="contactPhone"], input[type="tel"]')
+      cy.get('[data-cy="mobile-number"], input[name="mobileNumber"], input[type="tel"]')
         .should('be.visible')
         .clear()
         .type('123')
@@ -104,11 +113,11 @@ describe('Form 137 Submission Workflows', () => {
       cy.get('[data-cy="phone-error"], .error-message').should('be.visible')
       
       // Fix validation errors
-      cy.get('[data-cy="contact-email"], input[name="contactEmail"], input[type="email"]')
+      cy.get('[data-cy="email-address"], input[name="emailAddress"], input[type="email"]')
         .clear()
         .type('valid@university.edu')
       
-      cy.get('[data-cy="contact-phone"], input[name="contactPhone"], input[type="tel"]')
+      cy.get('[data-cy="mobile-number"], input[name="mobileNumber"], input[type="tel"]')
         .clear()
         .type('+639123456789')
       

@@ -2,6 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## GitHub CLI Configuration
+
+### Authentication
+The repository contains a `gh.key` file with a GitHub personal access token for authentication.
+
+```bash
+# Login to GitHub CLI using token from gh.key
+echo "$(cat gh.key)" | gh auth login --with-token
+
+# Verify authentication status
+gh auth status
+```
+
+**Current authenticated user**: jasoncalalang
+
+## GitHub Actions Management
+
+### Monitoring Workflows
+```bash
+# Check recent workflow runs for this repository
+gh run list --repo cspb1913/form-137-ui --limit 10
+
+# View detailed information about a specific run
+gh run view RUN_ID --repo cspb1913/form-137-ui
+
+# View failed logs from a workflow run
+gh run view RUN_ID --log-failed --repo cspb1913/form-137-ui
+
+# Re-run a failed workflow
+gh run rerun RUN_ID --repo cspb1913/form-137-ui
+```
+
+### Authentication Issues
+- Token stored in `gh.key` file
+- Full permissions available (admin, repo, workflow, etc.)
+- Protocol: HTTPS for Git operations
+
 ## Project Overview
 
 Form 137 Request Portal - A Next.js 15 application for managing student record requests with role-based access control via Auth0.
@@ -19,6 +56,23 @@ pnpm test:watch   # Run tests in watch mode
 node scripts/run-tests.js  # Run full test suite with coverage
 ```
 
+### Development Mode Options
+The application supports multiple development modes for different authentication scenarios:
+
+```bash
+# Standard development with Auth0 (default)
+pnpm dev
+
+# Development mode with Auth0 bypassed (mock authentication)
+NEXT_PUBLIC_DEV_MODE=true pnpm dev
+```
+
+#### Development Mode Features
+- **Standard Mode**: Full Auth0 integration for production-like testing
+- **Mock Mode**: Bypasses Auth0 authentication for rapid development
+- **Unified Auth Hook**: Single `useAuth()` hook works in both modes
+- **Automatic Switching**: Mode determined by `NEXT_PUBLIC_DEV_MODE` environment variable
+
 ### Testing Specific Files
 ```bash
 pnpm test -- path/to/test.tsx              # Run specific test file
@@ -28,6 +82,7 @@ pnpm test -- --updateSnapshot              # Update snapshots
 
 ### Cypress E2E Testing
 ```bash
+# Standard Testing (Production Mode)
 pnpm cypress:open                           # Open Cypress Test Runner (interactive)
 pnpm cypress:run                            # Run all E2E tests headless
 pnpm cypress:run:chrome                     # Run tests with Chrome browser
@@ -37,7 +92,20 @@ pnpm test:e2e:open                          # Interactive E2E tests with dev ser
 pnpm cypress:verify                         # Verify Cypress installation
 pnpm cypress:info                           # Get Cypress system info
 
-# Auth0 Integration Tests
+# Development Mode Testing (New)
+pnpm cypress:dev                            # Run dev-specific tests with mock auth
+pnpm cypress:dev:open                       # Open Cypress GUI in dev mode
+pnpm test:e2e:dev                           # Start server and run dev tests
+pnpm test:e2e:dev:open                      # Interactive dev tests with server
+pnpm cypress:prod                           # Force production mode tests
+
+# Environment-Specific Test Categories
+./cypress/scripts/run-enhanced-tests.sh dev dev         # Dev workflow tests
+./cypress/scripts/run-enhanced-tests.sh smoke dev       # Quick dev smoke tests
+./cypress/scripts/run-enhanced-tests.sh all prod        # Full production test suite
+./cypress/scripts/run-enhanced-tests.sh security prod   # Security-focused tests
+
+# Legacy Auth0 Integration Tests
 pnpm cypress:run:headless --spec "cypress/e2e/auth-backend-integration.cy.ts"    # Test Auth0 backend integration
 pnpm cypress:run:headless --spec "cypress/e2e/basic-smoke.cy.ts"                # Basic app functionality
 ```
@@ -107,10 +175,19 @@ export function Component() {
 ### Cypress Testing Framework
 - **Location**: `/cypress/` directory with comprehensive test suites
 - **Coverage**: Authentication flows, role-based routing, form workflows, admin functions, security
-- **Configuration**: `cypress.config.ts` with API endpoint and Auth0 integration
+- **Configuration**: `cypress.config.ts` with dynamic environment detection and dual-mode support
 - **Mock Data**: Test fixtures in `/cypress/fixtures/` for consistent test data
 - **Custom Commands**: Authentication helpers and form utilities in `/cypress/support/`
 - **Success Rate**: 71% test coverage with working smoke tests and critical path validation
+
+#### Dual-Mode Testing Architecture
+- **Development Mode** (`cypress/e2e/dev/`): Mock authentication, rapid feedback, local API testing
+  - `dev-mode-functionality.cy.ts`: Core dev features and workflow testing
+  - `dev-auth-simulation.cy.ts`: Mock user roles and authentication states
+  - `dev-api-testing.cy.ts`: Local backend connectivity and API mocking
+- **Production Mode** (`cypress/e2e/`): Full Auth0 integration, security validation, comprehensive E2E flows
+- **Environment Detection**: Automatic switching based on `NEXT_PUBLIC_DEV_MODE` and `CYPRESS_DEV_MODE`
+- **Configuration**: Optimized timeouts and settings per environment (dev: fast feedback, prod: thorough validation)
 
 ## Environment Configuration
 
@@ -118,7 +195,7 @@ export function Component() {
 Create `.env.local` with the following variables:
 
 ```bash
-# Auth0 Configuration
+# Auth0 Configuration (✅ FIXED: No trailing slash in URLs)
 AUTH0_CLIENT_ID=qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC
 AUTH0_CLIENT_SECRET=OSUSqi319Jj3ek80o0Rv7ILqriTaTUcZqS2vwtJDQ_-OlgpT1RiRBx8iAWJfahlN
 AUTH0_ISSUER_BASE_URL=https://jasoncalalang.auth0.com
@@ -134,7 +211,21 @@ NEXT_PUBLIC_AUTH0_AUDIENCE=https://form137.cspb.edu.ph/api
 # API Configuration
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 NEXT_PUBLIC_FORM137_API_URL=http://localhost:8080
+
+# Development Mode (optional)
+NEXT_PUBLIC_DEV_MODE=false                    # Set to 'true' to bypass Auth0
+
+# Cypress Development Mode (optional)
+CYPRESS_DEV_MODE=false                        # Set to 'true' to force dev test suite
 ```
+
+#### ✅ Auth0 Configuration Fix Applied
+**Important**: This configuration includes the fix for the Auth0 issuer URI trailing slash issue that was causing 401 authentication errors between frontend and backend.
+
+- **Correct**: `https://jasoncalalang.auth0.com` (no trailing slash)
+- **Previous (Broken)**: `https://jasoncalalang.auth0.com/` (with trailing slash)
+
+This fix has been applied to both frontend and backend configurations.
 
 ### Cypress Testing Configuration
 Create `cypress.env.json` for E2E testing:
@@ -183,7 +274,10 @@ Create `cypress.env.json` for E2E testing:
 4. Write Cypress E2E tests for new user workflows and critical paths
 5. Ensure TypeScript types are properly defined
 6. Maintain role-based access control consistency
-7. Run `pnpm cypress:run` to verify E2E tests still pass
+7. Test in both development and production modes:
+   - Run `pnpm test:e2e:dev` for rapid development feedback
+   - Run `pnpm test:e2e:prod` for comprehensive integration validation
+8. Consider dev mode compatibility when adding new Auth0-dependent features
 
 ### Common Patterns
 - Use `useUser()` hook from Auth0 for user context
@@ -232,10 +326,28 @@ const response = await fetch('/api/protected-endpoint', {
 ```
 
 ### Troubleshooting Auth0 Issues
+
+#### ✅ Resolved Issues
+- **401 Authentication Errors**: **FIXED** by removing trailing slash from Auth0 issuer URI
+- **Frontend/Backend Token Mismatch**: **RESOLVED** with issuer URI standardization
+
+#### Other Common Issues
 - **403 errors**: Ensure both frontend and backend are running with matching Auth0 configuration
 - **CORS errors**: Verify `cors.allowed-origins` includes `http://localhost:3000` in API
 - **Token validation**: Check that `AUTH0_AUDIENCE` matches between frontend and backend
 - **Redirect issues**: Verify `AUTH0_BASE_URL` and `APP_BASE_URL` are correctly set
+- **Development mode issues**: Check `NEXT_PUBLIC_DEV_MODE` environment variable setting
+
+#### Verification Commands
+```bash
+# Verify Auth0 configuration is correctly applied
+curl -H "Authorization: Bearer <token>" http://localhost:8080/api/dashboard
+# Should return 200 with valid token, 401 with invalid token
+
+# Test development mode
+NEXT_PUBLIC_DEV_MODE=true pnpm dev
+# Should bypass Auth0 and use mock authentication
+```
 
 ## Auth0 Authentication Infrastructure
 
@@ -251,6 +363,21 @@ The application has been standardized to use a unified Auth0 authentication patt
 ```
 Component → useGetAuth0Token() → getAuth0Token() → AuthenticatedHttpClient → API
 ```
+
+#### Development Mode Authentication
+The application includes a comprehensive development mode that bypasses Auth0 for rapid development:
+
+**Key Files:**
+- **`/lib/dev-auth-provider.tsx`**: Mock Auth0 provider for development
+- **`/lib/dev-jwt-generator.ts`**: Generates valid JWT tokens for testing
+- **`/hooks/use-auth.ts`**: Unified auth hook supporting both real and mock Auth0
+- **`/lib/auth-provider.tsx`**: Smart provider switching between Auth0 and development mode
+
+**Development Mode Features:**
+- Mock user authentication with configurable roles
+- JWT token generation for API testing
+- Seamless switching via environment variable
+- Full compatibility with existing Auth0 integration patterns
 
 ### Standardized API Service Pattern
 All API services now follow this consistent pattern:

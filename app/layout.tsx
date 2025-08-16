@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Providers } from "@/components/providers"
+import { DevUserSelector } from "@/components/dev-user-selector"
 
 // Log Auth0 environment variables on app start
 if (typeof window === "undefined") {
@@ -13,6 +14,7 @@ if (typeof window === "undefined") {
     AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
     AUTH0_CALLBACK_URL: process.env.AUTH0_CALLBACK_URL,
     AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
+    DEV_MODE: process.env.NEXT_PUBLIC_DEV_MODE,
   })
 }
 
@@ -30,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <DevUserSelector />
+        </Providers>
       </body>
     </html>
   )

@@ -80,11 +80,59 @@ pnpm cypress:run:edge
 # Run with development server
 pnpm test:e2e:open    # Interactive with dev server
 pnpm test:e2e        # Headless with dev server
+```
+
+### Enhanced Test Categories
+
+#### Security and Authentication Tests
+```bash
+# Run comprehensive Auth0 security tests
+npx cypress run --spec "cypress/e2e/security/auth0-security-comprehensive.cy.ts"
+
+# Run enhanced role-based access control tests
+npx cypress run --spec "cypress/e2e/auth/role-based-routing.cy.ts"
+
+# Run all security tests
+npx cypress run --spec "cypress/e2e/security/*"
+```
+
+#### API Integration Tests
+```bash
+# Run enhanced API integration tests
+npx cypress run --spec "cypress/e2e/api/enhanced-api-integration.cy.ts"
+
+# Run Auth0 + Spring Boot integration tests
+npx cypress run --spec "cypress/e2e/api/auth0-spring-boot-integration.cy.ts"
 
 # Run client credentials tests specifically
 ./test-client-credentials.sh                    # Run with setup validation
 npx cypress run --spec "cypress/e2e/api/*"      # All API tests
-npx cypress run --spec "cypress/e2e/workflows/form-137-client-credentials-integration.cy.ts"  # Integration test
+
+# Run enhanced test suite
+./cypress/scripts/run-enhanced-tests.sh api     # API tests only
+./cypress/scripts/run-enhanced-tests.sh         # All enhanced tests
+```
+
+#### Comprehensive Workflow Tests
+```bash
+# Run complete Form 137 lifecycle tests
+npx cypress run --spec "cypress/e2e/workflows/comprehensive-form137-lifecycle.cy.ts"
+
+# Run all workflow tests
+npx cypress run --spec "cypress/e2e/workflows/*"
+
+# Run form submission tests
+npx cypress run --spec "cypress/e2e/workflows/form-137-submission.cy.ts"
+```
+
+#### Authentication Tests
+```bash
+# Run all authentication tests
+npx cypress run --spec "cypress/e2e/auth/*"
+
+# Run specific authentication patterns
+npx cypress run --spec "cypress/e2e/auth/authentication.cy.ts"
+npx cypress run --spec "cypress/e2e/auth/auth0-fix-validation.cy.ts"
 ```
 
 ### CI/CD
@@ -113,6 +161,14 @@ pnpm cypress:run:record
 - Requester role restrictions  
 - Multi-role handling
 - Route protection verification
+- Enhanced security and access control
+- Privilege escalation prevention
+- Session integrity validation
+
+#### `auth0-fix-validation.cy.ts`
+- Auth0 configuration validation
+- JWT token debugging
+- Authentication flow verification
 
 ### 2. Workflow Tests (`workflows/`)
 
@@ -123,6 +179,19 @@ pnpm cypress:run:record
 - Success/failure scenarios
 - Accessibility testing
 - Data persistence and handling
+
+#### `comprehensive-form137-lifecycle.cy.ts` (NEW)
+- Complete Form 137 request lifecycle testing
+- Cross-role integration (Requester → Admin workflow)
+- Real-time status updates and notifications
+- Concurrent operations and performance testing
+- Error handling and edge cases
+- End-to-end Auth0 authentication flows
+
+#### `form-137-client-credentials-integration.cy.ts`
+- API-first testing with client credentials
+- Frontend-backend integration validation
+- Data consistency between UI and API operations
 
 ### 3. Admin Tests (`admin/`)
 
@@ -145,27 +214,77 @@ pnpm cypress:run:record
 - Content Security Policy compliance
 - Session security
 
+#### `auth0-security-comprehensive.cy.ts` (NEW)
+- Comprehensive Auth0 security validation
+- JWT token security and validation
+- Role-based access control (RBAC) testing
+- API security and CORS validation
+- Session management and edge cases
+- Performance and scalability testing
+- Authentication error recovery
+
+### 5. API Integration Tests (`api/`)
+
+#### `enhanced-api-integration.cy.ts` (NEW)
+- Enhanced JWT token validation with Spring Boot
+- API endpoint security and role-based access control
+- CORS configuration validation
+- Error handling and resilience testing
+- Performance and scalability testing
+- Request/response data validation
+
+#### `auth0-spring-boot-integration.cy.ts` (NEW)
+- Specific Auth0 + Spring Boot integration testing
+- JWT decoder configuration validation
+- Spring Security method-level security testing
+- @PreAuthorize annotation validation
+- Spring Boot actuator health endpoints
+- Performance testing of JWT validation
+
+#### `form-137-api-client-credentials.cy.ts`
+- Client credentials authentication flow
+- API-first testing approach
+- Machine-to-machine authentication patterns
+
+#### `simple-client-credentials.cy.ts`
+- Basic client credentials setup validation
+- API connectivity testing
+
 ## Custom Commands
 
 The test suite includes custom Cypress commands for common operations:
 
 ### Authentication Commands
 
-#### Client Credentials (Recommended for API Testing)
+#### Enhanced Client Credentials (Recommended for API Testing)
 ```typescript
 cy.auth0ClientCredentials()                         // Get access token via client credentials
-cy.clearTokenCache()                                // Clear cached tokens
+cy.auth0ClientCredentials({ useCache: false })      // Force fresh token
+cy.clearTokenCache()                                // Clear all cached tokens
+cy.clearTokenCache({ userOnly: true })              // Clear only user tokens
 cy.authenticatedRequest(requestOptions, authOptions) // Make authenticated API request
 cy.authenticatedRequestFromBrowser(requestOptions)   // Use browser-stored token
 ```
 
-#### User Authentication (For UI Testing)
+#### Enhanced User Authentication (For UI Testing)
 ```typescript
 cy.loginByAuth0({ role: 'admin' })     // Login as admin user
 cy.loginAsAdmin()                      // Shorthand for admin login
 cy.loginAsRequester()                  // Login as requester user
 cy.logoutUser()                        // Logout current user
 cy.mockUserSession(userFixture)        // Mock authentication state
+
+// New enhanced commands
+cy.auth0Login({ role: 'admin', useCache: false })   // Role-based authentication
+cy.validateJWTToken(token, expectedClaims)          // Validate JWT structure and claims
+cy.testTokenExpiration('requester')                 // Test token expiration handling
+```
+
+#### Security Testing Commands
+```typescript
+cy.testUnauthorizedAccess('/admin/endpoint', 'GET', 'requester') // Test access control
+cy.testCORSAndSecurity('/api/endpoint')                          // Test CORS headers
+cy.validateAuth0Integration()                                    // Comprehensive Auth0 health check
 ```
 
 ### Form and API Commands
@@ -220,11 +339,30 @@ Test data is stored in `fixtures/` directory:
 - Mock authentication for faster test execution
 - Test both real Auth0 flows and mocked states
 
-### 5. Client Credentials Testing
+### 5. Enhanced Auth0 Testing Patterns
+
+#### Client Credentials Testing
 - Use `cy.auth0ClientCredentials()` for reliable API authentication
-- Tokens are automatically cached for performance
+- Enhanced token caching with expiration handling
+- Automatic retry logic and error recovery
+- JWT token validation and claim verification
 - No user interaction required - perfect for CI/CD
 - Works with any Auth0 Machine-to-Machine application
+
+#### Role-Based Testing
+- Comprehensive role-based access control (RBAC) validation
+- Cross-role workflow testing (Requester → Admin)
+- Privilege escalation prevention testing
+- Session integrity and tampering detection
+- Real-time status updates between roles
+
+#### Security Testing
+- JWT token security and validation
+- API endpoint protection verification
+- CORS configuration validation
+- Session management edge cases
+- Authentication error recovery scenarios
+- Performance and scalability testing
 
 ### 6. Error Handling
 - Test error scenarios thoroughly

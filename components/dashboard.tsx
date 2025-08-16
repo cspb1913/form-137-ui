@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useAuth } from "@/hooks/use-auth"
 import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import { Search, Filter, RefreshCw, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 export function Dashboard() {
-  const { user, isLoading: userLoading } = useUser()
+  const { user, isLoading: userLoading } = useAuth()
   const getToken = useGetAuth0Token()
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)

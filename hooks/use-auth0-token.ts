@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useState } from "react"
-import { getAccessToken } from "@auth0/nextjs-auth0/client"
+import { getAccessToken } from "@auth0/nextjs-auth0"
 import { getAuth0Token } from "@/lib/auth-http-client"
 
 interface UseAuth0TokenOptions {

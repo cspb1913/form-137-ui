@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useUser } from "@auth0/nextjs-auth0"
 import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

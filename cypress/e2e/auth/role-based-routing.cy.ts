@@ -401,5 +401,186 @@ describe('Role-Based Routing and Access Control', () => {
       cy.url().should('include', specificAdminRoute)
       cy.get('[data-cy="request-detail"]').should('be.visible')
     })
+
+    it('should handle role-based redirects with query parameters', () => {
+      // Test with query parameters and fragments
+      cy.intercept('GET', '/api/auth/me', { fixture: 'user-admin.json' }).as('getAdminUser')
+      cy.mockUserSession({
+        sub: 'auth0|query-test-admin',
+        email: 'queryadmin@test.edu',
+        name: 'Query Test Admin',
+        roles: ['Admin']
+      })
+      
+      cy.visit('/?tab=overview&filter=pending#section1')
+      cy.wait('@getAdminUser')
+      
+      // Should redirect to admin with preserved intent
+      cy.url().should('include', '/admin')
+      // In a real implementation, query params might be preserved
+    })
+
+    it('should handle protected route access attempts with different authentication states', () => {
+      const protectedRoutes = [
+        { path: '/admin', requiredRole: 'Admin' },
+        { path: '/admin/requests', requiredRole: 'Admin' },
+        { path: '/dashboard/request/123', requiredRole: 'Requester' }
+      ]
+
+      protectedRoutes.forEach(route => {
+        // Test unauthenticated access
+        cy.intercept('GET', '/api/auth/me', { statusCode: 401 }).as('getUnauthenticated')
+        
+        cy.visit(route.path)
+        cy.wait('@getUnauthenticated')
+        
+        cy.url().should('not.include', route.path)
+        cy.get('[data-cy="login-prompt"], [data-cy="unauthorized-message"]').should('be.visible')
+      })
+    })
+  })
+
+  describe('Enhanced Security and Access Control', () => {
+    it('should validate JWT token claims in role checking', () => {
+      // Test with real Auth0 tokens if available
+      if (Cypress.env('AUTH0_ADMIN_USERNAME')) {
+        cy.auth0Login({ role: 'admin', useCache: false }).then((tokenData) => {
+          // Validate the token has correct role claims
+          cy.validateJWTToken(tokenData.access_token).then((decoded) => {
+            const roles = decoded['https://form137.cspb.edu.ph/roles'] || []
+            expect(roles).to.include('Admin')
+            
+            // Visit admin page and verify access
+            cy.visit('/admin')
+            cy.get('[data-cy="admin-dashboard"]').should('be.visible')
+          })
+        })
+      } else {
+        cy.log('Skipping real token test - Auth0 credentials not configured')
+      }
+    })
+
+    it('should enforce API-level role restrictions', () => {
+      // Test API calls with different role tokens
+      const testScenarios = [
+        { role: 'requester', endpoint: '/admin/requests', shouldFail: true },
+        { role: 'requester', endpoint: '/requests/mine', shouldFail: false },
+        { role: 'admin', endpoint: '/admin/requests', shouldFail: false },
+        { role: 'admin', endpoint: '/requests/mine', shouldFail: false }
+      ]
+
+      testScenarios.forEach(scenario => {
+        if (scenario.shouldFail) {
+          cy.testUnauthorizedAccess(scenario.endpoint, 'GET', scenario.role).then((response) => {
+            expect(response.status).to.be.oneOf([401, 403])
+            cy.log(`✓ Correctly blocked ${scenario.role} access to ${scenario.endpoint}`)
+          })
+        } else {
+          cy.authenticatedRequest({
+            method: 'GET',
+            url: `${Cypress.env('API_BASE_URL')}${scenario.endpoint}`
+          }, {
+            useClientCredentials: false,
+            userRole: scenario.role
+          }).then((response) => {
+            expect(response.status).to.be.oneOf([200, 404])
+            cy.log(`✓ Allowed ${scenario.role} access to ${scenario.endpoint}`)
+          })
+        }
+      })
+    })
+
+    it('should handle privilege escalation attempts', () => {
+      // Simulate attempts to escalate privileges
+      cy.intercept('GET', '/api/auth/me', { fixture: 'user-requester.json' }).as('getRequesterUser')
+      cy.mockUserSession({
+        sub: 'auth0|privilege-test',
+        email: 'privilege@test.edu',
+        name: 'Privilege Test User',
+        roles: ['Requester']
+      })
+
+      cy.visit('/')
+      cy.wait('@getRequesterUser')
+
+      // Attempt to navigate to admin routes through various methods
+      const adminRoutes = ['/admin', '/admin/requests', '/admin/dashboard']
+      
+      adminRoutes.forEach(route => {
+        // Direct navigation attempt
+        cy.visit(route)
+        cy.url().should('not.include', route)
+        
+        // Programmatic navigation attempt
+        cy.window().then(win => {
+          win.history.pushState({}, '', route)
+        })
+        cy.reload()
+        cy.url().should('not.include', route)
+      })
+    })
+
+    it('should validate session integrity and prevent tampering', () => {
+      cy.intercept('GET', '/api/auth/me', { fixture: 'user-requester.json' }).as('getRequesterUser')
+      cy.mockUserSession({
+        sub: 'auth0|session-integrity-test',
+        email: 'session@test.edu',
+        name: 'Session Test User',
+        roles: ['Requester']
+      })
+
+      cy.visit('/')
+      cy.wait('@getRequesterUser')
+
+      // Attempt to tamper with session data
+      cy.window().then(win => {
+        // Try to modify localStorage auth data
+        const currentAuth = win.localStorage.getItem('auth0.user')
+        if (currentAuth) {
+          const modifiedAuth = JSON.parse(currentAuth)
+          modifiedAuth.roles = ['Admin'] // Attempt privilege escalation
+          win.localStorage.setItem('auth0.user', JSON.stringify(modifiedAuth))
+        }
+      })
+
+      // Reload and verify tampering is detected/prevented
+      cy.reload()
+      cy.wait('@getRequesterUser')
+      
+      // Should still be treated as requester, not admin
+      cy.visit('/admin')
+      cy.url().should('not.include', '/admin')
+    })
+
+    it('should handle concurrent sessions and role changes', () => {
+      // Simulate role change during active session
+      cy.intercept('GET', '/api/auth/me', { fixture: 'user-requester.json' }).as('getInitialUser')
+      cy.mockUserSession({
+        sub: 'auth0|concurrent-test',
+        email: 'concurrent@test.edu',
+        name: 'Concurrent Test User',
+        roles: ['Requester']
+      })
+
+      cy.visit('/')
+      cy.wait('@getInitialUser')
+      cy.get('[data-cy="dashboard"]').should('be.visible')
+
+      // Simulate role upgrade (e.g., user gets admin privileges)
+      cy.intercept('GET', '/api/auth/me', {
+        sub: 'auth0|concurrent-test',
+        email: 'concurrent@test.edu',
+        name: 'Concurrent Test User',
+        roles: ['Admin', 'Requester']
+      }).as('getUpgradedUser')
+
+      // Refresh to trigger role check
+      cy.reload()
+      cy.wait('@getUpgradedUser')
+
+      // Should now redirect to admin dashboard
+      cy.url().should('include', '/admin')
+      cy.get('[data-cy="admin-dashboard"]').should('be.visible')
+    })
   })
 })

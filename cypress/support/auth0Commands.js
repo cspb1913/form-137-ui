@@ -1,26 +1,69 @@
 /**
- * Auth0 Programmatic Authentication Commands for Cypress
- * Supports both Client Credentials and Resource Owner Password Grant flows for E2E testing
+ * Enhanced Auth0 Programmatic Authentication Commands for Cypress
+ * Supports Client Credentials, Resource Owner Password Grant, and comprehensive testing patterns
+ * 
+ * Security Features:
+ * - Token caching with expiration handling
+ * - Comprehensive error handling and retry logic
+ * - JWT token validation and decoding
+ * - Session management with Auth0 NextJS SDK compatibility
+ * - Security testing helpers for 401/403 scenarios
  */
 
-// Auth0 configuration - should match your environment variables
-const auth0Config = {
-  domain: 'jasoncalalang.auth0.com',
-  clientId: 'qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC',
-  clientSecret: 'OSUSqi319Jj3ek80o0Rv7ILqriTaTUcZqS2vwtJDQ_-OlgpT1RiRBx8iAWJfahlN',
-  audience: 'https://form137.cspb.edu.ph/api',
-  scope: 'openid profile email offline_access',
+// Auth0 configuration - loaded from environment variables for security
+const getAuth0Config = () => ({
+  domain: Cypress.env('AUTH0_DOMAIN') || 'jasoncalalang.auth0.com',
+  clientId: Cypress.env('AUTH0_CLIENT_ID') || 'qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC',
+  clientSecret: Cypress.env('AUTH0_CLIENT_SECRET') || 'OSUSqi319Jj3ek80o0Rv7ILqriTaTUcZqS2vwtJDQ_-OlgpT1RiRBx8iAWJfahlN',
+  audience: Cypress.env('AUTH0_AUDIENCE') || 'https://form137.cspb.edu.ph/api',
+  scope: Cypress.env('AUTH0_SCOPE') || 'openid profile email offline_access',
   testUser: {
-    username: 'testuser@cspb.edu.ph',
-    password: '2025@CSPB'
+    username: Cypress.env('AUTH0_TEST_USERNAME') || 'testuser@cspb.edu.ph',
+    password: Cypress.env('AUTH0_TEST_PASSWORD') || '2025@CSPB'
+  },
+  adminUser: {
+    username: Cypress.env('AUTH0_ADMIN_USERNAME') || 'admin@cspb.edu.ph',
+    password: Cypress.env('AUTH0_ADMIN_PASSWORD') || 'admin-password-here'
+  },
+  requesterUser: {
+    username: Cypress.env('AUTH0_REQUESTER_USERNAME') || 'jason@cspb.edu.ph',
+    password: Cypress.env('AUTH0_REQUESTER_PASSWORD') || '2025@CSPB'
+  }
+});
+
+// Enhanced token cache with role-based caching and validation
+let tokenCache = {
+  clientCredentials: {
+    access_token: null,
+    expires_at: null,
+    token_type: 'Bearer'
+  },
+  userTokens: new Map(), // Map of userId -> tokens for different users
+  lastValidation: null
+};
+
+// JWT decoding helper
+const decodeJWT = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch (e) {
+    cy.log('Failed to decode JWT token:', e.message);
+    return null;
   }
 };
 
-// Token cache for performance optimization
-let tokenCache = {
-  access_token: null,
-  expires_at: null,
-  id_token: null
+// Token validation helper
+const isTokenValid = (token, bufferSeconds = 30) => {
+  if (!token) return false;
+  
+  const decoded = decodeJWT(token);
+  if (!decoded || !decoded.exp) return false;
+  
+  const expiryTime = decoded.exp * 1000;
+  const bufferTime = bufferSeconds * 1000;
+  
+  return Date.now() < (expiryTime - bufferTime);
 };
 
 /**
@@ -320,15 +363,122 @@ Cypress.Commands.add('getForm137Requests', (options = {}) => {
 });
 
 /**
- * Update Form 137 request status via API (admin function)
+ * Enhanced Form 137 request status update with role-based authentication
  */
-Cypress.Commands.add('updateForm137Status', (ticketNumber, newStatus, notes = '') => {
+Cypress.Commands.add('updateForm137Status', (ticketNumber, newStatus, notes = '', options = {}) => {
+  const { useAdminRole = true, expectSuccess = true } = options;
+  
   return cy.authenticatedRequest({
-    method: 'PATCH',
-    url: `${Cypress.env('API_BASE_URL')}/form137/requests/${ticketNumber}/status`,
+    method: 'PUT',
+    url: `${Cypress.env('API_BASE_URL')}/requests/${ticketNumber}/status`,
     body: {
       status: newStatus,
-      notes: notes
+      notes: notes,
+      updatedAt: new Date().toISOString()
     }
+  }, {
+    useClientCredentials: false,
+    userRole: useAdminRole ? 'admin' : 'requester',
+    expectStatusCode: expectSuccess ? 200 : undefined,
+    validateResponse: expectSuccess
+  }).then((response) => {
+    if (expectSuccess) {
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property('ticketNumber', ticketNumber);
+      expect(response.body).to.have.property('status', newStatus);
+      cy.log(`Successfully updated ${ticketNumber} to ${newStatus}`);
+    }
+    return response;
   });
+});
+
+/**
+ * Test unauthorized access to admin functions
+ */
+Cypress.Commands.add('testUnauthorizedAccess', (endpoint, method = 'GET', role = 'requester') => {
+  cy.log(`Testing unauthorized access to ${method} ${endpoint} with ${role} role`);
+  
+  return cy.authenticatedRequest({
+    method,
+    url: `${Cypress.env('API_BASE_URL')}${endpoint}`
+  }, {
+    useClientCredentials: false,
+    userRole: role,
+    retryOnUnauthorized: false
+  }).then((response) => {
+    // Should receive 403 Forbidden for role-based restrictions
+    expect(response.status).to.be.oneOf([401, 403]);
+    cy.log(`Correctly blocked ${role} access to ${endpoint}: ${response.status}`);
+    return response;
+  });
+});
+
+/**
+ * Test CORS headers and security configurations
+ */
+Cypress.Commands.add('testCORSAndSecurity', (endpoint = '/health/liveness') => {
+  cy.log('Testing CORS and security headers...');
+  
+  return cy.request({
+    method: 'OPTIONS',
+    url: `${Cypress.env('API_BASE_URL')}${endpoint}`,
+    headers: {
+      'Origin': 'http://localhost:3000',
+      'Access-Control-Request-Method': 'GET',
+      'Access-Control-Request-Headers': 'authorization,content-type'
+    },
+    failOnStatusCode: false
+  }).then((response) => {
+    // Validate CORS headers
+    expect(response.headers).to.have.property('access-control-allow-origin');
+    expect(response.headers).to.have.property('access-control-allow-methods');
+    expect(response.headers).to.have.property('access-control-allow-headers');
+    
+    cy.log('CORS headers validated successfully');
+    return response;
+  });
+});
+
+/**
+ * Comprehensive Auth0 health check
+ */
+Cypress.Commands.add('validateAuth0Integration', () => {
+  cy.log('Performing comprehensive Auth0 integration validation...');
+  
+  const config = getAuth0Config();
+  
+  // Test 1: Validate Auth0 domain accessibility
+  cy.request({
+    method: 'GET',
+    url: `https://${config.domain}/.well-known/openid_configuration`,
+    failOnStatusCode: false
+  }).then((response) => {
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.property('issuer', `https://${config.domain}/`);
+    expect(response.body).to.have.property('authorization_endpoint');
+    expect(response.body).to.have.property('token_endpoint');
+    cy.log('✓ Auth0 domain configuration validated');
+  });
+  
+  // Test 2: Validate client credentials flow
+  cy.auth0ClientCredentials({ useCache: false }).then((tokenData) => {
+    expect(tokenData).to.have.property('access_token');
+    expect(tokenData).to.have.property('token_type', 'Bearer');
+    cy.validateJWTToken(tokenData.access_token, { audience: config.audience });
+    cy.log('✓ Client credentials flow validated');
+  });
+  
+  // Test 3: Validate API connectivity with authentication
+  cy.testAPIHealth().then((response) => {
+    expect(response.status).to.be.oneOf([200, 204]);
+    cy.log('✓ API connectivity with Auth0 validated');
+  });
+  
+  // Test 4: Validate CORS configuration
+  cy.testCORSAndSecurity().then((response) => {
+    expect(response.status).to.be.oneOf([200, 204]);
+    cy.log('✓ CORS configuration validated');
+  });
+  
+  cy.log('Auth0 integration validation completed successfully');
 });

@@ -91,9 +91,34 @@ declare global {
       authenticatedRequestFromBrowser(requestOptions: any): Chainable<any>
       
       /**
-       * Clear token cache
+       * Clear token cache with selective clearing options
        */
-      clearTokenCache(): Chainable<void>
+      clearTokenCache(options?: { userOnly?: boolean; clientCredentialsOnly?: boolean }): Chainable<void>
+      
+      /**
+       * Validate JWT token and extract claims
+       */
+      validateJWTToken(token: string, expectedClaims?: any): Chainable<any>
+      
+      /**
+       * Test token expiration scenarios
+       */
+      testTokenExpiration(role?: 'admin' | 'requester'): Chainable<void>
+      
+      /**
+       * Test unauthorized access to admin functions
+       */
+      testUnauthorizedAccess(endpoint: string, method?: string, role?: 'admin' | 'requester'): Chainable<any>
+      
+      /**
+       * Test CORS headers and security configurations
+       */
+      testCORSAndSecurity(endpoint?: string): Chainable<any>
+      
+      /**
+       * Comprehensive Auth0 health check
+       */
+      validateAuth0Integration(): Chainable<void>
       
       /**
        * Test API health endpoint with authentication
@@ -477,13 +502,32 @@ interface ApiTestScenario {
 }
 
 interface Form137Data {
-  studentName: string
-  studentId: string
-  graduationYear: string
-  program: string
-  purpose: string
-  contactEmail: string
-  contactPhone: string
+  // Learner Information
+  learnerReferenceNumber: string
+  firstName: string
+  middleName?: string
+  lastName: string
+  dateOfBirth: string
+  
+  // School Information
+  lastGradeLevel: string
+  lastSchoolYear: string
+  previousSchool: string
+  
+  // Request Information
+  purposeOfRequest: string
+  deliveryMethod: string
+  requestType: string
+  
+  // Requester Information
+  learnerName: string
+  requesterName: string
+  relationshipToLearner: string
+  emailAddress: string
+  mobileNumber: string
+  
+  // Optional fields
+  notes?: string
 }
 
 /**
@@ -533,36 +577,73 @@ Cypress.Commands.add('testApiEndpoint', (endpoint: string, scenarios: ApiTestSce
 })
 
 /**
- * Setup API interceptors specifically for Form 137 testing
+ * Setup API interceptors specifically for Form 137 testing (PACT-compliant)
  */
 Cypress.Commands.add('setupForm137Interceptors', () => {
   const apiBase = Cypress.env('API_BASE_URL')
   
-  // Dashboard/requests endpoints
+  // Form 137 submission endpoint (PACT-compliant)
+  cy.intercept('POST', `${apiBase}/form137/submit`, {
+    statusCode: 201,
+    body: {
+      ticketNumber: 'REQ-2025-00123',
+      status: 'submitted',
+      submittedAt: '2025-01-11T21:52:11.000Z',
+      updatedAt: '2025-01-11T21:52:11.000Z',
+      notes: 'Request for urgent processing.'
+    }
+  }).as('createRequest')
+  
+  // Form 137 status check endpoint (PACT-compliant)
+  cy.intercept('GET', `${apiBase}/form137/status/*`, (req) => {
+    const ticketNumber = req.url.split('/').pop()
+    req.reply({
+      statusCode: 200,
+      body: {
+        ticketNumber: ticketNumber,
+        status: 'processing',
+        submittedAt: '2025-01-11T21:52:11.000Z',
+        updatedAt: '2025-01-12T09:30:00.000Z',
+        notes: 'Documents under review'
+      }
+    })
+  }).as('getRequestStatus')
+  
+  // Legacy endpoints for dashboard compatibility
   cy.intercept('GET', `${apiBase}/requests**`, { fixture: 'api-responses.json', property: 'dashboard.sampleRequests' }).as('getRequests')
   cy.intercept('GET', `${apiBase}/requests/mine**`, { fixture: 'api-responses.json', property: 'dashboard.sampleRequests' }).as('getMyRequests')
   cy.intercept('GET', `${apiBase}/admin/requests**`, { fixture: 'api-responses.json', property: 'adminRequests.allRequests' }).as('getAdminRequests')
   
-  // Request creation
-  cy.intercept('POST', `${apiBase}/requests`, { fixture: 'api-responses.json', property: 'requestSubmission.success' }).as('createRequest')
-  
   // Status updates (admin only)
   cy.intercept('PUT', `${apiBase}/requests/*/status`, { fixture: 'api-responses.json', property: 'statusUpdate.success' }).as('updateRequestStatus')
   
-  // Individual request details
+  // Individual request details (PACT-compliant data structure)
   cy.intercept('GET', `${apiBase}/requests/*`, (req) => {
     const requestId = req.url.split('/').pop()
     req.reply({
       id: requestId,
-      ticketNumber: `F137-2024-${requestId?.toUpperCase()}`,
-      studentName: 'Test Student',
-      studentId: '2024-12345',
-      program: 'Computer Science',
-      status: 'pending',
-      contactEmail: 'test@university.edu',
-      contactPhone: '+1234567890',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      ticketNumber: `REQ-2025-${requestId?.toUpperCase()}`,
+      // PACT-compliant Form 137 data
+      learnerReferenceNumber: '123456789012',
+      firstName: 'Juan',
+      middleName: 'Santos',
+      lastName: 'Dela Cruz',
+      dateOfBirth: '2000-01-15',
+      lastGradeLevel: 'Grade 12',
+      lastSchoolYear: '2023-2024',
+      previousSchool: 'Manila High School',
+      purposeOfRequest: 'College application requirements',
+      deliveryMethod: 'Email',
+      requestType: 'Form137',
+      learnerName: 'Juan Santos Dela Cruz',
+      requesterName: 'Maria Dela Cruz',
+      relationshipToLearner: 'Parent/Guardian',
+      emailAddress: 'maria.delacruz@email.com',
+      mobileNumber: '+639123456789',
+      status: 'submitted',
+      submittedAt: '2025-01-11T21:52:11.000Z',
+      updatedAt: '2025-01-11T21:52:11.000Z',
+      notes: 'Request for urgent processing.'
     })
   }).as('getRequestDetails')
 })
@@ -608,33 +689,71 @@ Cypress.Commands.add('verifyDashboardData', () => {
 })
 
 /**
- * Fill out Form 137 with comprehensive test data
+ * Fill out Form 137 with comprehensive test data (PACT-compliant)
  */
 Cypress.Commands.add('fillForm137WithTestData', (overrides: Partial<Form137Data> = {}) => {
   const testData: Form137Data = {
-    studentName: 'John Doe Student',
-    studentId: '2024-12345',
-    graduationYear: '2024',
-    program: 'Bachelor of Science in Computer Science',
-    purpose: 'Employment Requirements',
-    contactEmail: 'john.doe@university.edu',
-    contactPhone: '+639123456789',
+    // Learner Information
+    learnerReferenceNumber: '123456789012',
+    firstName: 'Juan',
+    middleName: 'Santos',
+    lastName: 'Dela Cruz',
+    dateOfBirth: '2000-01-15',
+    
+    // School Information
+    lastGradeLevel: 'Grade 12',
+    lastSchoolYear: '2023-2024',
+    previousSchool: 'Manila High School',
+    
+    // Request Information
+    purposeOfRequest: 'College application requirements',
+    deliveryMethod: 'Email',
+    requestType: 'Form137',
+    
+    // Requester Information
+    learnerName: 'Juan Santos Dela Cruz',
+    requesterName: 'Maria Dela Cruz',
+    relationshipToLearner: 'Parent/Guardian',
+    emailAddress: 'maria.delacruz@email.com',
+    mobileNumber: '+639123456789',
+    
+    // Optional fields
+    notes: 'Request for urgent processing.',
     ...overrides
   }
   
-  cy.log('Filling Form 137 with test data', testData)
+  cy.log('Filling Form 137 with PACT-compliant test data', testData)
   
-  // Fill basic information
-  cy.get('[data-cy="student-name"], input[name="studentName"]').should('be.visible').clear().type(testData.studentName)
-  cy.get('[data-cy="student-id"], input[name="studentId"]').should('be.visible').clear().type(testData.studentId)
-  cy.get('[data-cy="graduation-year"], input[name="graduationYear"], select[name="graduationYear"]').should('be.visible').clear().type(testData.graduationYear)
-  cy.get('[data-cy="program"], input[name="program"], select[name="program"]').should('be.visible').clear().type(testData.program)
-  cy.get('[data-cy="purpose"], input[name="purpose"], textarea[name="purpose"]').should('be.visible').clear().type(testData.purpose)
+  // Fill learner information
+  cy.get('[data-cy="learner-reference-number"], input[name="learnerReferenceNumber"]').should('be.visible').clear().type(testData.learnerReferenceNumber)
+  cy.get('[data-cy="first-name"], input[name="firstName"]').should('be.visible').clear().type(testData.firstName)
+  if (testData.middleName) {
+    cy.get('[data-cy="middle-name"], input[name="middleName"]').should('be.visible').clear().type(testData.middleName)
+  }
+  cy.get('[data-cy="last-name"], input[name="lastName"]').should('be.visible').clear().type(testData.lastName)
+  cy.get('[data-cy="date-of-birth"], input[name="dateOfBirth"], input[type="date"]').should('be.visible').clear().type(testData.dateOfBirth)
   
-  // Fill contact information
-  cy.get('[data-cy="contact-email"], input[name="contactEmail"], input[type="email"]').should('be.visible').clear().type(testData.contactEmail)
-  cy.get('[data-cy="contact-phone"], input[name="contactPhone"], input[type="tel"]').should('be.visible').clear().type(testData.contactPhone)
+  // Fill school information
+  cy.get('[data-cy="last-grade-level"], input[name="lastGradeLevel"], select[name="lastGradeLevel"]').should('be.visible').clear().type(testData.lastGradeLevel)
+  cy.get('[data-cy="last-school-year"], input[name="lastSchoolYear"]').should('be.visible').clear().type(testData.lastSchoolYear)
+  cy.get('[data-cy="previous-school"], input[name="previousSchool"]').should('be.visible').clear().type(testData.previousSchool)
   
-  // Verify all fields are filled
+  // Fill request information
+  cy.get('[data-cy="purpose-of-request"], input[name="purposeOfRequest"], textarea[name="purposeOfRequest"]').should('be.visible').clear().type(testData.purposeOfRequest)
+  cy.get('[data-cy="delivery-method"], input[name="deliveryMethod"], select[name="deliveryMethod"]').should('be.visible').clear().type(testData.deliveryMethod)
+  
+  // Fill requester information
+  cy.get('[data-cy="learner-name"], input[name="learnerName"]').should('be.visible').clear().type(testData.learnerName)
+  cy.get('[data-cy="requester-name"], input[name="requesterName"]').should('be.visible').clear().type(testData.requesterName)
+  cy.get('[data-cy="relationship-to-learner"], input[name="relationshipToLearner"], select[name="relationshipToLearner"]').should('be.visible').clear().type(testData.relationshipToLearner)
+  cy.get('[data-cy="email-address"], input[name="emailAddress"], input[type="email"]').should('be.visible').clear().type(testData.emailAddress)
+  cy.get('[data-cy="mobile-number"], input[name="mobileNumber"], input[type="tel"]').should('be.visible').clear().type(testData.mobileNumber)
+  
+  // Fill optional notes
+  if (testData.notes) {
+    cy.get('[data-cy="notes"], input[name="notes"], textarea[name="notes"]').should('be.visible').clear().type(testData.notes)
+  }
+  
+  // Verify all required fields are filled and submit button is enabled
   cy.get('[data-cy="submit-button"], button[type="submit"]').should('be.visible').and('not.be.disabled')
 })
