@@ -140,6 +140,10 @@ pacts/
 # Jest
 jest.config.js.bak
 
+# Cypress artifacts
+cypress/screenshots/
+cypress/videos/
+
 # Misc
 *.tgz
 *.tar.gz
