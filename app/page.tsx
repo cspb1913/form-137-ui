@@ -5,12 +5,12 @@ import { useEffect } from "react"
 import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useAuth } from "@/hooks/use-auth"
 import { LoginPrompt } from "@/components/login-prompt"
 import { isAdmin, canAccessDashboard } from "@/lib/auth-utils"
 
 export default function HomePage() {
-  const { user, isLoading } = useCurrentUser()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
 
   const handleNewRequest = () => {

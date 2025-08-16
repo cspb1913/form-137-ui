@@ -12,6 +12,24 @@ interface UserWithRoles {
 
 export async function GET() {
   try {
+    // Check if we're in development mode
+    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
+      // Return mock user data for development mode
+      const mockUser: UserWithRoles = {
+        sub: 'dev|development-user',
+        email: 'dev@example.com',
+        name: 'Development User',
+        nickname: 'dev',
+        picture: '/placeholder-user.jpg',
+        email_verified: true,
+        updated_at: new Date().toISOString(),
+        roles: ['Admin', 'Requester'] // Give both roles for testing
+      }
+      
+      console.log('🔧 Development Mode: Returning mock user data')
+      return NextResponse.json({ user: mockUser })
+    }
+
     const session = await auth0.getSession()
     if (!session || !session.user) {
       return NextResponse.json({ user: null }, { status: 401 })

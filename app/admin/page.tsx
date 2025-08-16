@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import AdminRequestList from "@/components/admin-request-list"
 import { TopNavigation } from "@/components/top-navigation"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useAuth } from "@/hooks/use-auth"
 import { canAccessAdmin } from "@/lib/auth-utils"
 
 export default function AdminPage() {
-  const { user, isLoading } = useCurrentUser()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
 
   // Role-based access control

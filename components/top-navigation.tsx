@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -19,7 +19,7 @@ import { isAdmin, isRequester } from "@/lib/auth-utils"
 
 export function TopNavigation() {
   const pathname = usePathname()
-  const { user, isLoading } = useCurrentUser()
+  const { user, isLoading } = useAuth()
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true

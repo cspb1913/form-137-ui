@@ -59,9 +59,9 @@ export function DevAuth0Provider({ children }: DevAuthProviderProps) {
       picture: "/placeholder-user.jpg",
       email_verified: true,
       updated_at: new Date().toISOString(),
-      roles: [role],
+      roles: ['Admin', 'Requester'], // Give both roles for testing
       // Add Auth0 namespace claims for roles
-      [`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`]: [role],
+      [`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`]: ['Admin', 'Requester'],
     }
   }
 
