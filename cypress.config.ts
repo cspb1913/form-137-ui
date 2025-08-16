@@ -53,10 +53,14 @@ export default defineConfig({
         // Task to verify API connectivity
         checkApiHealth() {
           return new Promise((resolve) => {
+            const http = require('http')
             const https = require('https')
-            const url = config.env.API_BASE_URL + '/health'
+            const url = config.env.API_BASE_URL + '/api/health/liveness'
             
-            https.get(url, (res) => {
+            // Use http for localhost, https for external URLs
+            const client = url.startsWith('https://') ? https : http
+            
+            client.get(url, (res) => {
               resolve({ status: res.statusCode, message: 'API is reachable' })
             }).on('error', (err) => {
               resolve({ status: 0, message: err.message })

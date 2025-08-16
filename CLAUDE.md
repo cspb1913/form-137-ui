@@ -36,6 +36,10 @@ pnpm test:e2e                               # Run E2E tests with dev server
 pnpm test:e2e:open                          # Interactive E2E tests with dev server
 pnpm cypress:verify                         # Verify Cypress installation
 pnpm cypress:info                           # Get Cypress system info
+
+# Auth0 Integration Tests
+pnpm cypress:run:headless --spec "cypress/e2e/auth-backend-integration.cy.ts"    # Test Auth0 backend integration
+pnpm cypress:run:headless --spec "cypress/e2e/basic-smoke.cy.ts"                # Basic app functionality
 ```
 
 ## Architecture Overview
@@ -92,14 +96,43 @@ const response = await fetch(url, {
 
 ## Environment Configuration
 
-Key environment variables required:
-- `AUTH0_SECRET`, `AUTH0_BASE_URL`, `AUTH0_ISSUER_BASE_URL`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`
-- `AUTH0_AUDIENCE` - API audience for token validation
-- `APP_BASE_URL` - Application base URL for Auth0 client configuration (e.g., 'http://localhost:3000')
-- `NEXT_PUBLIC_API_BASE_URL` - Local backend API endpoint (usually 'http://localhost:8080')
-- `NEXT_PUBLIC_FORM137_API_URL` - Production Form 137 API endpoint
-- `NEXT_PUBLIC_AUTH0_REDIRECT_URI` - Post-login redirect
-- `NEXT_PUBLIC_AUTH0_AUDIENCE` - Client-side Auth0 audience
+### Auth0 Configuration (Required)
+Create `.env.local` with the following variables:
+
+```bash
+# Auth0 Configuration
+AUTH0_CLIENT_ID=qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC
+AUTH0_CLIENT_SECRET=OSUSqi319Jj3ek80o0Rv7ILqriTaTUcZqS2vwtJDQ_-OlgpT1RiRBx8iAWJfahlN
+AUTH0_ISSUER_BASE_URL=https://jasoncalalang.auth0.com
+AUTH0_DOMAIN=jasoncalalang.auth0.com
+AUTH0_AUDIENCE=https://form137.cspb.edu.ph/api
+AUTH0_BASE_URL=http://localhost:3000
+APP_BASE_URL=http://localhost:3000
+AUTH0_SECRET=a_very_long_secret_value_with_at_least_32_characters_for_jwt_signing_purposes
+
+# Public Auth0 Configuration (exposed to client)
+NEXT_PUBLIC_AUTH0_AUDIENCE=https://form137.cspb.edu.ph/api
+
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_FORM137_API_URL=http://localhost:8080
+```
+
+### Cypress Testing Configuration
+Create `cypress.env.json` for E2E testing:
+
+```json
+{
+  "API_BASE_URL": "http://localhost:8080",
+  "AUTH0_DOMAIN": "jasoncalalang.auth0.com",
+  "AUTH0_CLIENT_ID": "qZTxWCF60uQ3qLkDHkgvVSUGTNjSMVrC",
+  "AUTH0_AUDIENCE": "https://form137.cspb.edu.ph/api",
+  "AUTH0_SCOPE": "openid profile email",
+  "AUTH0_REQUESTER_USERNAME": "testuser@cspb.edu.ph",
+  "AUTH0_REQUESTER_PASSWORD": "2025@CSPB",
+  "SKIP_AUTH0_TESTS": false
+}
+```
 
 ## Important Implementation Details
 
@@ -139,3 +172,49 @@ Key environment variables required:
 - Implement loading states with skeleton components
 - Handle errors with toast notifications
 - Follow existing Radix UI component patterns in `/components/ui/`
+
+## Auth0 Testing and Verification
+
+### Manual Auth0 Testing
+For manual testing of the Auth0 requester flow:
+
+1. **Start both services**:
+   ```bash
+   # Terminal 1: Start backend API
+   cd /path/to/form137-api && ./gradlew bootRunDev
+   
+   # Terminal 2: Start frontend
+   cd /path/to/form-137-ui && pnpm dev
+   ```
+
+2. **Test Auth0 Integration**:
+   - Visit: http://localhost:3000/auth-test.html
+   - Click: "🔑 Login with Auth0"
+   - Login with: `testuser@cspb.edu.ph` / `2025@CSPB`
+   - After login: Click "👤 Get User Info" to verify authentication
+   - Test API: Click "🌐 Test API Call" to verify backend integration
+
+### Automated Testing Status
+- ✅ **Basic smoke tests**: Passing (3/3)
+- ✅ **Backend security tests**: Passing - verifies API endpoints are properly secured
+- ✅ **Auth0 redirect tests**: Passing - confirms login redirects to Auth0
+- ⚠️ **Full Auth0 login automation**: Requires manual completion due to Auth0 security
+
+### API Integration Verification
+The frontend automatically sends JWT tokens to backend endpoints:
+
+```typescript
+// Service classes automatically handle auth headers
+const response = await fetch('/api/protected-endpoint', {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
+  }
+});
+```
+
+### Troubleshooting Auth0 Issues
+- **403 errors**: Ensure both frontend and backend are running with matching Auth0 configuration
+- **CORS errors**: Verify `cors.allowed-origins` includes `http://localhost:3000` in API
+- **Token validation**: Check that `AUTH0_AUDIENCE` matches between frontend and backend
+- **Redirect issues**: Verify `AUTH0_BASE_URL` and `APP_BASE_URL` are correctly set
