@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,7 @@ import Link from "next/link"
 
 export function Dashboard() {
   const { user, isLoading: userLoading } = useUser()
+  const getToken = useGetAuth0Token()
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,9 +31,7 @@ export function Dashboard() {
 
     try {
       setError(null)
-      const token = await getAccessToken({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      })
+      const token = await getToken()
       const data = await dashboardApi.getDashboardData(token)
       setRequests(data.requests)
       setStats(data.stats)

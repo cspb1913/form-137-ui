@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ interface RequestDetailProps {
 
 export function RequestDetail({ request: initialRequest, onRequestUpdate }: RequestDetailProps) {
   const { user } = useUser()
+  const getToken = useGetAuth0Token()
   const [request, setRequest] = useState(initialRequest)
   const [newComment, setNewComment] = useState("")
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -30,9 +32,7 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsAddingComment(true)
     try {
-      const token = await getAccessToken({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      })
+      const token = await getToken()
       const comment = await dashboardApi.addComment(request.id, newComment.trim(), token)
 
       const updatedRequest = {
@@ -57,9 +57,7 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsUpdatingStatus(true)
     try {
-      const token = await getAccessToken({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      })
+      const token = await getToken()
       const updatedRequest = await dashboardApi.updateRequestStatus(request.id, newStatus, token)
 
       setRequest(updatedRequest)

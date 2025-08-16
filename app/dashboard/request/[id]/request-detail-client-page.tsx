@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { RequestDetail } from "@/components/request-detail"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +17,7 @@ interface RequestDetailClientPageProps {
 
 export default function RequestDetailClientPage({ requestId }: RequestDetailClientPageProps) {
   const { user, isLoading: userLoading } = useUser()
+  const getToken = useGetAuth0Token()
   const [request, setRequest] = useState<FormRequest | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,9 +28,7 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
       try {
         setError(null)
-        const token = await getAccessToken({
-          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-        })
+        const token = await getToken()
         const requestData = await dashboardApi.getRequestById(requestId, token)
         setRequest(requestData)
       } catch (err) {

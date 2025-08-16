@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge } from "@/components/status-badge"
 import { useRouter } from "next/navigation"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
-import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 
 export default function AdminRequestList() {
   const [requests, setRequests] = useState<FormRequest[]>([])
@@ -13,6 +14,7 @@ export default function AdminRequestList() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { user, isLoading: userLoading } = useUser()
+  const getToken = useGetAuth0Token()
 
   useEffect(() => {
     if (userLoading) return
@@ -21,9 +23,7 @@ export default function AdminRequestList() {
       try {
         setError(null)
         if (user) {
-          const token = await getAccessToken({
-            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-          })
+          const token = await getToken()
           const { requests } = await dashboardApi.getDashboardData(token)
           setRequests(requests)
         } else {

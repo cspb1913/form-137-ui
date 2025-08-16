@@ -1,3 +1,5 @@
+import { AuthenticatedHttpClient, OptionalAuthMethod } from "@/lib/auth-http-client"
+
 export interface FormSubmissionRequest {
   status: string
   submittedAt: string
@@ -42,30 +44,17 @@ export interface ApiError {
 }
 
 export class FormApiService {
-  private baseUrl: string
+  private httpClient: AuthenticatedHttpClient
 
   constructor(
     baseUrl: string = process.env.NEXT_PUBLIC_FORM137_API_URL ||
       "",
   ) {
-    this.baseUrl = baseUrl
+    this.httpClient = new AuthenticatedHttpClient({ baseUrl })
   }
 
-  async submitForm(formData: FormSubmissionRequest): Promise<FormSubmissionResponse> {
-    const response = await fetch(`${this.baseUrl}/api/form137/submit`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    })
-
-    if (!response.ok) {
-      const errorData: ApiError = await response.json()
-      throw new Error(`API Error: ${errorData.message}`)
-    }
-
-    const data = await response.json()
+  async submitForm(formData: FormSubmissionRequest, accessToken?: string): Promise<FormSubmissionResponse> {
+    const data = await this.httpClient.post<any>("/api/form137/submit", formData, accessToken, false)
 
     return {
       success: data.status === "submitted",
@@ -75,21 +64,20 @@ export class FormApiService {
     }
   }
 
-  async getSubmissionStatus(ticketNumber: string): Promise<{
+  async getSubmissionStatus(ticketNumber: string, accessToken?: string): Promise<{
     ticketNumber: string
     status: "pending" | "processing" | "completed" | "rejected"
     submittedAt: string
     updatedAt: string
     notes?: string
   }> {
-    const response = await fetch(`${this.baseUrl}/api/form137/status/${ticketNumber}`)
-
-    if (!response.ok) {
-      const errorData: ApiError = await response.json()
-      throw new Error(`API Error: ${errorData.message}`)
-    }
-
-    return await response.json()
+    return this.httpClient.get<{
+      ticketNumber: string
+      status: "pending" | "processing" | "completed" | "rejected"
+      submittedAt: string
+      updatedAt: string
+      notes?: string
+    }>(`/api/form137/status/${ticketNumber}`, accessToken, false)
   }
 }
 

@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
-import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 
 const statusOptions = [
   { label: "Submitted", value: "submitted" },
@@ -29,6 +30,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
   const { user, isLoading: userLoading } = useUser()
+  const getToken = useGetAuth0Token()
 
   useEffect(() => {
     if (userLoading) return
@@ -37,9 +39,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
       try {
         setError(null)
         if (user) {
-          const token = await getAccessToken({
-            audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-          })
+          const token = await getToken()
           // Find the request by ticket number from the API
           const { requests } = await dashboardApi.getDashboardData(token)
           const requestDetail = requests.find(req => req.ticketNumber === ticketNumber)
@@ -70,9 +70,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
     
     setSaving(true)
     try {
-      const token = await getAccessToken({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      })
+      const token = await getToken()
       
       // Update status if changed
       if (status !== detail.status) {

@@ -3,6 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useUser } from "@auth0/nextjs-auth0/client"
+import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +24,8 @@ interface RequestForm137Props {
 
 export function RequestForm137({ onSuccess }: RequestForm137Props) {
   const { toast } = useToast()
+  const { user } = useUser()
+  const getToken = useGetAuth0Token()
   const { isBot, botType, confidence, trackActivity } = useBotID()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -132,6 +136,22 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       // Track form submission attempt
       await trackFormSubmission(formData, { isBot, botType, confidence })
 
+      // Get access token for authenticated API request
+      let accessToken: string | undefined
+      if (user) {
+        try {
+          accessToken = await getToken()
+        } catch (tokenError) {
+          console.error("Failed to get access token:", tokenError)
+          toast({
+            title: "Authentication Error",
+            description: "Failed to authenticate request. Please try logging in again.",
+            variant: "destructive",
+          })
+          return
+        }
+      }
+
       // Get current timestamp
       const now = new Date().toISOString()
 
@@ -172,8 +192,8 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
         mobileNumber: formData.mobileNumber,
       }
 
-      // Submit to API
-      const response = await formApiService.submitForm(apiRequest)
+      // Submit to API with access token
+      const response = await formApiService.submitForm(apiRequest, accessToken)
 
       // Track successful submission
       await trackActivity("successful_submission", {

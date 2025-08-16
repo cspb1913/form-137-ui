@@ -1,3 +1,5 @@
+import { AuthenticatedHttpClient, RequiredAuthMethod } from "@/lib/auth-http-client"
+
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_FORM137_API_URL || ""
 
 export interface DashboardStats {
@@ -41,10 +43,10 @@ export interface Document {
 }
 
 export class DashboardAPI {
-  private baseUrl: string
+  private httpClient: AuthenticatedHttpClient
 
   constructor(baseUrl: string = DEFAULT_BASE_URL) {
-    this.baseUrl = baseUrl
+    this.httpClient = new AuthenticatedHttpClient({ baseUrl })
   }
   private transformRequest(data: any): FormRequest {
     return {
@@ -71,31 +73,12 @@ export class DashboardAPI {
       documents: data.documents ?? [],
     }
   }
-  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
-    }
-
-    return response.json()
+  private async makeRequest<T>(endpoint: string, accessToken: string, options: RequestInit = {}): Promise<T> {
+    return this.httpClient.request<T>(endpoint, { ...options, requireAuth: true }, accessToken)
   }
 
   async getDashboardData(token: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
-    const data = await this.makeRequest<any>("/api/dashboard/requests", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const data = await this.makeRequest<any>("/api/dashboard/requests", token)
 
     const requests: FormRequest[] = (data.requests || []).map((r: any) =>
       this.transformRequest(r),
@@ -112,11 +95,7 @@ export class DashboardAPI {
   }
 
   async getRequestById(id: string, token: string): Promise<FormRequest> {
-    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`, token)
     return this.transformRequest(data)
   }
 
@@ -126,21 +105,15 @@ export class DashboardAPI {
   }
 
   async addComment(requestId: string, message: string, token: string): Promise<Comment> {
-    return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, {
+    return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, token, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ message }),
     })
   }
 
   async updateRequestStatus(requestId: string, status: FormRequest["status"], token: string): Promise<FormRequest> {
-    const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, token, {
       method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ status }),
     })
     return this.transformRequest(data)
