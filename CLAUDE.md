@@ -69,14 +69,32 @@ pnpm cypress:run:headless --spec "cypress/e2e/basic-smoke.cy.ts"                
 4. Users are automatically redirected based on their role
 
 ### API Integration Pattern
+The application uses a standardized Auth0 authentication pattern across all API services:
+
 ```typescript
-// Services use fetch with Auth0 tokens
-const response = await fetch(url, {
-  headers: {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json'
+// Centralized HTTP client with Auth0 integration
+import { AuthenticatedHttpClient } from '@/lib/auth-http-client'
+
+// Service layer with standardized auth handling
+class ApiService {
+  private httpClient = new AuthenticatedHttpClient()
+  
+  async getData(accessToken?: string) {
+    return this.httpClient.get<ResponseType>('/api/endpoint', accessToken, true)
   }
-});
+}
+
+// Component pattern with token retrieval
+import { useGetAuth0Token } from '@/hooks/use-auth0-token'
+
+export function Component() {
+  const getToken = useGetAuth0Token()
+  
+  const handleApiCall = async () => {
+    const token = await getToken()
+    await apiService.getData(token)
+  }
+}
 ```
 
 ### Testing Strategy
@@ -218,3 +236,83 @@ const response = await fetch('/api/protected-endpoint', {
 - **CORS errors**: Verify `cors.allowed-origins` includes `http://localhost:3000` in API
 - **Token validation**: Check that `AUTH0_AUDIENCE` matches between frontend and backend
 - **Redirect issues**: Verify `AUTH0_BASE_URL` and `APP_BASE_URL` are correctly set
+
+## Auth0 Authentication Infrastructure
+
+### Centralized Authentication System
+The application has been standardized to use a unified Auth0 authentication pattern across all components and services.
+
+#### Core Infrastructure Files
+- **`/lib/auth-http-client.ts`**: Centralized HTTP client with automatic Auth0 token handling
+- **`/hooks/use-auth0-token.ts`**: Standardized hooks for Auth0 token retrieval
+- **`/docs/AUTH0_AUTHENTICATION_PATTERN.md`**: Comprehensive documentation and guidelines
+
+#### Authentication Flow Architecture
+```
+Component → useGetAuth0Token() → getAuth0Token() → AuthenticatedHttpClient → API
+```
+
+### Standardized API Service Pattern
+All API services now follow this consistent pattern:
+
+```typescript
+// Service Layer
+class ApiService {
+  private httpClient = new AuthenticatedHttpClient()
+  
+  // Required authentication
+  async getProtectedData(accessToken: string) {
+    return this.httpClient.get<DataType>('/api/protected', accessToken, true)
+  }
+  
+  // Optional authentication  
+  async getPublicData(accessToken?: string) {
+    return this.httpClient.get<DataType>('/api/public', accessToken, false)
+  }
+}
+```
+
+### Component Integration Pattern
+All components use standardized Auth0 hooks:
+
+```typescript
+import { useUser } from '@auth0/nextjs-auth0/client'
+import { useGetAuth0Token } from '@/hooks/use-auth0-token'
+
+export function Component() {
+  const { user } = useUser()
+  const getToken = useGetAuth0Token()
+  
+  const handleApiCall = async () => {
+    const token = await getToken()
+    // Automatic error handling and loading states
+    await apiService.callMethod(token)
+  }
+}
+```
+
+### Key Benefits
+- **Consistency**: All API calls follow the same authentication pattern
+- **Security**: Centralized token handling with proper error management  
+- **Maintainability**: Single source of truth for authentication logic
+- **Type Safety**: Full TypeScript support with proper typing
+- **Error Handling**: Standardized error messages and user feedback
+
+### Migration from Legacy Pattern
+Components and services have been updated from manual token handling:
+
+```typescript
+// Before (manual)
+const { getAccessToken } = useAccessToken()
+const token = await getAccessToken({ audience: '...' })
+const response = await fetch(url, {
+  headers: { Authorization: `Bearer ${token}` }
+})
+
+// After (standardized)
+const getToken = useGetAuth0Token()
+const token = await getToken()
+const data = await apiService.getData(token)
+```
+
+This ensures all protected API endpoints receive proper bearer tokens and maintain secure communication with the backend API.
