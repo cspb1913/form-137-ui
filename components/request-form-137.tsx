@@ -41,7 +41,7 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     lastSchoolYear: "",
     previousSchool: "",
     purposeOfRequest: "",
-    deliveryMethod: "",
+    deliveryMethod: "Pick-up",
     requesterName: "",
     relationshipToLearner: "",
     emailAddress: "",
@@ -65,8 +65,7 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     "Grade 11",
     "Grade 12",
   ]
-  const relationshipOptions = ["Self", "Parent/Guardian", "Authorized Representative"]
-  const deliveryOptions = ["Email", "Pick-up"]
+  const relationshipOptions = ["Self", "Third Party"]
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -436,18 +435,11 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
                   <Label>
                     Delivery Method <span className="text-red-500">*</span>
                   </Label>
-                  <RadioGroup
-                    value={formData.deliveryMethod}
-                    onValueChange={(value) => handleInputChange("deliveryMethod", value)}
-                    className="mt-2"
-                  >
-                    {deliveryOptions.map((option) => (
-                      <div key={option} className="flex items-center space-x-2">
-                        <RadioGroupItem value={option} id={option} />
-                        <Label htmlFor={option}>{option}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                  <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                    <p className="text-sm text-gray-700 font-medium">Pick-up Only</p>
+                    <p className="text-xs text-gray-500 mt-1">All Form 137 requests must be picked up at the school office.</p>
+                  </div>
+                  <input type="hidden" name="deliveryMethod" value="Pick-up" />
                   {errors.deliveryMethod && (
                     <p className="text-sm text-red-600 mt-1" role="alert">
                       {errors.deliveryMethod}
@@ -482,24 +474,21 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
                   </div>
 
                   <div>
-                    <Label htmlFor="relationshipToLearner">
+                    <Label>
                       Relationship to Learner <span className="text-red-500">*</span>
                     </Label>
-                    <Select
+                    <RadioGroup
                       value={formData.relationshipToLearner}
                       onValueChange={(value) => handleInputChange("relationshipToLearner", value)}
+                      className="mt-2"
                     >
-                      <SelectTrigger className={errors.relationshipToLearner ? "border-red-500" : ""}>
-                        <SelectValue placeholder="Select relationship" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {relationshipOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {relationshipOptions.map((option) => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`relationship-${option}`} />
+                          <Label htmlFor={`relationship-${option}`}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
                     {errors.relationshipToLearner && (
                       <p className="text-sm text-red-600 mt-1" role="alert">
                         {errors.relationshipToLearner}

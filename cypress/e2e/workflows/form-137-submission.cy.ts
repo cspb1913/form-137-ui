@@ -42,7 +42,7 @@ describe('Form 137 Submission Workflows', () => {
         lastSchoolYear: '2023-2024',
         previousSchool: 'Manila High School',
         purposeOfRequest: 'Employment Requirements - Software Developer Position',
-        deliveryMethod: 'Email',
+        deliveryMethod: 'Pick-up',
         requestType: 'Form137',
         learnerName: 'Alice Marie Johnson',
         requesterName: 'Alice Marie Johnson',

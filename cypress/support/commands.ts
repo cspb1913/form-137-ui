@@ -633,11 +633,11 @@ Cypress.Commands.add('setupForm137Interceptors', () => {
       lastSchoolYear: '2023-2024',
       previousSchool: 'Manila High School',
       purposeOfRequest: 'College application requirements',
-      deliveryMethod: 'Email',
+      deliveryMethod: 'Pick-up',
       requestType: 'Form137',
       learnerName: 'Juan Santos Dela Cruz',
       requesterName: 'Maria Dela Cruz',
-      relationshipToLearner: 'Parent/Guardian',
+      relationshipToLearner: 'Third Party',
       emailAddress: 'maria.delacruz@email.com',
       mobileNumber: '+639123456789',
       status: 'submitted',
@@ -707,7 +707,7 @@ Cypress.Commands.add('fillForm137WithTestData', (overrides: Partial<Form137Data>
     
     // Request Information
     purposeOfRequest: 'College application requirements',
-    deliveryMethod: 'Email',
+    deliveryMethod: 'Pick-up',
     requestType: 'Form137',
     
     // Requester Information

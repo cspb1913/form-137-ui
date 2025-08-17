@@ -11,7 +11,7 @@ describe("Form Validation", () => {
     lastSchoolYear: "SY 2020-2021",
     previousSchool: "Test School",
     purposeOfRequest: "College application",
-    deliveryMethod: "Email",
+    deliveryMethod: "Pick-up",
     requesterName: "John Doe",
     relationshipToLearner: "Self",
     emailAddress: "john@example.com",
