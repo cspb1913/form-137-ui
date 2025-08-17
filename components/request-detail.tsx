@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useUser } from "@auth0/nextjs-auth0"
+import { useAuth } from "@/hooks/use-auth"
 import { useGetAuth0Token } from "@/hooks/use-auth0-token"
+import { RequesterRequestView } from "@/components/requester-request-view"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,12 +21,20 @@ interface RequestDetailProps {
 }
 
 export function RequestDetail({ request: initialRequest, onRequestUpdate }: RequestDetailProps) {
-  const { user } = useUser()
+  const { user } = useAuth()
   const getToken = useGetAuth0Token()
   const [request, setRequest] = useState(initialRequest)
   const [newComment, setNewComment] = useState("")
   const [isAddingComment, setIsAddingComment] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+
+  // Check if user is admin (has Admin role)
+  const isAdmin = user?.roles?.includes('Admin') || false
+  
+  // If user is not admin (i.e., they're a requester), show the readonly form view
+  if (!isAdmin) {
+    return <RequesterRequestView request={request} />
+  }
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return

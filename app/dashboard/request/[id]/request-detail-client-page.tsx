@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@auth0/nextjs-auth0"
+import { useAuth } from "@/hooks/use-auth"
 import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { RequestDetail } from "@/components/request-detail"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
@@ -16,7 +16,7 @@ interface RequestDetailClientPageProps {
 }
 
 export default function RequestDetailClientPage({ requestId }: RequestDetailClientPageProps) {
-  const { user, isLoading: userLoading } = useUser()
+  const { user, isLoading: userLoading } = useAuth()
   const getToken = useGetAuth0Token()
   const [request, setRequest] = useState<FormRequest | null>(null)
   const [loading, setLoading] = useState(true)
