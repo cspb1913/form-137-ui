@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from "@auth0/nextjs-auth0"
 import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +48,17 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     mobileNumber: "+63",
   })
 
+  // Initialize form data from logged-in user
+  useEffect(() => {
+    if (user?.email && !formData.emailAddress) {
+      setFormData(prev => ({
+        ...prev,
+        emailAddress: user.email || "",
+        requesterName: user.name || ""
+      }))
+    }
+  }, [user, formData.emailAddress])
+
   const gradeOptions = [
     "Nursery",
     "Pre-Kindergarten",
@@ -66,9 +77,31 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
     "Grade 12",
   ]
   const relationshipOptions = ["Self", "Third Party"]
+  
+  // Determine if requester name should be disabled (when relationship is "Self")
+  const isRequesterNameDisabled = formData.relationshipToLearner === "Self"
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value }
+      
+      // Special handling for relationship to learner changes
+      if (field === "relationshipToLearner") {
+        if (value === "Self") {
+          // When "Self" is selected, populate requester name with learner name
+          const learnerName = [prev.firstName, prev.middleName, prev.lastName]
+            .filter(Boolean)
+            .join(" ")
+          newData.requesterName = learnerName || user?.name || ""
+        } else if (value === "Third Party") {
+          // When "Third Party" is selected, clear the requester name for manual entry
+          newData.requesterName = ""
+        }
+      }
+      
+      return newData
+    })
+    
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
@@ -464,7 +497,11 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
                       type="text"
                       value={formData.requesterName}
                       onChange={(e) => handleInputChange("requesterName", e.target.value)}
-                      className={errors.requesterName ? "border-red-500" : ""}
+                      disabled={isRequesterNameDisabled}
+                      className={`${errors.requesterName ? "border-red-500" : ""} ${
+                        isRequesterNameDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+                      }`}
+                      placeholder={isRequesterNameDisabled ? "Same as learner (self)" : "Enter requester name"}
                     />
                     {errors.requesterName && (
                       <p className="text-sm text-red-600 mt-1" role="alert">
