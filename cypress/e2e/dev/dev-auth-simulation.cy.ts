@@ -199,7 +199,7 @@ describe('Development Authentication Simulation', () => {
   })
 
   describe('Development Token Simulation', () => {
-    it('should generate mock JWT tokens for API testing', () => {
+    it('should generate custom JWT tokens for API testing', () => {
       cy.visit('/')
       
       // Set up user for token generation
@@ -208,39 +208,85 @@ describe('Development Authentication Simulation', () => {
         win.localStorage.setItem('dev-user-role', 'Requester')
       })
       
-      // Test that we can generate mock tokens
-      // This would depend on the actual implementation of the dev JWT generator
-      cy.window().then((win) => {
-        // In a real implementation, we might call a dev token generator
-        // For now, just verify the user data is set up correctly
-        expect(win.localStorage.getItem('dev-user-email')).to.equal('token@test.com')
+      // Test custom JWT token generation via API
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:8080/api/auth/token',
+        headers: {
+          'X-CSPB-Secret': 'dev-secret-key-not-for-production',
+          'Content-Type': 'application/json'
+        },
+        body: {
+          email: 'token@test.com',
+          name: 'Token Test User',
+          role: 'Requester'
+        },
+        failOnStatusCode: false
+      }).then((response) => {
+        if (response.status === 200) {
+          cy.log('✅ Custom JWT token generated successfully')
+          expect(response.body).to.have.property('access_token')
+          expect(response.body).to.have.property('token_type', 'Bearer')
+          
+          // Store token for use in other tests
+          cy.window().then((win) => {
+            win.localStorage.setItem('dev-jwt-token', response.body.access_token)
+          })
+        } else {
+          cy.log('⚠️ JWT token generation requires API to be running')
+        }
       })
     })
 
-    it('should simulate API calls with mock authentication', () => {
+    it('should simulate API calls with custom JWT authentication', () => {
+      // First generate a custom JWT token
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:8080/api/auth/token',
+        headers: {
+          'X-CSPB-Secret': 'dev-secret-key-not-for-production',
+          'Content-Type': 'application/json'
+        },
+        body: {
+          email: 'api@test.com',
+          name: 'API Test User',
+          role: 'Requester'
+        },
+        failOnStatusCode: false
+      }).then((response) => {
+        if (response.status === 200) {
+          const token = response.body.access_token
+          
+          // Test authenticated API call with JWT token
+          cy.request({
+            method: 'GET',
+            url: 'http://localhost:8080/api/dashboard/requests',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            failOnStatusCode: false
+          }).then((apiResponse) => {
+            if (apiResponse.status === 200) {
+              cy.log('✅ Authenticated API call successful')
+            } else {
+              cy.log(`⚠️ API call status: ${apiResponse.status}`)
+            }
+          })
+        } else {
+          cy.log('⚠️ Skipping authenticated API test - JWT generation failed')
+        }
+      })
+
+      // Set up mock user in browser
       cy.visit('/')
-      
-      // Set up mock user
       cy.window().then((win) => {
         win.localStorage.setItem('dev-user-email', 'api@test.com')
         win.localStorage.setItem('dev-user-role', 'Requester')
       })
       
-      // Intercept API calls to verify they include mock auth
-      cy.intercept('GET', '**/api/**', (req) => {
-        // In dev mode, requests might include mock authorization
-        cy.log('API request intercepted:', req.url)
-        req.reply({ statusCode: 200, body: { message: 'Mock API response' } })
-      }).as('apiCall')
-      
       cy.reload()
-      
-      // Navigate to a page that makes API calls
-      cy.visit('/dashboard')
       cy.get('body').should('be.visible')
-      
-      // Wait for potential API calls
-      cy.wait(1000)
     })
   })
 

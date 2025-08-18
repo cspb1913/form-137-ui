@@ -98,15 +98,60 @@ describe('Development Mode Functionality', () => {
   })
 
   describe('Development API Integration', () => {
-    it('should connect to local development API', () => {
-      // Test local API connectivity
-      cy.task('checkLocalApiHealth').then((result: any) => {
-        cy.log(`API Health Check: ${JSON.stringify(result)}`)
+    it('should connect to local development API with custom JWT', () => {
+      // Test local API connectivity with custom authentication
+      cy.request({
+        method: 'GET',
+        url: 'http://localhost:8080/api/health/liveness',
+        failOnStatusCode: false
+      }).then((response) => {
+        cy.log(`API Health Check: ${response.status}`)
         
-        if (result.status === 200) {
+        if (response.status === 200) {
           cy.log('✅ Local API is running and accessible')
         } else {
           cy.log('⚠️ Local API may not be running - this is expected if not started')
+        }
+      })
+    })
+
+    it('should test custom JWT token generation in dev mode', () => {
+      // Test custom JWT token endpoint
+      cy.request({
+        method: 'POST',
+        url: 'http://localhost:8080/api/auth/token',
+        headers: {
+          'X-CSPB-Secret': 'dev-secret-key-not-for-production',
+          'Content-Type': 'application/json'
+        },
+        body: {
+          email: 'dev@test.com',
+          name: 'Dev User',
+          role: 'Requester'
+        },
+        failOnStatusCode: false
+      }).then((response) => {
+        if (response.status === 200) {
+          cy.log('✅ Custom JWT token generation working')
+          expect(response.body).to.have.property('access_token')
+        } else {
+          cy.log('⚠️ JWT token generation may require API to be running')
+        }
+      })
+    })
+
+    it('should test JWKS endpoint availability', () => {
+      // Test JWKS endpoint for token validation
+      cy.request({
+        method: 'GET',
+        url: 'http://localhost:8080/api/auth/.well-known/jwks.json',
+        failOnStatusCode: false
+      }).then((response) => {
+        if (response.status === 200) {
+          cy.log('✅ JWKS endpoint accessible')
+          expect(response.body).to.have.property('keys')
+        } else {
+          cy.log('⚠️ JWKS endpoint may require API to be running')
         }
       })
     })

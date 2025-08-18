@@ -1,6 +1,7 @@
 import { Pact } from "@pact-foundation/pact"
 import { like, eachLike } from "@pact-foundation/pact/src/dsl/matchers"
 import { DashboardAPI } from "../../services/dashboard-api"
+import { getCustomToken } from "@/lib/auth-http-client"
 
 const provider = new Pact({
   consumer: "Form137Frontend",
@@ -68,14 +69,25 @@ describe("Dashboard API Pact Tests", () => {
     })
 
     it("should return dashboard data", async () => {
-      const dashboardAPI = new DashboardAPI("http://localhost:1234")
-      const result = await dashboardAPI.getDashboardData("token123")
+      // Set up environment for custom token generation
+      const originalApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+      const originalSecret = process.env.NEXT_PUBLIC_CSPB_API_SECRET
+      process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:1234"
+      process.env.NEXT_PUBLIC_CSPB_API_SECRET = "test-secret-key-for-pact-tests"
 
-      expect(result.requests).toBeDefined()
-      expect(result.statistics).toBeDefined()
-      expect(result.requests[0]).toHaveProperty("id")
-      expect(result.requests[0]).toHaveProperty("ticketNumber")
-      expect(result.requests[0]).toHaveProperty("status")
+      try {
+        const dashboardAPI = new DashboardAPI("http://localhost:1234")
+        const result = await dashboardAPI.getDashboardData("token123")
+
+        expect(result.requests).toBeDefined()
+        expect(result.statistics).toBeDefined()
+        expect(result.requests[0]).toHaveProperty("id")
+        expect(result.requests[0]).toHaveProperty("ticketNumber")
+        expect(result.requests[0]).toHaveProperty("status")
+      } finally {
+        process.env.NEXT_PUBLIC_API_BASE_URL = originalApiUrl
+        process.env.NEXT_PUBLIC_CSPB_API_SECRET = originalSecret
+      }
     })
   })
 
