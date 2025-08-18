@@ -8,7 +8,7 @@
  */
 describe('Custom JWT Authentication Integration', () => {
   const API_BASE_URL = 'http://localhost:8080'
-  const DEV_API_SECRET = 'dev-secret-key-not-for-production'
+  const DEV_API_SECRET = 'cspb-secure-api-key-2025'
 
   beforeEach(() => {
     // Clear any existing state

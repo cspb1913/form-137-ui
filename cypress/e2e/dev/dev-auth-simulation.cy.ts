@@ -213,7 +213,7 @@ describe('Development Authentication Simulation', () => {
         method: 'POST',
         url: 'http://localhost:8080/api/auth/token',
         headers: {
-          'X-CSPB-Secret': 'dev-secret-key-not-for-production',
+          'X-CSPB-Secret': 'cspb-secure-api-key-2025',
           'Content-Type': 'application/json'
         },
         body: {
@@ -244,7 +244,7 @@ describe('Development Authentication Simulation', () => {
         method: 'POST',
         url: 'http://localhost:8080/api/auth/token',
         headers: {
-          'X-CSPB-Secret': 'dev-secret-key-not-for-production',
+          'X-CSPB-Secret': 'cspb-secure-api-key-2025',
           'Content-Type': 'application/json'
         },
         body: {
