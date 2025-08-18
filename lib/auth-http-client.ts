@@ -162,6 +162,44 @@ export async function getAuth0Token(
 }
 
 /**
+ * Custom token retrieval from our own API endpoint
+ * 
+ * @param userInfo - User information for token generation
+ */
+export async function getCustomToken(userInfo: {
+  email?: string
+  name?: string
+  role?: string
+}): Promise<string> {
+  try {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_FORM137_API_URL || ""
+    
+    const response = await fetch(`${apiBaseUrl}/api/auth/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSPB-Secret": process.env.NEXT_PUBLIC_CSPB_API_SECRET || "cspb-secure-api-key-2025",
+      },
+      body: JSON.stringify({
+        email: userInfo.email || "user@example.com",
+        name: userInfo.name || "User",
+        role: userInfo.role || "Requester",
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Token request failed: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.access_token
+  } catch (error) {
+    console.error("Failed to retrieve custom access token:", error)
+    throw new Error("Custom authentication failed. Please try again.")
+  }
+}
+
+/**
  * Utility type for API service methods that support optional authentication
  */
 export type OptionalAuthMethod<TArgs extends any[], TReturn> = (

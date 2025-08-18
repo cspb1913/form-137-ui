@@ -7,7 +7,7 @@
 
 import { useCallback, useState } from "react"
 import { getAccessToken } from "@auth0/nextjs-auth0"
-import { getAuth0Token } from "@/lib/auth-http-client"
+import { getAuth0Token, getCustomToken } from "@/lib/auth-http-client"
 
 interface UseAuth0TokenOptions {
   audience?: string
@@ -63,33 +63,26 @@ export function useAuth0Token(options: UseAuth0TokenOptions = {}): UseAuth0Token
  */
 export function useGetAuth0Token(audience?: string) {
   const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
+  const useCustomAuth = process.env.NEXT_PUBLIC_USE_CUSTOM_AUTH === "true"
   
-  // For development mode, import the generateDevJWT function
   return useCallback(async (): Promise<string> => {
-    if (isDevelopmentMode) {
-      // In development mode, generate a mock JWT token
-      const { generateDevJWT } = await import("@/lib/dev-jwt-generator")
-      
-      // Get user details from localStorage (if available)
+    if (isDevelopmentMode || useCustomAuth) {
+      // Use custom authentication API (works for both dev mode and custom auth mode)
       let email = "dev@example.com"
       let name = "Development User"
       let role = "Admin"
       
       if (typeof window !== "undefined") {
-        email = localStorage.getItem("dev-user-email") || email
-        name = localStorage.getItem("dev-user-name") || name
-        role = localStorage.getItem("dev-user-role") || role
+        // Try dev-user-* keys first (for dev mode), then fall back to user-* keys (for custom auth mode)
+        email = localStorage.getItem("dev-user-email") || localStorage.getItem("user-email") || email
+        name = localStorage.getItem("dev-user-name") || localStorage.getItem("user-name") || name
+        role = localStorage.getItem("dev-user-role") || localStorage.getItem("user-role") || role
       }
       
-      return generateDevJWT({
-        email,
-        name,
-        role,
-        expirationHours: 24,
-      })
+      return getCustomToken({ email, name, role })
     } else {
       // In production mode, use the standard Auth0 flow
       return getAuth0Token(getAccessToken, audience)
     }
-  }, [audience, isDevelopmentMode])
+  }, [audience, isDevelopmentMode, useCustomAuth])
 }
