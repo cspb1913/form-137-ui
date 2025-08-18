@@ -35,6 +35,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
   const [status, setStatus] = useState<RequestStatus>("submitted")
   const [comments, setComments] = useState("")
   const [saving, setSaving] = useState(false)
+  const [justAdded, setJustAdded] = useState<string | null>(null)
   const { toast } = useToast()
   const { user, isLoading: userLoading } = useUser()
   const getToken = useGetAuth0Token()
@@ -78,15 +79,30 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
     setSaving(true)
     try {
       const token = await getToken()
+      let updatedDetail = { ...detail }
       
       // Update status if changed
       if (status !== detail.status) {
-        await dashboardApi.updateRequestStatus(detail.id, status, token)
+        updatedDetail = await dashboardApi.updateRequestStatus(detail.id, status, token)
+        setDetail(updatedDetail)
       }
       
       // Add comment if provided
       if (comments.trim()) {
-        await dashboardApi.addComment(detail.id, comments, token)
+        const newComment = await dashboardApi.addComment(detail.id, comments, token)
+        
+        // Update the detail with the new comment at the beginning (most recent first)
+        const updatedComments = [newComment, ...updatedDetail.comments]
+        updatedDetail = {
+          ...updatedDetail,
+          comments: updatedComments
+        }
+        setDetail(updatedDetail)
+        setComments("") // Clear the comment input after successful save
+        
+        // Set the just added comment for animation
+        setJustAdded(newComment.id)
+        setTimeout(() => setJustAdded(null), 2000) // Remove highlight after 2 seconds
       }
       
       toast({ title: "Saved", description: "Request updated successfully." })
@@ -207,11 +223,11 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Program</label>
+                <label className="text-sm font-medium text-muted-foreground">Last Grade Level</label>
                 <p className="font-medium mt-1">{detail.program || 'Not specified'}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Graduation Year</label>
+                <label className="text-sm font-medium text-muted-foreground">Last School Year</label>
                 <p className="font-medium mt-1">{detail.graduationYear || 'Not specified'}</p>
               </div>
             </div>
@@ -323,17 +339,39 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
           <CardDescription>Communication history and admin actions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <label className="text-sm font-medium">Add Comment</label>
+          <div className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 transition-all duration-300 ease-in-out">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-blue-600" />
+              <label className="text-sm font-medium text-blue-900">Add Comment</label>
+            </div>
             <Textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               rows={4}
               placeholder="Add a comment or update..."
+              className="transition-all duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
-            <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={handleSave} 
+                disabled={saving || (!comments.trim() && status === detail?.status)} 
+                className="transition-all duration-200 ease-in-out transform hover:scale-105 disabled:hover:scale-100"
+              >
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+              {comments.trim() && (
+                <span className="text-xs text-muted-foreground bg-white px-2 py-1 rounded-full">
+                  {comments.trim().length} characters
+                </span>
+              )}
+            </div>
           </div>
 
           <Separator />
@@ -341,21 +379,53 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
           <div className="space-y-4">
             <h4 className="text-sm font-medium">Comment History</h4>
             {detail.comments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No comments yet.</p>
+              <div className="text-muted-foreground text-center py-8 transition-all duration-300 ease-in-out">
+                <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No comments yet.</p>
+              </div>
             ) : (
-              detail.comments.map((comment) => (
-                <div key={comment.id} className="flex gap-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium">{comment.author}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </span>
+              <div className="space-y-3">
+                {[...detail.comments]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .map((comment, index) => (
+                    <div 
+                      key={comment.id} 
+                      className={`flex gap-3 p-4 rounded-lg transform transition-all duration-500 ease-in-out hover:scale-[1.01] animate-in slide-in-from-top-2 fade-in ${
+                        justAdded === comment.id 
+                          ? 'bg-green-50 border-2 border-green-200 shadow-lg' 
+                          : 'bg-muted/50 hover:bg-muted/70'
+                      }`}
+                      style={{ 
+                        animationDelay: `${index * 100}ms`,
+                        animationDuration: '600ms'
+                      }}
+                    >
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium text-sm">{comment.author}</span>
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </span>
+                          {(index === 0 || justAdded === comment.id) && (
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              justAdded === comment.id 
+                                ? 'bg-green-200 text-green-800 animate-bounce' 
+                                : 'bg-green-100 text-green-700 animate-pulse'
+                            }`}>
+                              {justAdded === comment.id ? 'New!' : 'Latest'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed break-words">{comment.message}</p>
+                      </div>
                     </div>
-                    <p className="text-sm">{comment.message}</p>
-                  </div>
-                </div>
-              ))
+                  ))}
+              </div>
             )}
           </div>
         </CardContent>
