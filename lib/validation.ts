@@ -38,7 +38,10 @@ export const validateForm = (data: FormData): FormErrors => {
   if (!data.previousSchool.trim()) errors.previousSchool = "Previous School is required"
   if (!data.purposeOfRequest.trim()) errors.purposeOfRequest = "Purpose of Request is required"
   if (!data.deliveryMethod) errors.deliveryMethod = "Delivery Method is required"
-  if (!data.requesterName.trim()) errors.requesterName = "Requester Name is required"
+  // Requester Name is only required if relationship is not "Self"
+  if (!data.requesterName.trim() && data.relationshipToLearner !== "Self") {
+    errors.requesterName = "Requester Name is required"
+  }
   if (!data.relationshipToLearner) errors.relationshipToLearner = "Relationship to Learner is required"
 
   // Email validation

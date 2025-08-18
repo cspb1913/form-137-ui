@@ -51,12 +51,8 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
   if (userLoading || loading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Skeleton className="h-10 w-10" />
-          <div>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
-          </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-24" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -93,8 +89,8 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
   if (!user) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -113,8 +109,8 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -138,8 +134,8 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
   if (!request) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -159,19 +155,19 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
   }
 
   return (
-    <div>
-      <div className="container mx-auto p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </Button>
       </div>
 
-      <RequestDetail request={request} onRequestUpdate={handleRequestUpdate} />
+      <div className="-mt-6">
+        <RequestDetail request={request} onRequestUpdate={handleRequestUpdate} />
+      </div>
     </div>
   )
 }

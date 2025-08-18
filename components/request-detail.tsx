@@ -81,8 +81,8 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Request Details</h1>
           <p className="text-muted-foreground">Ticket #{request.ticketNumber}</p>
@@ -95,10 +95,12 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
                 <SelectItem value="processing">Processing</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="requires-clarification">Requires Clarification</SelectItem>
+                <SelectItem value="ready-for-pickup">Ready for Pickup</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -114,25 +116,25 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                <p className="font-medium">{request.studentName}</p>
+                <p className="font-medium mt-1">{request.studentName}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Student ID</label>
-                <p className="font-medium">{request.studentId}</p>
+                <p className="font-medium mt-1">{request.studentId}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Program</label>
-                <p className="font-medium">{request.program}</p>
+                <p className="font-medium mt-1">{request.program}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Graduation Year</label>
-                <p className="font-medium">{request.graduationYear}</p>
+                <p className="font-medium mt-1">{request.graduationYear}</p>
               </div>
             </div>
 
@@ -141,11 +143,11 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{request.email}</span>
+                <span className="text-sm">{request.email}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{request.phoneNumber}</span>
+                <span className="text-sm">{request.phoneNumber}</span>
               </div>
             </div>
           </CardContent>
@@ -161,7 +163,7 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Purpose</label>
-              <p className="font-medium">{request.purpose}</p>
+              <p className="font-medium mt-1">{request.purpose}</p>
             </div>
 
             <div>
@@ -185,16 +187,16 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
             <Separator />
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <label className="text-muted-foreground">Submitted</label>
+                <label className="text-sm font-medium text-muted-foreground">Submitted</label>
                 <div className="flex items-center gap-2 mt-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>{new Date(request.submittedAt).toLocaleString()}</span>
                 </div>
               </div>
               <div>
-                <label className="text-muted-foreground">Last Updated</label>
+                <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
                 <div className="flex items-center gap-2 mt-1">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span>{new Date(request.updatedAt).toLocaleString()}</span>

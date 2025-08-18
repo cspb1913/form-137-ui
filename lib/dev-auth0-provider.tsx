@@ -43,13 +43,27 @@ export function DevAuth0Provider({ children }: DevAuthProviderProps) {
     // Check localStorage first (for profile switching), then environment variables
     let email = process.env.NEXT_PUBLIC_DEV_USER_EMAIL || "dev@example.com"
     let name = process.env.NEXT_PUBLIC_DEV_USER_NAME || "Development User"
-    let role = process.env.NEXT_PUBLIC_DEV_USER_ROLE || "Requester"
+    let role = process.env.NEXT_PUBLIC_DEV_USER_ROLE || "Admin"
     
     if (typeof window !== "undefined") {
       email = localStorage.getItem("dev-user-email") || email
       name = localStorage.getItem("dev-user-name") || name
       role = localStorage.getItem("dev-user-role") || role
     }
+    
+    // Create roles array based on the selected role
+    let roles: string[] = []
+    if (role === "Admin") {
+      roles = ["Admin", "Requester"] // Admin gets both roles
+    } else if (role === "Requester") {
+      roles = ["Requester"] // Requester gets only requester role
+    } else if (role === "Student") {
+      roles = ["Student"] // Student gets only student role
+    } else {
+      roles = [role] // Fallback for any other role
+    }
+    
+    console.log(`🔧 DevAuth0Provider: Creating mock user with role: ${role}, roles: ${JSON.stringify(roles)}`)
     
     return {
       sub: `dev|${email.split("@")[0]}`,
@@ -59,33 +73,42 @@ export function DevAuth0Provider({ children }: DevAuthProviderProps) {
       picture: "/placeholder-user.jpg",
       email_verified: true,
       updated_at: new Date().toISOString(),
-      roles: ['Admin', 'Requester'], // Give both roles for testing
+      roles: roles,
       // Add Auth0 namespace claims for roles
-      [`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`]: ['Admin', 'Requester'],
+      [`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`]: roles,
     }
   }
 
   // Generate a fake JWT token for API calls using the JWT generator
   const generateMockToken = (): string => {
     const { generateDevJWT } = require("./dev-jwt-generator")
+    
+    // Get current role from localStorage if available
+    let role = process.env.NEXT_PUBLIC_DEV_USER_ROLE || "Admin"
+    let email = process.env.NEXT_PUBLIC_DEV_USER_EMAIL || "dev@example.com"
+    let name = process.env.NEXT_PUBLIC_DEV_USER_NAME || "Development User"
+    
+    if (typeof window !== "undefined") {
+      email = localStorage.getItem("dev-user-email") || email
+      name = localStorage.getItem("dev-user-name") || name
+      role = localStorage.getItem("dev-user-role") || role
+    }
+    
     return generateDevJWT({
-      email: process.env.NEXT_PUBLIC_DEV_USER_EMAIL || "dev@example.com",
-      name: process.env.NEXT_PUBLIC_DEV_USER_NAME || "Development User",
-      role: process.env.NEXT_PUBLIC_DEV_USER_ROLE || "Requester",
+      email,
+      name,
+      role,
       expirationHours: 24,
     })
   }
 
   useEffect(() => {
-    // Simulate initial loading
-    const timer = setTimeout(() => {
-      setAuthState({
-        user: createMockUser(),
-        isLoading: false,
-      })
-    }, 100)
-
-    return () => clearTimeout(timer)
+    // Initialize immediately in development mode - no need for delay
+    console.log("🔧 DevAuth0Provider: Initializing mock user")
+    setAuthState({
+      user: createMockUser(),
+      isLoading: false,
+    })
   }, [])
 
   const login = () => {

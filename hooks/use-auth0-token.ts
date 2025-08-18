@@ -62,7 +62,34 @@ export function useAuth0Token(options: UseAuth0TokenOptions = {}): UseAuth0Token
  * @returns Promise resolving to access token
  */
 export function useGetAuth0Token(audience?: string) {
+  const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
+  
+  // For development mode, import the generateDevJWT function
   return useCallback(async (): Promise<string> => {
-    return getAuth0Token(getAccessToken, audience)
-  }, [audience])
+    if (isDevelopmentMode) {
+      // In development mode, generate a mock JWT token
+      const { generateDevJWT } = await import("@/lib/dev-jwt-generator")
+      
+      // Get user details from localStorage (if available)
+      let email = "dev@example.com"
+      let name = "Development User"
+      let role = "Admin"
+      
+      if (typeof window !== "undefined") {
+        email = localStorage.getItem("dev-user-email") || email
+        name = localStorage.getItem("dev-user-name") || name
+        role = localStorage.getItem("dev-user-role") || role
+      }
+      
+      return generateDevJWT({
+        email,
+        name,
+        role,
+        expirationHours: 24,
+      })
+    } else {
+      // In production mode, use the standard Auth0 flow
+      return getAuth0Token(getAccessToken, audience)
+    }
+  }, [audience, isDevelopmentMode])
 }
