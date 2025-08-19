@@ -147,3 +147,4 @@ cypress/videos/
 # Misc
 *.tgz
 *.tar.gz
+.vercel
