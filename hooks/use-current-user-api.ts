@@ -42,23 +42,35 @@ export function useCurrentUserApi(): UseCurrentUserApiReturn {
       forceCall 
     })
     
-    if (!auth0User && !forceCall) {
-      console.log('❌ No Auth0 user, skipping MongoDB API call')
-      setUser(null)
-      setIsLoading(false)
-      return
-    }
+    // TEMP: Always try the API call since we know Auth0 is working via API routes
+    // if (!auth0User && !forceCall) {
+    //   console.log('❌ No Auth0 user, skipping MongoDB API call')
+    //   setUser(null)
+    //   setIsLoading(false)
+    //   return
+    // }
 
     try {
       console.log('🔄 Starting MongoDB API call...')
       setError(null)
       
-      console.log('🎫 Getting Auth0 token...')
-      const token = await getToken()
-      console.log('✅ Got Auth0 token:', token ? 'SUCCESS' : 'FAILED', token?.substring(0, 20) + '...')
+      // First check if we have an Auth0 session via API
+      console.log('🔍 Checking Auth0 session via /api/auth/me')
+      const auth0Response = await fetch('/api/auth/me')
+      if (!auth0Response.ok) {
+        console.log('❌ No Auth0 session found via API')
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
       
-      console.log('📡 Calling MongoDB API...')
-      const userData = await userAPI.getCurrentUser(token)
+      const auth0Data = await auth0Response.json()
+      console.log('✅ Auth0 session found:', auth0Data.email)
+      
+      console.log('📡 Getting Auth0 token for MongoDB API...')
+      const token = await getToken()
+      console.log('✅ Auth0 token obtained, calling MongoDB API...')
+      const userData = await userAPI.getCurrentUserWithToken(token)
       console.log('✅ MongoDB API response:', userData)
       
       setUser(userData)
@@ -84,6 +96,12 @@ export function useCurrentUserApi(): UseCurrentUserApiReturn {
       fetchCurrentUser()
     } else {
       console.log('⏳ Auth0 still loading, waiting...')
+      // TEMP: Also try to fetch after a timeout even if Auth0 is loading
+      const timeout = setTimeout(() => {
+        console.log('⚠️ Auth0 loading timeout - trying fetchCurrentUser anyway')
+        fetchCurrentUser(true)
+      }, 3000)
+      return () => clearTimeout(timeout)
     }
   }, [auth0User, auth0Loading])
 
