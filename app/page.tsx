@@ -7,7 +7,7 @@ import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
 import { useAuth } from "@/hooks/use-auth-mongodb"
 import { LoginPrompt } from "@/components/login-prompt"
-import { isAdmin, canAccessDashboard } from "@/lib/user-auth-utils"
+import { isAdmin, isRequester, canAccessDashboard } from "@/lib/user-auth-utils"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()
@@ -24,18 +24,20 @@ export default function HomePage() {
   // Role-based redirect logic
   useEffect(() => {
     if (!isLoading && user) {
-      if (isAdmin(user)) {
-        // Admin users should be redirected to /admin
-        router.replace("/admin")
-        return
-      }
-      // Handle users without proper roles
+      // Handle users without proper roles first
       if (!canAccessDashboard(user)) {
         // Redirect users without valid roles to unauthorized page
         router.replace("/unauthorized")
         return
       }
-      // Requester users stay on this page
+      
+      // Admin-only users go to admin panel
+      if (isAdmin(user) && !isRequester(user)) {
+        router.replace("/admin")
+        return
+      }
+      
+      // All other cases (Requester-only, Admin+Requester, or any valid roles) stay on dashboard
     }
   }, [user, isLoading, router])
 
