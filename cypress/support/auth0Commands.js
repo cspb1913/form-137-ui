@@ -73,7 +73,7 @@ const isTokenValid = (token, bufferSeconds = 30) => {
  */
 Cypress.Commands.add('auth0ClientCredentials', (options = {}) => {
   const {
-    audience = auth0Config.audience,
+    audience = getAuth0Config().audience,
     useCache = true
   } = options;
 
@@ -87,13 +87,13 @@ Cypress.Commands.add('auth0ClientCredentials', (options = {}) => {
   
   return cy.request({
     method: 'POST',
-    url: `https://${auth0Config.domain}/oauth/token`,
+    url: `https://${getAuth0Config().domain}/oauth/token`,
     headers: {
       'Content-Type': 'application/json'
     },
     body: {
-      client_id: auth0Config.clientId,
-      client_secret: auth0Config.clientSecret,
+      client_id: getAuth0Config().clientId,
+      client_secret: getAuth0Config().clientSecret,
       audience: audience,
       grant_type: 'client_credentials'
     },
@@ -126,17 +126,17 @@ Cypress.Commands.add('auth0ClientCredentials', (options = {}) => {
  */
 Cypress.Commands.add('auth0Login', (options = {}) => {
   const {
-    username = auth0Config.testUser.username,
-    password = auth0Config.testUser.password,
-    scope = auth0Config.scope,
-    audience = auth0Config.audience
+    username = getAuth0Config().testUser.username,
+    password = getAuth0Config().testUser.password,
+    scope = getAuth0Config().scope,
+    audience = getAuth0Config().audience
   } = options;
 
   cy.log('Authenticating with Auth0 via ROPG...');
   
   return cy.request({
     method: 'POST',
-    url: `https://${auth0Config.domain}/oauth/token`,
+    url: `https://${getAuth0Config().domain}/oauth/token`,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
@@ -146,7 +146,7 @@ Cypress.Commands.add('auth0Login', (options = {}) => {
       password: password,
       audience: audience,
       scope: scope,
-      client_id: auth0Config.clientId
+      client_id: getAuth0Config().clientId
     },
     failOnStatusCode: false
   }).then((response) => {
@@ -481,4 +481,60 @@ Cypress.Commands.add('validateAuth0Integration', () => {
   });
   
   cy.log('Auth0 integration validation completed successfully');
+});
+
+/**
+ * Validate JWT token structure and claims
+ */
+Cypress.Commands.add('validateJWTToken', (token, options = {}) => {
+  const { audience, issuer } = options;
+  
+  cy.log('Validating JWT token structure...');
+  
+  // Check token format
+  expect(token.split('.')).to.have.length(3);
+  
+  // Decode and validate payload
+  const payload = decodeJWT(token);
+  expect(payload).to.not.be.null;
+  
+  if (audience) {
+    expect(payload).to.have.property('aud', audience);
+  }
+  
+  if (issuer) {
+    expect(payload).to.have.property('iss', issuer);
+  }
+  
+  // Check expiration
+  expect(payload).to.have.property('exp');
+  expect(payload.exp * 1000).to.be.greaterThan(Date.now());
+  
+  cy.log('✓ JWT token validation passed');
+});
+
+/**
+ * Fill Form 137 with test data
+ */
+Cypress.Commands.add('fillForm137WithTestData', (data) => {
+  const {
+    studentName = 'Test Student',
+    studentId = 'TEST-123',
+    program = 'Computer Science',
+    purpose = 'Employment'
+  } = data;
+  
+  cy.get('[data-cy="student-name"], [name="studentName"]').type(studentName);
+  cy.get('[data-cy="student-id"], [name="studentId"]').type(studentId);
+  cy.get('[data-cy="program"], [name="program"]').select(program);
+  cy.get('[data-cy="purpose"], [name="purpose"]').select(purpose);
+});
+
+/**
+ * Check toast notification
+ */
+Cypress.Commands.add('checkToast', (message, type = 'success') => {
+  cy.get(`[data-cy="toast-${type}"], .toast-${type}, .alert-${type}`)
+    .should('be.visible')
+    .and('contain', message);
 });

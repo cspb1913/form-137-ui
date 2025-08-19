@@ -5,9 +5,9 @@ import { useEffect } from "react"
 import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth-mongodb"
 import { LoginPrompt } from "@/components/login-prompt"
-import { isAdmin, canAccessDashboard } from "@/lib/auth-utils"
+import { isAdmin, canAccessDashboard } from "@/lib/user-auth-utils"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()

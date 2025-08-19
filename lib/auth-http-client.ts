@@ -41,6 +41,14 @@ export class AuthenticatedHttpClient {
   ): Promise<T> {
     const { requireAuth = false, audience, ...requestOptions } = options
     const url = `${this.baseUrl}${endpoint}`
+    
+    console.log('🌐 AuthenticatedHttpClient.request', { 
+      endpoint, 
+      url, 
+      baseUrl: this.baseUrl,
+      hasToken: !!accessToken,
+      requireAuth 
+    })
 
     // Prepare headers
     const headers: Record<string, string> = {
@@ -56,10 +64,18 @@ export class AuthenticatedHttpClient {
       throw new Error("Authentication required but no access token provided")
     }
 
-    const response = await fetch(url, {
-      ...requestOptions,
-      headers,
-    })
+    let response: Response
+    try {
+      console.log('🚀 Making fetch request:', { url, method: requestOptions.method || 'GET', headers })
+      response = await fetch(url, {
+        ...requestOptions,
+        headers,
+      })
+      console.log('✅ Fetch successful:', { status: response.status, statusText: response.statusText })
+    } catch (fetchError) {
+      console.error('❌ Fetch failed:', { url, error: fetchError })
+      throw fetchError
+    }
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`

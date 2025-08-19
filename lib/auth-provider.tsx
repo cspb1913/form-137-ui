@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { Auth0Provider } from "@auth0/nextjs-auth0"
 import { DevAuth0Provider } from "./dev-auth0-provider"
 
 interface AuthProviderProps {
@@ -20,7 +21,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   console.log("🔐 Running in Production Mode - Using real Auth0 authentication")
-  // Dynamically import Auth0Provider only when needed to avoid hydration issues in dev mode
-  const { Auth0Provider } = require("@auth0/nextjs-auth0")
-  return <Auth0Provider>{children}</Auth0Provider>
+  
+  return (
+    <Auth0Provider>
+      {children}
+    </Auth0Provider>
+  )
 }
