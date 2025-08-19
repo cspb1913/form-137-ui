@@ -182,7 +182,7 @@ describe('Simplified Auth0 Requester Flow', () => {
     // Test that the backend is accessible
     cy.request({
       method: 'GET',
-      url: `${Cypress.env('API_BASE_URL')}/api/health/liveness`,
+      url: `${Cypress.env('SPRING_BOOT_API_URL')}/api/health/liveness`,
       timeout: 10000
     }).then((response) => {
       expect(response.status).to.eq(200)
@@ -193,7 +193,7 @@ describe('Simplified Auth0 Requester Flow', () => {
     // Test that protected endpoints require auth
     cy.request({
       method: 'GET',
-      url: `${Cypress.env('API_BASE_URL')}/api/dashboard`,
+      url: `${Cypress.env('SPRING_BOOT_API_URL')}/api/dashboard`,
       failOnStatusCode: false,
       timeout: 10000
     }).then((response) => {

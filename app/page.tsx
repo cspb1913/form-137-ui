@@ -29,6 +29,12 @@ export default function HomePage() {
         router.replace("/admin")
         return
       }
+      // Handle users without proper roles
+      if (!canAccessDashboard(user)) {
+        // Redirect users without valid roles to unauthorized page
+        router.replace("/unauthorized")
+        return
+      }
       // Requester users stay on this page
     }
   }, [user, isLoading, router])
@@ -55,11 +61,18 @@ export default function HomePage() {
     )
   }
 
-  // Handle users without proper roles
-  if (!canAccessDashboard(user)) {
-    // Redirect users without valid roles to unauthorized page
-    router.replace("/unauthorized")
-    return
+  // Show loading while redirecting (prevents render during redirect)
+  if (!canAccessDashboard(user) || isAdmin(user)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+        <TopNavigation />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
