@@ -70,10 +70,44 @@ export class UserAPI {
    * This method uses the enhanced secure client with built-in security features
    */
   async getCurrentUser(): Promise<User> {
-    console.log('🔐 UserAPI.getCurrentUser called - using existing auth client instead of secure client (temporary fix)')
-    // Temporary fix: Use existing AuthenticatedHttpClient instead of SecureAuth0ApiClient
-    // to avoid client-side token retrieval issues
-    return this.httpClient.get<User>("/api/users/me", undefined, true)
+    console.log('🔐 UserAPI.getCurrentUser called - using SecureAuth0ApiClient with enhanced security')
+    
+    try {
+      // Use the secure client which handles token retrieval, caching, and validation automatically
+      return await this.secureClient.get<User>("/api/users/me")
+      
+    } catch (error) {
+      console.error('❌ Failed to get current user with secure client:', error)
+      
+      // Fallback to manual token retrieval if secure client fails
+      console.log('🔄 Falling back to manual token retrieval...')
+      
+      try {
+        const response = await fetch('/api/auth/access-token')
+        if (!response.ok) {
+          throw new Error(`Failed to get access token: ${response.status}`)
+        }
+        
+        const tokenData = await response.json()
+        const accessToken = tokenData.access_token
+        
+        if (!accessToken) {
+          throw new Error('No access token received from Auth0')
+        }
+        
+        console.log('✅ Auth0 token retrieved successfully (fallback)', { 
+          tokenPreview: accessToken.substring(0, 20) + '...',
+          baseUrl: this.baseUrl 
+        })
+        
+        // Use the token with the authenticated HTTP client
+        return this.httpClient.get<User>("/api/users/me", accessToken, true)
+        
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError)
+        throw new Error(`Authentication failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`)
+      }
+    }
   }
 
   /**

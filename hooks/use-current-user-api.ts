@@ -51,26 +51,24 @@ export function useCurrentUserApi(): UseCurrentUserApiReturn {
     // }
 
     try {
-      console.log('🔄 Starting MongoDB API call...')
+      console.log('🔄 Starting MongoDB API call (authentication disabled)...')
       setError(null)
       
-      // First check if we have an Auth0 session via API
-      console.log('🔍 Checking Auth0 session via /api/auth/me')
-      const auth0Response = await fetch('/api/auth/me')
-      if (!auth0Response.ok) {
-        console.log('❌ No Auth0 session found via API')
-        setUser(null)
-        setIsLoading(false)
-        return
+      console.log('📡 Calling MongoDB API directly without authentication...')
+      // Since API auth is disabled, call API directly without any authentication checks
+      const apiUrl = process.env.NEXT_PUBLIC_FORM137_API_URL || "http://localhost:8080"
+      const response = await fetch(`${apiUrl}/api/users/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status} ${response.statusText}`)
       }
       
-      const auth0Data = await auth0Response.json()
-      console.log('✅ Auth0 session found:', auth0Data.email)
-      
-      console.log('📡 Getting Auth0 token for MongoDB API...')
-      const token = await getToken()
-      console.log('✅ Auth0 token obtained, calling MongoDB API...')
-      const userData = await userAPI.getCurrentUserWithToken(token)
+      const userData = await response.json()
       console.log('✅ MongoDB API response:', userData)
       
       setUser(userData)
@@ -84,26 +82,10 @@ export function useCurrentUserApi(): UseCurrentUserApiReturn {
   }
 
   useEffect(() => {
-    console.log('🔄 useCurrentUserApi useEffect triggered', { 
-      auth0Loading, 
-      hasAuth0User: !!auth0User, 
-      email: auth0User?.email,
-      timestamp: new Date().toISOString()
-    })
-    
-    if (!auth0Loading) {
-      console.log('✅ Auth0 not loading, calling fetchCurrentUser')
-      fetchCurrentUser()
-    } else {
-      console.log('⏳ Auth0 still loading, waiting...')
-      // TEMP: Also try to fetch after a timeout even if Auth0 is loading
-      const timeout = setTimeout(() => {
-        console.log('⚠️ Auth0 loading timeout - trying fetchCurrentUser anyway')
-        fetchCurrentUser(true)
-      }, 3000)
-      return () => clearTimeout(timeout)
-    }
-  }, [auth0User, auth0Loading])
+    console.log('🔄 useCurrentUserApi useEffect triggered - API auth disabled, calling immediately')
+    // Since API authentication is disabled, we can call immediately without waiting for Auth0
+    fetchCurrentUser(true)
+  }, [])
 
   // Add a fallback mechanism if Auth0 loading gets stuck
   useEffect(() => {
@@ -150,7 +132,7 @@ export function useCurrentUserApi(): UseCurrentUserApiReturn {
 
   return {
     user,
-    isLoading: isLoading || auth0Loading,
+    isLoading: isLoading, // Don't depend on auth0Loading since API auth is disabled
     error,
     refetch
   }

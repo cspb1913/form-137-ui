@@ -79,9 +79,23 @@ export class SecureAuth0ApiClient {
     console.log('🔄 Retrieving fresh Auth0 token...')
     
     try {
-      // Use the existing auth-http-client approach instead
-      // The SecureAuth0ApiClient should delegate to the existing system
-      throw new Error("SecureAuth0ApiClient token retrieval not implemented for client-side use. Use the existing useGetAuth0Token hook instead.")
+      // Get Auth0 access token from our API endpoint
+      const response = await fetch('/api/auth/access-token')
+      if (!response.ok) {
+        throw new Error(`Failed to get access token: ${response.status} ${response.statusText}`)
+      }
+      
+      const tokenData = await response.json()
+      const token = tokenData.access_token
+      
+      if (!token) {
+        throw new Error('No access token received from Auth0')
+      }
+
+      // Validate JWT structure
+      if (!this.isValidJwtStructure(token)) {
+        throw new Error('Invalid JWT token structure received')
+      }
 
       // Estimate expiration (typical JWT is 1 hour, cache for 50 minutes)
       const expiresAt = Date.now() + (50 * 60 * 1000)
@@ -96,7 +110,7 @@ export class SecureAuth0ApiClient {
       // Clear any stale cached token
       this.tokenCache.delete(cacheKey)
       
-      throw new Error("Authentication failed. Please log in again.")
+      throw new Error(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

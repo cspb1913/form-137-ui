@@ -40,7 +40,9 @@ export function useAuth(): AuthHook {
   const userWithRoles: UserWithRoles | null = user
     ? {
         ...user,
-        roles: user[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || [],
+        roles: user[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || 
+               // TEMPORARY FIX: Assign Admin role to jason@cspb.edu.ph until Auth0 custom claims are configured
+               (user.email === 'jason@cspb.edu.ph' ? ['Admin'] : []),
       }
     : null
 
