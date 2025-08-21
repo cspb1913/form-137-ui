@@ -8,20 +8,19 @@ interface AuthProviderProps {
 }
 
 /**
- * Smart Auth provider that switches between real Auth0 and development mode
- * based on the NEXT_PUBLIC_DEV_MODE environment variable
+ * Smart Auth provider that switches between client credentials and development mode
+ * Auth0 has been replaced with client credentials authentication
  */
 export function AuthProvider({ children }: AuthProviderProps) {
   const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
 
   if (isDevelopmentMode) {
-    console.log("🔧 Running in Development Mode - Auth0 authentication bypassed")
+    console.log("🔧 Running in Development Mode - Using mock authentication")
     return <DevAuth0Provider>{children}</DevAuth0Provider>
   }
 
-  console.log("🔐 Running in Production Mode - Using real Auth0 authentication")
+  console.log("🔐 Running in Production Mode - Using client credentials authentication")
   
-  // In Next.js 13+ App Router, Auth0 works via API routes without needing a client provider
-  // The useUser hook connects directly to the session via the API routes
+  // No Auth0 provider needed - using client credentials directly
   return <>{children}</>
 }

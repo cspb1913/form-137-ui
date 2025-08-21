@@ -1,4 +1,4 @@
-import { getSession, getAccessToken } from "@auth0/nextjs-auth0"
+import { getAccessToken } from "@auth0/nextjs-auth0"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -19,30 +19,15 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Check if user is authenticated first
-    const session = await getSession()
-    if (!session || !session.user) {
-      console.error('❌ No active Auth0 session')
-      return NextResponse.json(
-        { error: "No active session. Please log in." }, 
-        { status: 401 }
-      )
-    }
-
-    console.log('✅ Active Auth0 session found', { 
-      user: session.user.email,
-      sessionKeys: Object.keys(session)
-    })
-
-    // Try to get the Auth0 access token for the API
+    // Try to get the Auth0 access token for the API directly
     let accessToken = null
     
     try {
-      const tokenResult = await getAccessToken({
+      const tokenResult = await getAccessToken(request, {
         audience: process.env.AUTH0_AUDIENCE || 'http://localhost:8080/api',
         scope: 'openid profile email'
       })
-      accessToken = tokenResult
+      accessToken = tokenResult.accessToken
       console.log('✅ Retrieved Auth0 access token successfully')
     } catch (tokenError) {
       console.warn('⚠️ Could not get access token, trying alternative approaches:', tokenError)

@@ -32,11 +32,12 @@ export class AuthenticatedHttpClient {
    * 
    * @param endpoint - API endpoint (relative to baseUrl)
    * @param options - Request options including authentication requirements
-   * @param accessToken - Optional Auth0 access token
+   * @param accessToken - Auth0 access token for authentication
    */
   async request<T>(
     endpoint: string, 
-    options: AuthenticatedRequestOptions = {}
+    options: AuthenticatedRequestOptions = {},
+    accessToken?: string
   ): Promise<T> {
     const { requireAuth = false, audience, ...requestOptions } = options
     const url = `${this.baseUrl}${endpoint}`
@@ -45,20 +46,24 @@ export class AuthenticatedHttpClient {
       endpoint, 
       url, 
       baseUrl: this.baseUrl,
-      hasToken: !!accessToken,
-      requireAuth 
+      requireAuth,
+      hasToken: !!accessToken
     })
 
     // Prepare headers
     const headers: Record<string, string> = {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-      "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
       ...requestOptions.headers as Record<string, string>,
     }
 
-    // Note: Using client ID/secret headers instead of Bearer token for simplified authentication
+    // Add Authorization header if token is provided
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+      console.log('🔐 Added Authorization header')
+    } else if (requireAuth) {
+      throw new Error('Authentication required but no access token provided')
+    }
 
     let response: Response
     try {
@@ -98,8 +103,8 @@ export class AuthenticatedHttpClient {
   /**
    * Make a GET request
    */
-  async get<T>(endpoint: string, requireAuth = false): Promise<T> {
-    return this.request<T>(endpoint, { method: "GET", requireAuth })
+  async get<T>(endpoint: string, accessToken?: string, requireAuth = false): Promise<T> {
+    return this.request<T>(endpoint, { method: "GET", requireAuth }, accessToken)
   }
 
   /**
@@ -108,6 +113,7 @@ export class AuthenticatedHttpClient {
   async post<T>(
     endpoint: string, 
     data?: any, 
+    accessToken?: string,
     requireAuth = false
   ): Promise<T> {
     return this.request<T>(
@@ -116,7 +122,8 @@ export class AuthenticatedHttpClient {
         method: "POST", 
         body: data ? JSON.stringify(data) : undefined,
         requireAuth 
-      }
+      },
+      accessToken
     )
   }
 
@@ -126,6 +133,7 @@ export class AuthenticatedHttpClient {
   async patch<T>(
     endpoint: string, 
     data?: any, 
+    accessToken?: string,
     requireAuth = false
   ): Promise<T> {
     return this.request<T>(
@@ -134,7 +142,8 @@ export class AuthenticatedHttpClient {
         method: "PATCH", 
         body: data ? JSON.stringify(data) : undefined,
         requireAuth 
-      }
+      },
+      accessToken
     )
   }
 
@@ -144,6 +153,7 @@ export class AuthenticatedHttpClient {
   async put<T>(
     endpoint: string, 
     data?: any, 
+    accessToken?: string,
     requireAuth = false
   ): Promise<T> {
     return this.request<T>(
@@ -152,15 +162,16 @@ export class AuthenticatedHttpClient {
         method: "PUT", 
         body: data ? JSON.stringify(data) : undefined,
         requireAuth 
-      }
+      },
+      accessToken
     )
   }
 
   /**
    * Make a DELETE request
    */
-  async delete<T>(endpoint: string, requireAuth = false): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE", requireAuth })
+  async delete<T>(endpoint: string, accessToken?: string, requireAuth = false): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", requireAuth }, accessToken)
   }
 }
 
