@@ -37,7 +37,8 @@ describe("Admin API Pact Tests", () => {
           path: "/api/dashboard/requests",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer admin_token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -80,7 +81,7 @@ describe("Admin API Pact Tests", () => {
 
     it("should return all requests for admin dashboard", async () => {
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.getDashboardData("admin_token123")
+      const result = await adminAPI.getDashboardData()
 
       expect(result.requests).toBeDefined()
       expect(result.stats).toBeDefined()
@@ -102,7 +103,8 @@ describe("Admin API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer admin_token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             status: like("completed"),
@@ -140,7 +142,7 @@ describe("Admin API Pact Tests", () => {
 
     it("should allow admin to update request status", async () => {
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.updateRequestStatus("req_001", "completed", "admin_token123")
+      const result = await adminAPI.updateRequestStatus("req_001", "completed")
 
       expect(result).toHaveProperty("id", "req_001")
       expect(result).toHaveProperty("status", "completed")
@@ -158,7 +160,8 @@ describe("Admin API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer admin_token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             message: like("Request has been processed and is ready for pickup"),
@@ -181,7 +184,7 @@ describe("Admin API Pact Tests", () => {
 
     it("should allow admin to add comments", async () => {
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.addComment("req_001", "Request has been processed and is ready for pickup", "admin_token123")
+      const result = await adminAPI.addComment("req_001", "Request has been processed and is ready for pickup")
 
       expect(result).toHaveProperty("id")
       expect(result).toHaveProperty("message", "Request has been processed and is ready for pickup")

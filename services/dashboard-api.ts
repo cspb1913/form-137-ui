@@ -73,12 +73,12 @@ export class DashboardAPI {
       documents: data.documents ?? [],
     }
   }
-  private async makeRequest<T>(endpoint: string, accessToken: string, options: RequestInit = {}): Promise<T> {
-    return this.httpClient.request<T>(endpoint, { ...options, requireAuth: true }, accessToken)
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.httpClient.request<T>(endpoint, { ...options, requireAuth: true })
   }
 
-  async getDashboardData(token: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
-    const data = await this.makeRequest<any>("/api/dashboard/requests", token)
+  async getDashboardData(): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
+    const data = await this.makeRequest<any>("/api/dashboard/requests")
 
     const requests: FormRequest[] = (data.requests || []).map((r: any) =>
       this.transformRequest(r),
@@ -94,25 +94,25 @@ export class DashboardAPI {
     return { requests, stats }
   }
 
-  async getRequestById(id: string, token: string): Promise<FormRequest> {
-    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`, token)
+  async getRequestById(id: string): Promise<FormRequest> {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`)
     return this.transformRequest(data)
   }
 
   // Alias for backwards compatibility with older tests
-  async getRequestDetails(id: string, token: string): Promise<FormRequest> {
-    return this.getRequestById(id, token)
+  async getRequestDetails(id: string): Promise<FormRequest> {
+    return this.getRequestById(id)
   }
 
-  async addComment(requestId: string, message: string, token: string): Promise<Comment> {
-    return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, token, {
+  async addComment(requestId: string, message: string): Promise<Comment> {
+    return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, {
       method: "POST",
       body: JSON.stringify({ message }),
     })
   }
 
-  async updateRequestStatus(requestId: string, status: FormRequest["status"], token: string): Promise<FormRequest> {
-    const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, token, {
+  async updateRequestStatus(requestId: string, status: FormRequest["status"]): Promise<FormRequest> {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     })

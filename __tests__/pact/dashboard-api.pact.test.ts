@@ -27,7 +27,8 @@ describe("Dashboard API Pact Tests", () => {
           path: "/api/dashboard/requests",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -77,7 +78,7 @@ describe("Dashboard API Pact Tests", () => {
 
       try {
         const dashboardAPI = new DashboardAPI("http://localhost:1234")
-        const result = await dashboardAPI.getDashboardData("token123")
+        const result = await dashboardAPI.getDashboardData()
 
         expect(result.requests).toBeDefined()
         expect(result.statistics).toBeDefined()
@@ -101,7 +102,8 @@ describe("Dashboard API Pact Tests", () => {
           path: "/api/dashboard/request/req_001",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -136,7 +138,7 @@ describe("Dashboard API Pact Tests", () => {
 
     it("should return specific request details", async () => {
       const dashboardAPI = new DashboardAPI("http://localhost:1234")
-      const result = await dashboardAPI.getRequestDetails("req_001", "token123")
+      const result = await dashboardAPI.getRequestDetails("req_001")
 
       expect(result).toHaveProperty("id", "req_001")
       expect(result).toHaveProperty("ticketNumber")
@@ -156,7 +158,8 @@ describe("Dashboard API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             message: like("I need to update my contact information"),
@@ -180,7 +183,7 @@ describe("Dashboard API Pact Tests", () => {
 
     it("should add a comment to the request", async () => {
       const dashboardAPI = new DashboardAPI("http://localhost:1234")
-      const result = await dashboardAPI.addComment("req_001", "I need to update my contact information", "token123")
+      const result = await dashboardAPI.addComment("req_001", "I need to update my contact information")
 
       expect(result).toHaveProperty("id")
       expect(result).toHaveProperty("message", "I need to update my contact information")
@@ -199,7 +202,8 @@ describe("Dashboard API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             status: like("processing"),
@@ -237,7 +241,7 @@ describe("Dashboard API Pact Tests", () => {
 
     it("should update request status", async () => {
       const dashboardAPI = new DashboardAPI("http://localhost:1234")
-      const result = await dashboardAPI.updateRequestStatus("req_001", "processing", "token123")
+      const result = await dashboardAPI.updateRequestStatus("req_001", "processing")
 
       expect(result).toHaveProperty("id", "req_001")
       expect(result).toHaveProperty("status", "processing")
@@ -254,7 +258,8 @@ describe("Dashboard API Pact Tests", () => {
           path: "/api/dashboard/request/nonexistent",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -273,7 +278,7 @@ describe("Dashboard API Pact Tests", () => {
     it("should handle non-existent request", async () => {
       const dashboardAPI = new DashboardAPI("http://localhost:1234")
 
-      await expect(dashboardAPI.getRequestDetails("nonexistent", "token123")).rejects.toThrow("Request not found")
+      await expect(dashboardAPI.getRequestDetails("nonexistent")).rejects.toThrow("Request not found")
     })
   })
 })

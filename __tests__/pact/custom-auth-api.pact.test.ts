@@ -35,7 +35,8 @@ describe("Custom Auth API Pact Tests", () => {
           path: "/api/auth/token",
           headers: {
             "Content-Type": "application/json",
-            "X-CSPB-Secret": "test-secret-key-for-pact-tests",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             email: like("admin@example.com"),
@@ -85,7 +86,8 @@ describe("Custom Auth API Pact Tests", () => {
           path: "/api/auth/token",
           headers: {
             "Content-Type": "application/json",
-            "X-CSPB-Secret": "invalid-secret",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "invalid-secret",
           },
           body: {
             email: like("user@example.com"),
@@ -176,7 +178,8 @@ describe("Custom Auth API Pact Tests", () => {
           path: "/api/auth/admin-token",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSPB-Secret": "test-secret-key-for-pact-tests",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           query: {
             email: "admin@example.com",

@@ -26,7 +26,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users/me",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -67,7 +68,7 @@ describe("User API Pact Tests", () => {
 
       try {
         const userAPI = new UserAPI("http://localhost:1235")
-        const result = await userAPI.getCurrentUser("token123")
+        const result = await userAPI.getCurrentUserWithToken("token123")
 
         expect(result).toHaveProperty("auth0Id")
         expect(result).toHaveProperty("email")
@@ -96,7 +97,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7C687515def8dcc9049a9c9b57",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -130,7 +132,7 @@ describe("User API Pact Tests", () => {
 
     it("should return user by auth0Id", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.getUserByAuth0Id("auth0|687515def8dcc9049a9c9b57", "token123")
+      const result = await userAPI.getUserByAuth0IdWithToken("auth0|687515def8dcc9049a9c9b57", "token123")
 
       expect(result).toHaveProperty("auth0Id", "auth0|687515def8dcc9049a9c9b57")
       expect(result).toHaveProperty("email", "jason@cspb.edu.ph")
@@ -149,7 +151,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer admin-token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -183,7 +186,7 @@ describe("User API Pact Tests", () => {
 
     it("should return all users (admin only)", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.getAllUsers("admin-token123")
+      const result = await userAPI.getAllUsersWithToken("admin-token123")
 
       expect(result).toBeInstanceOf(Array)
       expect(result[0]).toHaveProperty("auth0Id")
@@ -203,7 +206,8 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer admin-token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             auth0Id: like("auth0|new-user-123"),
@@ -266,7 +270,7 @@ describe("User API Pact Tests", () => {
         },
       }
 
-      const result = await userAPI.createUser(newUser, "admin-token123")
+      const result = await userAPI.createUserWithToken(newUser, "admin-token123")
 
       expect(result).toHaveProperty("auth0Id", "auth0|new-user-123")
       expect(result).toHaveProperty("email", "newuser@cspb.edu.ph")
@@ -286,7 +290,8 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             name: like("Jason Updated"),
@@ -343,7 +348,7 @@ describe("User API Pact Tests", () => {
         },
       }
 
-      const result = await userAPI.updateUser("auth0|687515def8dcc9049a9c9b57", updateData, "token123")
+      const result = await userAPI.updateUserWithToken("auth0|687515def8dcc9049a9c9b57", updateData, "token123")
 
       expect(result).toHaveProperty("name", "Jason Updated")
       expect(result.profile).toHaveProperty("lastName", "Updated")
@@ -363,7 +368,8 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: like("Bearer admin-token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: {
             roles: eachLike("Requester"),
@@ -400,7 +406,7 @@ describe("User API Pact Tests", () => {
 
     it("should update user roles (admin only)", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.updateUserRoles(
+      const result = await userAPI.updateUserRolesWithToken(
         "auth0|687515def8dcc9049a9c9b57", 
         ["Requester"], 
         "admin-token123"
@@ -421,7 +427,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7C687515def8dcc9049a9c9b57",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer admin-token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -455,7 +462,7 @@ describe("User API Pact Tests", () => {
 
     it("should deactivate user (soft delete)", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.deactivateUser("auth0|687515def8dcc9049a9c9b57", "admin-token123")
+      const result = await userAPI.deactivateUserWithToken("auth0|687515def8dcc9049a9c9b57", "admin-token123")
 
       expect(result).toHaveProperty("isActive", false)
     })
@@ -471,7 +478,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7Cnonexistent",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -490,7 +498,7 @@ describe("User API Pact Tests", () => {
     it("should handle non-existent user", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
 
-      await expect(userAPI.getUserByAuth0Id("auth0|nonexistent", "token123")).rejects.toThrow("HTTP error!")
+      await expect(userAPI.getUserByAuth0IdWithToken("auth0|nonexistent", "token123")).rejects.toThrow("HTTP error!")
     })
   })
 
@@ -504,7 +512,8 @@ describe("User API Pact Tests", () => {
           path: "/api/users",
           headers: {
             Accept: "application/json",
-            Authorization: like("Bearer requester-token123"),
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -523,7 +532,7 @@ describe("User API Pact Tests", () => {
     it("should prevent non-admin access to user list", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
 
-      await expect(userAPI.getAllUsers("requester-token123")).rejects.toThrow("HTTP error!")
+      await expect(userAPI.getAllUsersWithToken("requester-token123")).rejects.toThrow("HTTP error!")
     })
   })
 })

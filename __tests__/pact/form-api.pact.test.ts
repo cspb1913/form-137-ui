@@ -68,6 +68,8 @@ describe("Form137 API Pact Tests", () => {
           path: "/api/form137/submit",
           headers: {
             "Content-Type": "application/json",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: formData,
         },
@@ -133,6 +135,8 @@ describe("Form137 API Pact Tests", () => {
           path: "/api/form137/submit",
           headers: {
             "Content-Type": "application/json",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: formData,
         },
@@ -197,6 +201,8 @@ describe("Form137 API Pact Tests", () => {
           path: "/api/form137/submit",
           headers: {
             "Content-Type": "application/json",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
           body: invalidFormData,
         },
@@ -234,6 +240,8 @@ describe("Form137 API Pact Tests", () => {
           path: `/api/form137/status/${ticketNumber}`,
           headers: {
             Accept: "application/json",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
@@ -271,6 +279,8 @@ describe("Form137 API Pact Tests", () => {
           path: `/api/form137/status/${ticketNumber}`,
           headers: {
             Accept: "application/json",
+            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
+            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
           },
         },
         willRespondWith: {
