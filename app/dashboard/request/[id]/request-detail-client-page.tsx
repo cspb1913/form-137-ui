@@ -21,7 +21,7 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await httpClient.get('/api/users/me')
+        const userData = await httpClient.get('/api/auth/me')
         setUser(userData)
       } catch (err) {
         console.error('Failed to fetch user:', err)
@@ -41,8 +41,21 @@ export default function RequestDetailClientPage({ requestId }: RequestDetailClie
 
       try {
         setError(null)
-        const token = await getToken()
-        const requestData = await dashboardApi.getRequestById(requestId, token)
+        
+        // Use frontend API proxy that handles authentication with JWT tokens
+        // Include credentials to send session cookies to the API proxy
+        const response = await fetch(`/api/dashboard/request/${requestId}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`)
+        }
+        
+        const requestData = await response.json()
         setRequest(requestData)
       } catch (err) {
         console.error("Failed to fetch request:", err)

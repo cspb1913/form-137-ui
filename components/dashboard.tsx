@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/status-badge"
 import { dashboardApi, type FormRequest, type DashboardStats } from "@/services/dashboard-api"
 import { Search, Filter, RefreshCw, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { Form137RequestModal } from "@/components/form-137-request-modal"
 
 export function Dashboard() {
   const [user, setUser] = useState<any>(null)
@@ -24,6 +25,8 @@ export function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [refreshing, setRefreshing] = useState(false)
+  const [selectedRequest, setSelectedRequest] = useState<FormRequest | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const fetchDashboardData = async () => {
     try {
@@ -140,6 +143,61 @@ export function Dashboard() {
   const handleRefresh = async () => {
     setRefreshing(true)
     await fetchDashboardData()
+  }
+
+  const handleViewDetails = (request: FormRequest) => {
+    setSelectedRequest(request)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedRequest(null)
+  }
+
+  const handleAddComment = async (comment: string) => {
+    if (!selectedRequest) return
+
+    try {
+      const response = await fetch(`/api/dashboard/request/${selectedRequest.id}/comments`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: comment })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const newCommentData = await response.json()
+      
+      // Update the selected request with the new comment
+      const updatedRequest = {
+        ...selectedRequest,
+        comments: [
+          {
+            id: newCommentData.id || Date.now().toString(),
+            message: comment,
+            author: user?.name || "You",
+            createdAt: new Date().toISOString()
+          },
+          ...selectedRequest.comments
+        ]
+      }
+      
+      setSelectedRequest(updatedRequest)
+      
+      // Update the request in the main list
+      setRequests(prev => prev.map(req => 
+        req.id === selectedRequest.id ? updatedRequest : req
+      ))
+    } catch (error) {
+      console.error("Failed to add comment:", error)
+      throw error
+    }
   }
 
   const filteredRequests = requests.filter((request) => {
@@ -353,8 +411,12 @@ export function Dashboard() {
                       </TableCell>
                       <TableCell>{new Date(request.submittedAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard/request/${request.id}`}>View Details</Link>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleViewDetails(request)}
+                        >
+                          View Details
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -365,6 +427,16 @@ export function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Request Details Modal */}
+      {selectedRequest && (
+        <Form137RequestModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          request={selectedRequest}
+          onAddComment={handleAddComment}
+        />
+      )}
     </div>
   )
 }

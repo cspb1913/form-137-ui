@@ -19,7 +19,7 @@ export default function RequestDetailPage({ params }: RequestDetailPageProps) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await httpClient.get('/api/users/me')
+        const userData = await httpClient.get('/api/auth/me')
         setUser(userData)
       } catch (err) {
         console.error('Failed to fetch user:', err)
