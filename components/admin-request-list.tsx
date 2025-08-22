@@ -5,16 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge } from "@/components/status-badge"
 import { useRouter } from "next/navigation"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
-import { useUser } from "@auth0/nextjs-auth0"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
+import { httpClient } from "@/lib/auth-http-client"
 
 export default function AdminRequestList() {
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { user, isLoading: userLoading } = useUser()
-  const getToken = useGetAuth0Token()
+  const [user, setUser] = useState(null)
+  const [userLoading, setUserLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      } finally {
+        setUserLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
 
   useEffect(() => {
     if (userLoading) return
@@ -23,9 +36,9 @@ export default function AdminRequestList() {
       try {
         setError(null)
         if (user) {
-          const token = await getToken()
-          const { requests } = await dashboardApi.getDashboardData(token)
-          setRequests(requests)
+          // Use secure server-side endpoint with JWT validation
+          const data = await httpClient.get('/api/dashboard/requests')
+          setRequests(data.requests || [])
         } else {
           setRequests([])
         }

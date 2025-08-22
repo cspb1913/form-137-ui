@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { httpClient } from "@/lib/auth-http-client"
 import { useAuth } from "@/hooks/use-auth"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,6 @@ import Link from "next/link"
 
 export function Dashboard() {
   const { user, isLoading: userLoading } = useAuth()
-  const getToken = useGetAuth0Token()
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -27,14 +26,12 @@ export function Dashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchDashboardData = async () => {
-    if (!user) return
-
     try {
       setError(null)
-      const token = await getToken()
-      const data = await dashboardApi.getDashboardData(token)
-      setRequests(data.requests)
-      setStats(data.stats)
+      // Use secure server-side endpoint with automatic JWT validation
+      const data = await httpClient.get('/api/dashboard/requests')
+      setRequests(data.requests || [])
+      setStats(data.stats || null)
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err)
       setError("Failed to load dashboard data. Please try again.")
@@ -43,6 +40,8 @@ export function Dashboard() {
       setRefreshing(false)
     }
   }
+
+  // Auth0 handles user authentication automatically
 
   useEffect(() => {
     if (!userLoading && user) {

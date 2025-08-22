@@ -4,12 +4,28 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import AdminRequestList from "@/components/admin-request-list"
 import { TopNavigation } from "@/components/top-navigation"
-import { useAuth } from "@/hooks/use-auth"
+import { httpClient } from "@/lib/auth-http-client"
+import { useState } from "react"
 import { canAccessAdmin } from "@/lib/auth-utils"
 
 export default function AdminPage() {
-  const { user, isLoading } = useAuth()
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
 
   // Role-based access control
   useEffect(() => {

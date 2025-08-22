@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { httpClient } from "@/lib/auth-http-client"
 import { useAuth } from "@/hooks/use-auth"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
 import { RequesterRequestView } from "@/components/requester-request-view"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,7 +22,6 @@ interface RequestDetailProps {
 
 export function RequestDetail({ request: initialRequest, onRequestUpdate }: RequestDetailProps) {
   const { user } = useAuth()
-  const getToken = useGetAuth0Token()
   const [request, setRequest] = useState(initialRequest)
   const [newComment, setNewComment] = useState("")
   const [isAddingComment, setIsAddingComment] = useState(false)
@@ -41,8 +40,10 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsAddingComment(true)
     try {
-      const token = await getToken()
-      const comment = await dashboardApi.addComment(request.id, newComment.trim(), token)
+      // Use secure server-side endpoint with JWT validation
+      const comment = await httpClient.post(`/api/requests/${request.id}/comments`, {
+        text: newComment.trim()
+      })
 
       const updatedRequest = {
         ...request,
@@ -66,8 +67,10 @@ export function RequestDetail({ request: initialRequest, onRequestUpdate }: Requ
 
     setIsUpdatingStatus(true)
     try {
-      const token = await getToken()
-      const updatedRequest = await dashboardApi.updateRequestStatus(request.id, newStatus, token)
+      // Use secure server-side endpoint with JWT validation and admin authorization
+      const updatedRequest = await httpClient.patch(`/api/requests/${request.id}/status`, {
+        status: newStatus
+      })
 
       setRequest(updatedRequest)
       onRequestUpdate?.(updatedRequest)

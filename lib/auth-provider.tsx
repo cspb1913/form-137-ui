@@ -1,26 +1,21 @@
 "use client"
 
 import React from "react"
-import { DevAuth0Provider } from "./dev-auth0-provider"
+import { Auth0Provider } from '@auth0/nextjs-auth0'
 
 interface AuthProviderProps {
   children: React.ReactNode
 }
 
 /**
- * Smart Auth provider that switches between client credentials and development mode
- * Auth0 has been replaced with client credentials authentication
+ * Auth provider using Auth0 authentication
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
-
-  if (isDevelopmentMode) {
-    console.log("🔧 Running in Development Mode - Using mock authentication")
-    return <DevAuth0Provider>{children}</DevAuth0Provider>
-  }
-
-  console.log("🔐 Running in Production Mode - Using client credentials authentication")
+  console.log("🔐 Using Auth0 authentication")
   
-  // No Auth0 provider needed - using client credentials directly
-  return <>{children}</>
+  return (
+    <Auth0Provider>
+      {children}
+    </Auth0Provider>
+  )
 }

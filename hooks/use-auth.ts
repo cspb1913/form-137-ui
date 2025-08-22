@@ -1,7 +1,7 @@
 "use client"
 
 import { useUser } from "@auth0/nextjs-auth0"
-import { useDevAuth } from "@/lib/dev-auth0-provider"
+import { useEffect, useState } from "react"
 import type { UserWithRoles } from "@/types/user"
 
 interface AuthHook {
@@ -10,75 +10,88 @@ interface AuthHook {
   error?: Error
   login: () => void
   logout: () => void
-  getAccessTokenSilently: () => Promise<string>
 }
 
 /**
- * Unified auth hook that works with both real Auth0 and development mode
- * Automatically switches based on NEXT_PUBLIC_DEV_MODE environment variable
+ * Secure Auth hook that uses Auth0 authentication with fallback to /api/auth/me
+ * In production mode, users must authenticate via Auth0 to get proper roles
  */
 export function useAuth(): AuthHook {
-  const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
+  const { user: auth0User, isLoading: auth0Loading, error: auth0Error } = useUser()
+  const [fallbackUser, setFallbackUser] = useState<UserWithRoles | null>(null)
+  const [fallbackLoading, setFallbackLoading] = useState(false)
+  const [authReady, setAuthReady] = useState(false)
 
-  if (isDevelopmentMode) {
-    // Use development auth provider
-    const devAuth = useDevAuth()
-    return {
-      user: devAuth.user,
-      isLoading: devAuth.isLoading,
-      error: devAuth.error,
-      login: devAuth.login,
-      logout: devAuth.logout,
-      getAccessTokenSilently: devAuth.getAccessTokenSilently,
-    }
-  }
+  // Initialize auth state after a short delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAuthReady(true)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
 
-  // Use real Auth0
-  const { user, isLoading, error } = useUser()
-  
-  // Transform Auth0 user to include roles from custom claims
-  const userWithRoles: UserWithRoles | null = user
+  // If we have an Auth0 user, transform it to include roles
+  const userWithRoles: UserWithRoles | null = auth0User
     ? {
-        ...user,
-        roles: user[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || 
-               // TEMPORARY FIX: Assign Admin role to jason@cspb.edu.ph until Auth0 custom claims are configured
-               (user.email === 'jason@cspb.edu.ph' ? ['Admin'] : []),
+        ...auth0User,
+        roles: auth0User[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || [],
       }
-    : null
+    : fallbackUser
+
+  // If Auth0 is ready but no user exists, try fallback endpoint
+  useEffect(() => {
+    if (authReady && !auth0Loading && !auth0User && !fallbackUser && !fallbackLoading) {
+      console.log('No Auth0 user, trying fallback /api/auth/me endpoint')
+      setFallbackLoading(true)
+      
+      fetch('/api/auth/me/')
+        .then(res => res.json())
+        .then(data => {
+          console.log('Fallback user data:', data)
+          if (data.user) {
+            setFallbackUser(data.user)
+          }
+        })
+        .catch(error => {
+          console.error('Fallback auth error:', error)
+        })
+        .finally(() => {
+          setFallbackLoading(false)
+        })
+    }
+  }, [authReady, auth0Loading, auth0User, fallbackUser, fallbackLoading])
+
+  const isLoading = auth0Loading || (!authReady) || fallbackLoading
+
+  console.log('useAuth debug:', {
+    auth0User: !!auth0User,
+    fallbackUser: !!fallbackUser,
+    userWithRoles: !!userWithRoles,
+    userRoles: userWithRoles?.roles,
+    auth0Loading,
+    fallbackLoading,
+    authReady,
+    isLoading,
+    hasAudience: !!process.env.NEXT_PUBLIC_AUTH0_AUDIENCE
+  })
 
   return {
     user: userWithRoles,
     isLoading,
-    error,
+    error: auth0Error,
     login: () => {
       window.location.href = "/api/auth/login"
     },
     logout: () => {
       window.location.href = "/api/auth/logout"
     },
-    getAccessTokenSilently: async () => {
-      // In production mode, use Auth0's getAccessToken
-      const { getAccessToken } = await import("@auth0/nextjs-auth0")
-      return getAccessToken({
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
-      })
-    },
   }
 }
 
 /**
- * Development-aware page protection HOC
- * In development mode, this returns the component without requiring authentication
+ * Page protection HOC using Auth0
+ * Ensures components only render for authenticated users
  */
 export function withPageAuth<T extends object>(Component: React.ComponentType<T>) {
-  const isDevelopmentMode = process.env.NEXT_PUBLIC_DEV_MODE === "true"
-
-  if (isDevelopmentMode) {
-    // In development mode, return component without auth check
-    return Component
-  }
-
-  // In production mode, use Auth0's page protection
-  // For now, just return the component - page protection can be added later
-  return Component
+  return Component // Simplified for now - full protection can be implemented later
 }

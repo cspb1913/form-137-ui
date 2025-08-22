@@ -443,3 +443,72 @@ const data = await apiService.getData(token)
 ```
 
 This ensures all protected API endpoints receive proper bearer tokens and maintain secure communication with the backend API.
+
+## Authentication Issue Analysis - Critical Findings (2025-08-21)
+
+### Problem Discovery: False Positive Test Results
+- **Original Issue**: Cypress smoke tests were giving FALSE POSITIVES
+- **Root Cause**: Tests only checked for basic page elements like "Form 137 Portal" text
+- **Impact**: This text exists even on access denied pages, so tests passed incorrectly
+- **Resolution**: Updated tests with proper access denied detection to reveal real authentication issues
+
+### Auth0 Authentication Flow - Production Mode Issues
+When running with `NEXT_PUBLIC_DEV_MODE=false` (production mode):
+
+#### Current Behavior (BROKEN):
+1. User visits `/` 
+2. Page loads but user has no Auth0 session
+3. `useAuth()` hook tries to get user from Auth0 session - returns null
+4. Page logic redirects to `/unauthorized` showing "Access Denied"
+5. Users never see the login prompt or get chance to authenticate
+
+#### Expected Behavior:
+1. **Unauthenticated users** → See login prompt → Click "Sign In" → Auth0 login → Get roles → Access dashboard
+2. **Authenticated users with roles** → Direct access to dashboard  
+3. **Authenticated users without roles** → Access denied (this is correct)
+
+### Technical Analysis
+
+#### Key Files Involved:
+- `/app/page.tsx` - Main page with authentication logic
+- `/hooks/use-auth.ts` - Authentication hook using Auth0
+- `/middleware.ts` - Route protection middleware
+- `/app/api/auth/me/route.ts` - Custom auth endpoint
+- `/components/login-prompt.tsx` - Login UI component
+
+#### Root Issues Identified:
+1. **useAuth Hook**: Originally only used Auth0's `useUser()` which returns null when no session exists
+2. **Page Logic**: Redirects to `/unauthorized` when user lacks roles, but this happens before authentication
+3. **Custom Endpoint**: `/api/auth/me/` returns user with proper roles `["Admin", "Requester"]` but wasn't being used by auth hook
+4. **Role Extraction**: Auth0 user object doesn't contain roles in expected custom claims format
+
+#### Attempted Fixes Applied:
+1. **Updated useAuth hook** to fallback to custom `/api/auth/me/` endpoint when no Auth0 session exists
+2. **Simplified middleware** to allow all routes through (authentication handled at component level)
+3. **Added debug logging** to trace authentication flow issues
+
+#### Current Status:
+- **Issue persists** even after multiple attempted fixes
+- Users still see "Access Denied" instead of proper login flow
+- Root cause appears to be deeper Auth0 configuration issue
+- **Critical**: Need proper Auth0 setup with role assignment or alternative authentication approach
+
+### Test Coverage Improvements
+- **Before**: Basic smoke test checked only for page elements (false positives)
+- **After**: Enhanced test checks for access denied text, takes screenshots, validates authentication flow
+- **New Approach**: Validates either login prompt OR dashboard content, explicitly rejects access denied scenarios
+- **Benefit**: Tests now accurately detect authentication issues instead of giving false confidence
+
+### Recommendations for Resolution:
+1. **Immediate**: Fix Auth0 configuration to properly assign roles to users during authentication
+2. **Short-term**: Ensure Auth0 login flow works end-to-end with proper role claims
+3. **Alternative**: Consider using development mode authentication for testing until Auth0 is properly configured
+4. **Long-term**: Implement comprehensive Auth0 role management and user provisioning
+
+### Impact Assessment:
+- **High Priority**: Production authentication is completely broken
+- **User Impact**: No users can access the application in production mode
+- **Testing Impact**: Previous test suite was giving false confidence about application functionality
+- **Development Impact**: Authentication architecture needs fundamental review
+
+This analysis documents the critical authentication issues discovered through improved testing and should guide future development efforts.

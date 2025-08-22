@@ -1,17 +1,27 @@
 "use client"
 export const dynamic = "force-dynamic"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Dashboard } from "@/components/dashboard"
 import { TopNavigation } from "@/components/top-navigation"
 import { Toaster } from "@/components/ui/sonner"
-import { useAuth } from "@/hooks/use-auth-mongodb"
+import { useAuth } from "@/hooks/use-auth"
 import { LoginPrompt } from "@/components/login-prompt"
 import { isAdmin, isRequester, canAccessDashboard } from "@/lib/user-auth-utils"
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const [forceReady, setForceReady] = useState(false)
+
+  // Force ready state after 2 seconds to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Page: Forcing ready state to prevent infinite loading')
+      setForceReady(true)
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleNewRequest = () => {
     router.push("/request")
@@ -24,9 +34,15 @@ export default function HomePage() {
   // Role-based redirect logic
   useEffect(() => {
     if (!isLoading && user) {
+      console.log('User object:', user)
+      console.log('User roles:', user.roles)
+      console.log('Can access dashboard:', canAccessDashboard(user))
+      
       // Handle users without proper roles first
       if (!canAccessDashboard(user)) {
-        // Redirect users without valid roles to unauthorized page
+        // For production mode, if user exists but lacks roles, 
+        // redirect to unauthorized (this is correct behavior)
+        console.log('Redirecting to unauthorized - user lacks required roles')
         router.replace("/unauthorized")
         return
       }
@@ -38,10 +54,14 @@ export default function HomePage() {
       }
       
       // All other cases (Requester-only, Admin+Requester, or any valid roles) stay on dashboard
+      console.log('User has valid roles, staying on dashboard')
     }
   }, [user, isLoading, router])
 
-  if (isLoading) {
+  // Use the forced ready state to override infinite loading
+  const actuallyLoading = isLoading && !forceReady
+
+  if (actuallyLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
         <TopNavigation />

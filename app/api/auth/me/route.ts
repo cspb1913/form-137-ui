@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server"
-import { getAccessToken } from "@auth0/nextjs-auth0"
+import { auth0 } from "@/lib/auth0"
 import { httpClient } from "@/lib/auth-http-client"
 
 interface UserWithRoles {
@@ -13,81 +13,54 @@ interface UserWithRoles {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if we're in development mode
-    if (process.env.NEXT_PUBLIC_DEV_MODE === "true") {
-      // Return mock user data for development mode
-      const mockUser: UserWithRoles = {
-        sub: 'dev|development-user',
-        email: 'dev@example.com',
-        name: 'Development User',
-        nickname: 'dev',
-        picture: '/placeholder-user.jpg',
-        email_verified: true,
-        updated_at: new Date().toISOString(),
-        roles: ['Admin', 'Requester'] // Give both roles for testing
-      }
-      
-      console.log('🔧 Development Mode: Returning mock user data')
-      return NextResponse.json({ user: mockUser })
+    // Check for session cookie
+    const sessionCookie = request.cookies.get('appSession')
+    
+    if (!sessionCookie) {
+      console.log('No session cookie found')
+      return NextResponse.json({ user: null }, { status: 401 })
     }
-
-    // Production mode: Get Auth0 access token directly
-    let accessToken = null
+    
+    let session
     try {
-      const tokenResult = await getAccessToken(request, {
-        audience: process.env.AUTH0_AUDIENCE || 'http://localhost:8080/api',
-        scope: 'openid profile email'
-      })
-      accessToken = tokenResult.accessToken
-      console.log('✅ Retrieved Auth0 access token for /api/auth/me')
-    } catch (tokenError) {
-      console.error('❌ Failed to get Auth0 access token:', tokenError)
-      return NextResponse.json(
-        { error: "Failed to retrieve access token" }, 
-        { 
-          status: 401,
-          headers: {
-            'WWW-Authenticate': 'Bearer realm="api"',
-            'Cache-Control': 'no-store',
-            'Pragma': 'no-cache'
-          }
-        }
-      )
+      session = JSON.parse(sessionCookie.value)
+    } catch (e) {
+      console.error('Invalid session cookie format')
+      return NextResponse.json({ user: null }, { status: 401 })
     }
-
-    // Use access token to get user data from MongoDB API
-    try {
-      console.log('🔧 Production Mode: Using Auth0 token to get user data from API')
-      const userData = await httpClient.get('/api/users/me', accessToken, true)
-      
-      // Transform MongoDB user data to match frontend expectations
-      const userWithRoles: UserWithRoles = {
-        sub: userData.auth0Id || 'api-client-credentials',
-        email: userData.email,
-        name: userData.name,
-        nickname: userData.profile?.firstName || 'API Client',
-        picture: '/placeholder-user.jpg',
-        email_verified: true,
-        updated_at: userData.metadata?.updatedAt || new Date().toISOString(),
-        roles: userData.roles || ['Admin', 'Requester']
-      }
-      
-      console.log('✅ Client credentials user data:', userWithRoles)
-      return NextResponse.json({ user: userWithRoles })
-    } catch (apiError) {
-      console.error('❌ Failed to get user from MongoDB API:', apiError)
-      // Return 500 for API errors (not auth errors)
-      return NextResponse.json(
-        { error: "Failed to retrieve user data" }, 
-        { 
-          status: 500,
-          headers: {
-            'Cache-Control': 'no-store',
-            'Pragma': 'no-cache'
-          }
-        }
-      )
+    
+    // Check if session is expired
+    if (session.expiresAt && Date.now() > session.expiresAt) {
+      console.log('Session expired')
+      return NextResponse.json({ user: null }, { status: 401 })
     }
+    
+    if (!session.idToken) {
+      console.log('No ID token in session')
+      return NextResponse.json({ user: null }, { status: 401 })
+    }
+    
+    // Decode the JWT ID token (simplified - in production use proper JWT verification)
+    const base64Payload = session.idToken.split('.')[1]
+    const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString())
+    
+    console.log('JWT payload:', payload)
+    
+    // Extract user info and roles from the token
+    const user: UserWithRoles = {
+      sub: payload.sub,
+      name: payload.name,
+      email: payload.email,
+      nickname: payload.nickname,
+      picture: payload.picture,
+      email_verified: payload.email_verified,
+      updated_at: payload.updated_at,
+      roles: payload[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || []
+    }
+    
+    console.log('User with roles:', user)
+    return NextResponse.json({ user })
+    
   } catch (error) {
     console.error("Auth session error:", error)
     return NextResponse.json(

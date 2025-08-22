@@ -1,13 +1,28 @@
 "use client"
 
 import { useUser, getAccessToken } from "@auth0/nextjs-auth0"
-import { useState } from "react"
-import { useAuth } from "@/hooks/use-auth-mongodb"
+import { useState, useEffect } from "react"
+import { httpClient } from "@/lib/auth-http-client"
 import { isAdmin, isRequester, canAccessDashboard } from "@/lib/user-auth-utils"
 
 export default function DebugAuth() {
   const { user, isLoading } = useUser()
-  const { user: appUser, isLoading: appLoading } = useAuth()
+  const [appUser, setAppUser] = useState(null)
+  const [appLoading, setAppLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setAppUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      } finally {
+        setAppLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
   const [tokenInfo, setTokenInfo] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 

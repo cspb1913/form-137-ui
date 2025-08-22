@@ -15,8 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
-import { useUser } from "@auth0/nextjs-auth0"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
+import { httpClient } from "@/lib/auth-http-client"
 import { User, FileText, Mail, Phone, Calendar, Clock, MessageSquare, AlertCircle, MapPin } from "lucide-react"
 
 const statusOptions = [
@@ -37,8 +36,22 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
   const [saving, setSaving] = useState(false)
   const [justAdded, setJustAdded] = useState<string | null>(null)
   const { toast } = useToast()
-  const { user, isLoading: userLoading } = useUser()
-  const getToken = useGetAuth0Token()
+  const [user, setUser] = useState(null)
+  const [userLoading, setUserLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      } finally {
+        setUserLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
 
   useEffect(() => {
     if (userLoading) return
@@ -47,7 +60,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
       try {
         setError(null)
         if (user) {
-          const token = await getToken()
+          // Direct API call without token
           // Find the request by ticket number from the API
           const { requests } = await dashboardApi.getDashboardData(token)
           const requestDetail = requests.find(req => req.ticketNumber === ticketNumber)
@@ -78,7 +91,7 @@ export default function AdminRequestDetail({ ticketNumber }: { ticketNumber: str
     
     setSaving(true)
     try {
-      const token = await getToken()
+      // Direct API call without token
       let updatedDetail = { ...detail }
       
       // Update status if changed

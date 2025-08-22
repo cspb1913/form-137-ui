@@ -1,18 +1,21 @@
 import { Pact } from "@pact-foundation/pact"
 import { like } from "@pact-foundation/pact/src/dsl/matchers"
-import { getCustomToken } from "@/lib/auth-http-client"
+import { AuthenticatedHttpClient } from "@/lib/auth-http-client"
 import path from "path"
 
 const mockProvider = new Pact({
   consumer: "Form137Frontend",
-  provider: "CustomAuthAPI",
+  provider: "Form137API",
   port: 1237,
-  log: path.resolve(process.cwd(), "logs", "custom-auth-pact.log"),
+  log: path.resolve(process.cwd(), "logs", "auth0-integration-pact.log"),
   dir: path.resolve(process.cwd(), "pacts"),
   logLevel: "INFO",
 })
 
-describe("Custom Auth API Pact Tests", () => {
+describe("Auth0 Integration Pact Tests", () => {
+  const httpClient = new AuthenticatedHttpClient({ baseUrl: "http://localhost:1237" })
+  const mockAuth0Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature"
+
   beforeAll(async () => {
     await mockProvider.setup()
   })
@@ -25,115 +28,17 @@ describe("Custom Auth API Pact Tests", () => {
     await mockProvider.verify()
   })
 
-  describe("POST /api/auth/token", () => {
-    test("should generate token with valid X-CSPB-Secret header", async () => {
+  describe("GET /api/health/liveness", () => {
+    test("should check API health without authentication", async () => {
       await mockProvider.addInteraction({
-        state: "Valid X-CSPB-Secret header is provided",
-        uponReceiving: "a request for custom JWT token with valid secret",
-        withRequest: {
-          method: "POST",
-          path: "/api/auth/token",
-          headers: {
-            "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
-          },
-          body: {
-            email: like("admin@example.com"),
-            name: like("System Administrator"),
-            role: like("Admin"),
-          },
-        },
-        willRespondWith: {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: {
-            access_token: like("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."),
-            token_type: "Bearer",
-            expires_in: 86400,
-            scope: "openid profile email",
-          },
-        },
-      })
-
-      // Mock the API base URL for testing
-      const originalEnv = process.env.NEXT_PUBLIC_API_BASE_URL
-      process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:1237"
-      process.env.NEXT_PUBLIC_CSPB_API_SECRET = "test-secret-key-for-pact-tests"
-
-      try {
-        const token = await getCustomToken({
-          email: "admin@example.com",
-          name: "System Administrator",
-          role: "Admin",
-        })
-
-        expect(token).toMatch(/^eyJ/)
-        expect(typeof token).toBe("string")
-      } finally {
-        process.env.NEXT_PUBLIC_API_BASE_URL = originalEnv
-      }
-    })
-
-    test("should reject request with invalid X-CSPB-Secret header", async () => {
-      await mockProvider.addInteraction({
-        state: "Invalid or missing X-CSPB-Secret header",
-        uponReceiving: "a request for custom JWT token with invalid secret",
-        withRequest: {
-          method: "POST",
-          path: "/api/auth/token",
-          headers: {
-            "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "invalid-secret",
-          },
-          body: {
-            email: like("user@example.com"),
-            name: like("Test User"),
-            role: like("Requester"),
-          },
-        },
-        willRespondWith: {
-          status: 403,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: {
-            error: "forbidden",
-            error_description: "Invalid or missing X-CSPB-Secret header",
-          },
-        },
-      })
-
-      // Mock the API base URL for testing
-      const originalEnv = process.env.NEXT_PUBLIC_API_BASE_URL
-      process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:1237"
-      process.env.NEXT_PUBLIC_CSPB_API_SECRET = "invalid-secret"
-
-      try {
-        await expect(getCustomToken({
-          email: "user@example.com",
-          name: "Test User",
-          role: "Requester",
-        })).rejects.toThrow("Custom authentication failed")
-      } finally {
-        process.env.NEXT_PUBLIC_API_BASE_URL = originalEnv
-      }
-    })
-  })
-
-  describe("GET /api/auth/.well-known/jwks.json", () => {
-    test("should return JWKS for token validation", async () => {
-      await mockProvider.addInteraction({
-        state: "JWKS endpoint is available",
-        uponReceiving: "a request for JWKS",
+        state: "API is healthy",
+        uponReceiving: "a request for health check",
         withRequest: {
           method: "GET",
-          path: "/api/auth/.well-known/jwks.json",
+          path: "/api/health/liveness",
           headers: {
-            Accept: "application/json",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
           },
         },
         willRespondWith: {
@@ -142,48 +47,65 @@ describe("Custom Auth API Pact Tests", () => {
             "Content-Type": "application/json",
           },
           body: {
-            keys: [
-              {
-                kty: "oct",
-                kid: like("custom-key-1"),
-                use: "sig",
-                alg: "HS256",
-                k: like("ZGV2ZWxvcG1lbnQtc2VjcmV0LWtleQ"),
-              },
-            ],
+            status: "UP",
+            timestamp: like("2024-01-15T10:30:00Z"),
           },
         },
       })
 
-      const response = await fetch("http://localhost:1237/api/auth/.well-known/jwks.json", {
-        headers: { Accept: "application/json" },
-      })
+      const response = await httpClient.get<{status: string}>("/api/health/liveness")
 
-      expect(response.status).toBe(200)
-      const jwks = await response.json()
-      expect(jwks).toHaveProperty("keys")
-      expect(jwks.keys).toHaveLength(1)
-      expect(jwks.keys[0]).toHaveProperty("kty", "oct")
-      expect(jwks.keys[0]).toHaveProperty("alg", "HS256")
+      expect(response.status).toBe("UP")
     })
+
   })
 
-  describe("POST /api/auth/admin-token", () => {
-    test("should generate admin token with valid secret", async () => {
+  describe("Protected Endpoint Authentication", () => {
+    test("should reject request without Auth0 token", async () => {
       await mockProvider.addInteraction({
-        state: "Admin token can be generated",
-        uponReceiving: "a request for admin token with valid secret",
+        state: "No authentication token provided",
+        uponReceiving: "a request for protected endpoint without token",
         withRequest: {
-          method: "POST",
-          path: "/api/auth/admin-token",
+          method: "GET",
+          path: "/api/dashboard/requests",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
           },
-          query: {
-            email: "admin@example.com",
-            name: "System Administrator",
+        },
+        willRespondWith: {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            error: "unauthorized",
+            error_description: "Authorization header is required",
+          },
+        },
+      })
+
+      try {
+        // Small delay to ensure interaction is registered
+        await new Promise(resolve => setTimeout(resolve, 50))
+        await httpClient.get("/api/dashboard/requests", undefined, false)
+        fail("Should have thrown an error")
+      } catch (error: any) {
+        expect(error.message).toContain("unauthorized")
+      }
+    })
+
+    test("should accept request with valid Auth0 token", async () => {
+      await mockProvider.addInteraction({
+        state: "Valid Auth0 token provided",
+        uponReceiving: "a request for protected endpoint with valid Auth0 token",
+        withRequest: {
+          method: "GET",
+          path: "/api/dashboard/requests",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
         },
         willRespondWith: {
@@ -192,29 +114,59 @@ describe("Custom Auth API Pact Tests", () => {
             "Content-Type": "application/json",
           },
           body: {
-            access_token: like("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."),
-            token_type: "Bearer",
-            expires_in: 86400,
-            role: "Admin",
-            email: "admin@example.com",
-            name: "System Administrator",
+            requests: [],
+            totalCount: 0,
+            statistics: {
+              totalRequests: 0,
+              pendingRequests: 0,
+              completedRequests: 0,
+              averageProcessingTime: 0,
+            },
           },
         },
       })
 
-      const response = await fetch("http://localhost:1237/api/auth/admin-token?email=admin@example.com&name=System Administrator", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSPB-Secret": "test-secret-key-for-pact-tests",
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      const response = await httpClient.get("/api/dashboard/requests", mockAuth0Token, true)
+
+      expect(response).toHaveProperty("requests")
+      expect(response).toHaveProperty("statistics")
+    })
+
+    test("should reject request with invalid Auth0 token", async () => {
+      await mockProvider.addInteraction({
+        state: "Invalid Auth0 token provided",
+        uponReceiving: "a request for protected endpoint with invalid Auth0 token",
+        withRequest: {
+          method: "GET",
+          path: "/api/dashboard/requests",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer invalid-token",
+          },
+        },
+        willRespondWith: {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: {
+            error: "invalid_token",
+            error_description: "The access token provided is expired, revoked, malformed, or invalid",
+          },
         },
       })
 
-      expect(response.status).toBe(200)
-      const result = await response.json()
-      expect(result).toHaveProperty("access_token")
-      expect(result).toHaveProperty("role", "Admin")
-      expect(result.access_token).toMatch(/^eyJ/)
+      try {
+        // Small delay to ensure interaction is registered
+        await new Promise(resolve => setTimeout(resolve, 50))
+        await httpClient.get("/api/dashboard/requests", "invalid-token", true)
+        fail("Should have thrown an error")
+      } catch (error: any) {
+        expect(error.message).toContain("invalid_token")
+      }
     })
   })
 })

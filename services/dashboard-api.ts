@@ -73,12 +73,12 @@ export class DashboardAPI {
       documents: data.documents ?? [],
     }
   }
-  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    return this.httpClient.request<T>(endpoint, { ...options, requireAuth: true })
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}, accessToken?: string): Promise<T> {
+    return this.httpClient.request<T>(endpoint, { ...options, requireAuth: true }, accessToken)
   }
 
-  async getDashboardData(): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
-    const data = await this.makeRequest<any>("/api/dashboard/requests")
+  async getDashboardData(accessToken?: string): Promise<{ requests: FormRequest[]; stats: DashboardStats }> {
+    const data = await this.makeRequest<any>("/api/dashboard/requests", {}, accessToken)
 
     const requests: FormRequest[] = (data.requests || []).map((r: any) =>
       this.transformRequest(r),
@@ -94,28 +94,28 @@ export class DashboardAPI {
     return { requests, stats }
   }
 
-  async getRequestById(id: string): Promise<FormRequest> {
-    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`)
+  async getRequestById(id: string, accessToken?: string): Promise<FormRequest> {
+    const data = await this.makeRequest<any>(`/api/dashboard/request/${id}`, {}, accessToken)
     return this.transformRequest(data)
   }
 
   // Alias for backwards compatibility with older tests
-  async getRequestDetails(id: string): Promise<FormRequest> {
-    return this.getRequestById(id)
+  async getRequestDetails(id: string, accessToken?: string): Promise<FormRequest> {
+    return this.getRequestById(id, accessToken)
   }
 
-  async addComment(requestId: string, message: string): Promise<Comment> {
+  async addComment(requestId: string, message: string, accessToken?: string): Promise<Comment> {
     return this.makeRequest(`/api/dashboard/request/${requestId}/comment`, {
       method: "POST",
       body: JSON.stringify({ message }),
-    })
+    }, accessToken)
   }
 
-  async updateRequestStatus(requestId: string, status: FormRequest["status"]): Promise<FormRequest> {
+  async updateRequestStatus(requestId: string, status: FormRequest["status"], accessToken?: string): Promise<FormRequest> {
     const data = await this.makeRequest<any>(`/api/dashboard/request/${requestId}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
-    })
+    }, accessToken)
     return this.transformRequest(data)
   }
 }

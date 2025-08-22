@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/hooks/use-auth"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
+import { httpClient } from "@/lib/auth-http-client"
 import { RequestDetail } from "@/components/request-detail"
 import { dashboardApi, type FormRequest } from "@/services/dashboard-api"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,8 +15,22 @@ interface RequestDetailClientPageProps {
 }
 
 export default function RequestDetailClientPage({ requestId }: RequestDetailClientPageProps) {
-  const { user, isLoading: userLoading } = useAuth()
-  const getToken = useGetAuth0Token()
+  const [user, setUser] = useState(null)
+  const [userLoading, setUserLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      } finally {
+        setUserLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
   const [request, setRequest] = useState<FormRequest | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

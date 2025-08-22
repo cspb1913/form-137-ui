@@ -1,4 +1,7 @@
-import type { User } from "@/services/user-api"
+import type { UserWithRoles } from "@/types/user"
+
+// Type alias for backward compatibility
+type User = UserWithRoles
 
 export type UserRole = "Admin" | "Requester"
 
@@ -6,10 +9,25 @@ export type UserRole = "Admin" | "Requester"
  * Check if a user has a specific role
  */
 export function hasRole(user: User | null, role: UserRole): boolean {
-  if (!user || !user.roles) {
+  if (!user) {
+    console.log('hasRole: user is null/undefined')
     return false
   }
-  return user.roles.includes(role)
+  
+  if (!user.roles) {
+    console.log('hasRole: user.roles is null/undefined', { user })
+    return false
+  }
+  
+  const hasRoleResult = user.roles.includes(role)
+  console.log('hasRole check:', { 
+    role, 
+    userRoles: user.roles, 
+    hasRole: hasRoleResult,
+    userKeys: Object.keys(user)
+  })
+  
+  return hasRoleResult
 }
 
 /**

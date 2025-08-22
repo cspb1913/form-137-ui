@@ -3,8 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@auth0/nextjs-auth0"
-import { useGetAuth0Token } from "@/hooks/use-auth0-token"
+import { httpClient } from "@/lib/auth-http-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,8 +23,19 @@ interface RequestForm137Props {
 
 export function RequestForm137({ onSuccess }: RequestForm137Props) {
   const { toast } = useToast()
-  const { user } = useUser()
-  const getToken = useGetAuth0Token()
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await httpClient.get('/api/users/me')
+        setUser(userData)
+      } catch (err) {
+        console.error('Failed to fetch user:', err)
+      }
+    }
+    fetchUser()
+  }, [])
   const { isBot, botType, confidence, trackActivity } = useBotID()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -172,7 +182,7 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
       let accessToken: string | undefined
       if (user) {
         try {
-          accessToken = await getToken()
+          // Use client credentials in httpClient
         } catch (tokenError) {
           console.error("Failed to get access token:", tokenError)
           toast({

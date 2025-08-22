@@ -37,13 +37,7 @@ jest.mock("@/components/botid-provider", () => ({
     trackActivity: jest.fn(),
   }),
 }))
-jest.mock("@/hooks/use-current-user", () => ({
-  useCurrentUser: jest.fn(() => ({
-    user: undefined,
-    isLoading: false,
-    isError: false,
-  })),
-}))
+// Note: No hooks mocked - architecture uses pure API calls
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
