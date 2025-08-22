@@ -32,31 +32,8 @@ export function Dashboard() {
     try {
       setError(null)
       
-      // DEBUG: Dump all cookies in the console
-      console.log('=== COOKIE DEBUG ===')
-      console.log('All document cookies:', document.cookie)
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [name, value] = cookie.trim().split('=')
-        acc[name] = value
-        return acc
-      }, {} as Record<string, string>)
-      console.log('Parsed cookies:', cookies)
-      
-      if (cookies.appSession) {
-        console.log('appSession cookie found:', cookies.appSession)
-        try {
-          const sessionData = JSON.parse(decodeURIComponent(cookies.appSession))
-          console.log('Parsed appSession:', sessionData)
-          console.log('Has accessToken:', !!sessionData.accessToken)
-          console.log('Has idToken:', !!sessionData.idToken) 
-          console.log('Expires at:', sessionData.expiresAt ? new Date(sessionData.expiresAt) : 'No expiry')
-        } catch (e) {
-          console.log('Failed to parse appSession cookie:', e)
-        }
-      } else {
-        console.log('No appSession cookie found')
-      }
-      console.log('=== END COOKIE DEBUG ===')
+      // HttpOnly cookies are not accessible via document.cookie
+      // Authentication is handled server-side via the API route
       
       // Use frontend API proxy that handles authentication with JWT tokens
       // Include credentials to send session cookies to the API proxy

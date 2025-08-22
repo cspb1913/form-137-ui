@@ -61,8 +61,10 @@ export async function GET(request: NextRequest) {
     const base64Payload = session.idToken.split('.')[1]
     const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString())
     
-    // Extract user roles from the token
+    // Extract user email and roles from the token
+    const userEmail = payload.email
     const userRoles = payload[`${process.env.AUTH0_AUDIENCE}/roles`] || []
+    console.log('Dashboard API: User email from JWT:', userEmail)
     console.log('Dashboard API: User roles from JWT:', userRoles)
     
     // Debug: Access token validation
@@ -83,12 +85,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 4. Make authenticated backend API call using access token
+    // 4. Make authenticated backend API call using access token with user email filter
     const backendUrl = process.env.NEXT_PUBLIC_FORM137_API_URL || 'http://localhost:8080'
-    console.log('Dashboard API: Making backend call to:', `${backendUrl}/api/dashboard/requests`)
+    const apiUrl = `${backendUrl}/api/dashboard/requests?userEmail=${encodeURIComponent(userEmail)}`
+    console.log('Dashboard API: Making backend call to:', apiUrl)
+    console.log('Dashboard API: Filtering by user email:', userEmail)
     console.log('Dashboard API: Full access token being sent:', session.accessToken)
     
-    const response = await fetch(`${backendUrl}/api/dashboard/requests`, {
+    const response = await fetch(apiUrl, {
       headers: {
         'Authorization': `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
