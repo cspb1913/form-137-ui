@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -17,9 +17,35 @@ import { FileText, LayoutDashboard, LogOut, User, Settings } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isAdmin, isRequester } from "@/lib/auth-utils"
 
+interface UserData {
+  sub: string
+  name?: string
+  email?: string
+  picture?: string
+  roles?: string[]
+  [key: string]: any
+}
+
 export function TopNavigation() {
   const pathname = usePathname()
-  const { user, isLoading } = useAuth()
+  const [user, setUser] = useState<UserData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch user data from API on component mount
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUser(data.user)
+        }
+        setIsLoading(false)
+      })
+      .catch(error => {
+        console.error('Failed to fetch user:', error)
+        setIsLoading(false)
+      })
+  }, [])
 
   const isActive = (path: string) => {
     if (path === "/" && pathname === "/") return true
