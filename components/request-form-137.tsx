@@ -28,10 +28,17 @@ export function RequestForm137({ onSuccess }: RequestForm137Props) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await httpClient.get('/api/users/me')
+        // Try to fetch user data for form pre-population, but don't require authentication
+        const userData = await httpClient.get('/api/users/me', undefined, false)
         setUser(userData)
       } catch (err) {
-        console.error('Failed to fetch user:', err)
+        // Silently handle auth errors - form should work without authentication
+        if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+          console.log('User not authenticated - form will work without pre-population')
+        } else {
+          console.error('Failed to fetch user:', err)
+        }
+        setUser(null)
       }
     }
     fetchUser()
