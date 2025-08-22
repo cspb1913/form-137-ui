@@ -159,7 +159,7 @@ export function Dashboard() {
     if (!selectedRequest) return
 
     try {
-      const response = await fetch(`/api/dashboard/request/${selectedRequest.id}/comments`, {
+      const response = await fetch(`/api/dashboard/request/${selectedRequest.id}/comment`, {
         method: 'POST',
         credentials: 'include',
         headers: {
