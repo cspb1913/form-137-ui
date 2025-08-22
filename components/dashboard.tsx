@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { httpClient } from "@/lib/auth-http-client"
-import { useAuth } from "@/hooks/use-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +15,8 @@ import { Search, Filter, RefreshCw, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 export function Dashboard() {
-  const { user, isLoading: userLoading } = useAuth()
+  const [user, setUser] = useState<any>(null)
+  const [userLoading, setUserLoading] = useState(true)
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,10 +28,78 @@ export function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setError(null)
-      // Use secure server-side endpoint with automatic JWT validation
-      const data = await httpClient.get('/api/dashboard/requests')
-      setRequests(data.requests || [])
-      setStats(data.stats || null)
+      
+      // DEBUG: Dump all cookies in the console
+      console.log('=== COOKIE DEBUG ===')
+      console.log('All document cookies:', document.cookie)
+      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const [name, value] = cookie.trim().split('=')
+        acc[name] = value
+        return acc
+      }, {} as Record<string, string>)
+      console.log('Parsed cookies:', cookies)
+      
+      if (cookies.appSession) {
+        console.log('appSession cookie found:', cookies.appSession)
+        try {
+          const sessionData = JSON.parse(decodeURIComponent(cookies.appSession))
+          console.log('Parsed appSession:', sessionData)
+          console.log('Has accessToken:', !!sessionData.accessToken)
+          console.log('Has idToken:', !!sessionData.idToken) 
+          console.log('Expires at:', sessionData.expiresAt ? new Date(sessionData.expiresAt) : 'No expiry')
+        } catch (e) {
+          console.log('Failed to parse appSession cookie:', e)
+        }
+      } else {
+        console.log('No appSession cookie found')
+      }
+      console.log('=== END COOKIE DEBUG ===')
+      
+      // Use frontend API proxy that handles authentication with JWT tokens
+      // Include credentials to send session cookies to the API proxy
+      const response = await fetch('/api/dashboard/requests', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const rawData = await response.json()
+      
+      // Transform the raw backend data to the expected frontend format
+      const transformedRequests = (rawData.requests || []).map((request: any) => ({
+        id: request.id,
+        ticketNumber: request.ticketNumber,
+        studentName: request.learnerName,
+        studentId: request.learnerReferenceNumber,
+        email: request.requesterEmail,
+        phoneNumber: request.mobileNumber ?? "",
+        graduationYear: request.lastSchoolYear ?? "",
+        program: request.previousSchool ?? request.lastGradeLevel ?? "",
+        purpose: request.purposeOfRequest ?? "",
+        deliveryMethod: (request.deliveryMethod || "").toLowerCase(),
+        deliveryAddress: request.deliveryAddress ?? undefined,
+        status: request.status,
+        submittedAt: request.submittedAt ?? request.submittedDate ?? request.submittedAt,
+        updatedAt: request.updatedAt ?? request.updatedDate ?? request.submittedAt ?? request.submittedDate,
+        comments: (request.comments || []).map((c: any) => ({
+          id: c.id ?? "",
+          message: c.message,
+          author: c.registrarName ?? "",
+          createdAt: c.timestamp,
+        })),
+        documents: request.documents ?? [],
+      }))
+      
+      setRequests(transformedRequests)
+      setStats({
+        totalRequests: rawData.statistics?.totalRequests ?? 0,
+        pendingRequests: rawData.statistics?.pendingRequests ?? 0,
+        completedRequests: rawData.statistics?.completedRequests ?? 0,
+        rejectedRequests: rawData.statistics?.rejectedRequests ?? 0,
+      })
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err)
       setError("Failed to load dashboard data. Please try again.")
@@ -41,13 +109,33 @@ export function Dashboard() {
     }
   }
 
-  // Auth0 handles user authentication automatically
-
+  // Check auth status and load data
   useEffect(() => {
-    if (!userLoading && user) {
-      fetchDashboardData()
+    const checkAuthAndLoadData = async () => {
+      try {
+        const response = await fetch('/api/auth/me/', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          if (data.user) {
+            await fetchDashboardData()
+          }
+        } else {
+          setUser(null)
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setUser(null)
+      } finally {
+        setUserLoading(false)
+      }
     }
-  }, [user, userLoading])
+    
+    checkAuthAndLoadData()
+  }, [])
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -56,9 +144,9 @@ export function Dashboard() {
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
-      request.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+      (request.studentName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (request.ticketNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (request.studentId?.toLowerCase() || '').includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || request.status === statusFilter
 
@@ -139,7 +227,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Form 137 Dashboard</h1>

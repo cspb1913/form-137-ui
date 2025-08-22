@@ -1,21 +1,20 @@
 "use client"
 
 import React from "react"
-import { Auth0Provider } from '@auth0/nextjs-auth0'
 
 interface AuthProviderProps {
   children: React.ReactNode
 }
 
 /**
- * Auth provider using Auth0 authentication
+ * Custom auth provider for our custom Auth0 implementation
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  console.log("🔐 Using Auth0 authentication")
+  console.log("🔐 Using custom Auth0 authentication")
   
   return (
-    <Auth0Provider>
+    <>
       {children}
-    </Auth0Provider>
+    </>
   )
 }

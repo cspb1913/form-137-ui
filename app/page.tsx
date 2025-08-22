@@ -1,45 +1,53 @@
 "use client"
 
-import { useUser } from '@auth0/nextjs-auth0'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { LoginPrompt } from "@/components/login-prompt"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function HomePage() {
-  const { user, isLoading } = useUser()
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState(null)
   
   useEffect(() => {
-    // If user is authenticated, redirect to dashboard
-    if (user && !isLoading) {
-      router.push('/dashboard')
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me/', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.user && data.user.roles && data.user.roles.length > 0) {
+            console.log('Authenticated user with roles:', data.user.roles)
+            router.push('/dashboard')
+            return
+          }
+        }
+        
+        // User not authenticated or no roles - show login
+        setUser(null)
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setUser(null)
+        setIsLoading(false)
+      }
     }
-  }, [user, isLoading, router])
+    
+    checkAuth()
+  }, [router])
   
-  // Show loading while checking authentication
+  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          <p className="mt-4 text-lg text-gray-600">Loading...</p>
-        </div>
+        <div className="text-lg">Loading...</div>
       </div>
     )
   }
   
-  // If authenticated user, will redirect via useEffect - show loading for now
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-gray-600">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-  
-  // If not authenticated, show login prompt
+  // Show login prompt for unauthenticated users or users without roles
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
       <LoginPrompt />

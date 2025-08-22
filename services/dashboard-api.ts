@@ -57,7 +57,7 @@ export class DashboardAPI {
       email: data.requesterEmail,
       phoneNumber: data.mobileNumber ?? "",
       graduationYear: data.lastSchoolYear ?? "",
-      program: data.lastGradeLevel ?? "",
+      program: data.previousSchool ?? data.lastGradeLevel ?? "",
       purpose: data.purposeOfRequest ?? "",
       deliveryMethod: (data.deliveryMethod || "").toLowerCase(),
       deliveryAddress: data.deliveryAddress ?? undefined,

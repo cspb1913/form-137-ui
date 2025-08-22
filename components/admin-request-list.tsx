@@ -18,8 +18,11 @@ export default function AdminRequestList() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await httpClient.get('/api/users/me')
-        setUser(userData)
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const userData = await response.json()
+          setUser(userData.user)
+        }
       } catch (err) {
         console.error('Failed to fetch user:', err)
       } finally {
@@ -36,9 +39,14 @@ export default function AdminRequestList() {
       try {
         setError(null)
         if (user) {
-          // Use secure server-side endpoint with JWT validation
-          const data = await httpClient.get('/api/dashboard/requests')
-          setRequests(data.requests || [])
+          // Use frontend API proxy that handles authentication with JWT tokens
+          const response = await fetch('/api/dashboard/requests')
+          if (response.ok) {
+            const data = await response.json()
+            setRequests(data.requests || [])
+          } else {
+            throw new Error(`API error: ${response.status}`)
+          }
         } else {
           setRequests([])
         }

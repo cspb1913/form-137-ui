@@ -16,8 +16,11 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await httpClient.get('/api/users/me')
-        setUser(userData)
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const userData = await response.json()
+          setUser(userData.user)
+        }
       } catch (err) {
         console.error('Failed to fetch user:', err)
       } finally {

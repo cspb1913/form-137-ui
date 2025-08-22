@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
     // 1. Extract and validate custom session cookie
     const sessionCookie = request.cookies.get('appSession')
     
+    console.log('Dashboard API: All cookies received:', request.cookies.getAll())
+    console.log('Dashboard API: appSession cookie:', sessionCookie)
+    
     if (!sessionCookie) {
       console.log('Dashboard API: No session cookie found')
       return NextResponse.json(
@@ -62,6 +65,14 @@ export async function GET(request: NextRequest) {
     const userRoles = payload[`${process.env.AUTH0_AUDIENCE}/roles`] || []
     console.log('Dashboard API: User roles from JWT:', userRoles)
     
+    // Debug: Access token validation
+    const accessTokenPayload = JSON.parse(Buffer.from(session.accessToken.split('.')[1], 'base64').toString())
+    console.log('Dashboard API: Access token audience:', accessTokenPayload.aud)
+    console.log('Dashboard API: Expected audience:', process.env.AUTH0_AUDIENCE)
+    console.log('Dashboard API: JWT audience valid:', accessTokenPayload.aud.includes(process.env.AUTH0_AUDIENCE))
+    console.log('Dashboard API: Full access token payload:', JSON.stringify(accessTokenPayload, null, 2))
+    console.log('Dashboard API: Access token (first 50 chars):', session.accessToken.substring(0, 50) + '...')
+    
     const hasRequiredRole = userRoles.includes('Admin') || userRoles.includes('Requester')
     
     if (!hasRequiredRole) {
@@ -75,6 +86,7 @@ export async function GET(request: NextRequest) {
     // 4. Make authenticated backend API call using access token
     const backendUrl = process.env.NEXT_PUBLIC_FORM137_API_URL || 'http://localhost:8080'
     console.log('Dashboard API: Making backend call to:', `${backendUrl}/api/dashboard/requests`)
+    console.log('Dashboard API: Full access token being sent:', session.accessToken)
     
     const response = await fetch(`${backendUrl}/api/dashboard/requests`, {
       headers: {

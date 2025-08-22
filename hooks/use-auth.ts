@@ -1,6 +1,5 @@
 "use client"
 
-import { useUser } from "@auth0/nextjs-auth0"
 import { useEffect, useState } from "react"
 import type { UserWithRoles } from "@/types/user"
 
@@ -13,82 +12,66 @@ interface AuthHook {
 }
 
 /**
- * Secure Auth hook that uses Auth0 authentication with fallback to /api/auth/me
- * In production mode, users must authenticate via Auth0 to get proper roles
+ * Custom Auth hook that works with our custom Auth0 implementation
+ * Uses /api/auth/me endpoint to check authentication status
  */
 export function useAuth(): AuthHook {
-  const { user: auth0User, isLoading: auth0Loading, error: auth0Error } = useUser()
-  const [fallbackUser, setFallbackUser] = useState<UserWithRoles | null>(null)
-  const [fallbackLoading, setFallbackLoading] = useState(false)
-  const [authReady, setAuthReady] = useState(false)
-  const [forceFinish, setForceFinish] = useState(false)
+  const [user, setUser] = useState<UserWithRoles | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | undefined>()
 
-  // Initialize auth state after a short delay
+  // Check authentication status on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAuthReady(true)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Force finish loading after a reasonable timeout (3 seconds)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Auth: Forcing finish loading after timeout')
-      setForceFinish(true)
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // If we have an Auth0 user, transform it to include roles
-  const userWithRoles: UserWithRoles | null = auth0User
-    ? {
-        ...auth0User,
-        roles: auth0User[`${process.env.NEXT_PUBLIC_AUTH0_AUDIENCE}/roles`] || [],
-      }
-    : fallbackUser
-
-  // If Auth0 is ready but no user exists, try fallback endpoint
-  useEffect(() => {
-    if (authReady && !auth0Loading && !auth0User && !fallbackUser && !fallbackLoading) {
-      console.log('No Auth0 user, trying fallback /api/auth/me endpoint')
-      setFallbackLoading(true)
-      
-      fetch('/api/auth/me/')
-        .then(res => res.json())
-        .then(data => {
-          console.log('Fallback user data:', data)
+    let mounted = true
+    
+    const checkAuth = async () => {
+      try {
+        console.log('Checking authentication status...')
+        const response = await fetch('/api/auth/me/')
+        
+        if (!mounted) return
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Auth check successful:', data)
           if (data.user) {
-            setFallbackUser(data.user)
+            setUser(data.user)
           }
-        })
-        .catch(error => {
-          console.error('Fallback auth error:', error)
-        })
-        .finally(() => {
-          setFallbackLoading(false)
-        })
+        } else {
+          console.log('Auth check failed:', response.status)
+          setUser(null)
+        }
+      } catch (err) {
+        console.error('Auth check error:', err)
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error('Authentication check failed'))
+          setUser(null)
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
     }
-  }, [authReady, auth0Loading, auth0User, fallbackUser, fallbackLoading])
 
-  const isLoading = (auth0Loading && !forceFinish) || (!authReady) || fallbackLoading
+    checkAuth()
+    
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   console.log('useAuth debug:', {
-    auth0User: !!auth0User,
-    fallbackUser: !!fallbackUser,
-    userWithRoles: !!userWithRoles,
-    userRoles: userWithRoles?.roles,
-    auth0Loading,
-    fallbackLoading,
-    authReady,
+    user: !!user,
+    userRoles: user?.roles,
     isLoading,
-    hasAudience: !!process.env.NEXT_PUBLIC_AUTH0_AUDIENCE
+    error: !!error
   })
 
   return {
-    user: userWithRoles,
+    user,
     isLoading,
-    error: auth0Error,
+    error,
     login: () => {
       window.location.href = "/api/auth/login"
     },
