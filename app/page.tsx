@@ -1,118 +1,48 @@
 "use client"
-export const dynamic = "force-dynamic"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Dashboard } from "@/components/dashboard"
-import { TopNavigation } from "@/components/top-navigation"
-import { Toaster } from "@/components/ui/sonner"
-import { useAuth } from "@/hooks/use-auth"
+
+import { useUser } from '@auth0/nextjs-auth0'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { LoginPrompt } from "@/components/login-prompt"
-import { isAdmin, isRequester, canAccessDashboard } from "@/lib/user-auth-utils"
 
 export default function HomePage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useUser()
   const router = useRouter()
-  const [forceReady, setForceReady] = useState(false)
-
-  // Force ready state after 2 seconds to prevent infinite loading
+  
   useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Page: Forcing ready state to prevent infinite loading')
-      setForceReady(true)
-    }, 2000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handleNewRequest = () => {
-    router.push("/request")
-  }
-
-  const handleViewRequest = (requestId: string) => {
-    router.push(`/dashboard/request/${requestId}`)
-  }
-
-  // Role-based redirect logic
-  useEffect(() => {
-    if (!isLoading && user) {
-      console.log('User object:', user)
-      console.log('User roles:', user.roles)
-      console.log('Can access dashboard:', canAccessDashboard(user))
-      
-      // Handle users without proper roles first
-      if (!canAccessDashboard(user)) {
-        // For production mode, if user exists but lacks roles, 
-        // redirect to unauthorized (this is correct behavior)
-        console.log('Redirecting to unauthorized - user lacks required roles')
-        router.replace("/unauthorized")
-        return
-      }
-      
-      // Admin-only users go to admin panel
-      if (isAdmin(user) && !isRequester(user)) {
-        router.replace("/admin")
-        return
-      }
-      
-      // All other cases (Requester-only, Admin+Requester, or any valid roles) stay on dashboard
-      console.log('User has valid roles, staying on dashboard')
+    // If user is authenticated, redirect to dashboard
+    if (user && !isLoading) {
+      router.push('/dashboard')
     }
   }, [user, isLoading, router])
-
-  // Use the forced ready state to override infinite loading
-  const actuallyLoading = isLoading && !forceReady
-
-  if (actuallyLoading) {
+  
+  // Show loading while checking authentication
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <TopNavigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+          <p className="mt-4 text-lg text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
-
-  if (!user) {
+  
+  // If authenticated user, will redirect via useEffect - show loading for now
+  if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <TopNavigation />
-        <LoginPrompt />
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Redirecting to dashboard...</p>
+        </div>
       </div>
     )
   }
-
-  // Show loading while redirecting (prevents render during redirect)
-  if (!canAccessDashboard(user) || isAdmin(user)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <TopNavigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
+  
+  // If not authenticated, show login prompt
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-      <TopNavigation />
-      <main className="container mx-auto px-4 py-8">
-        <Dashboard onNewRequest={handleNewRequest} onViewRequest={handleViewRequest} />
-      </main>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "white",
-            border: "1px solid #1B4332",
-            color: "#1B4332",
-          },
-        }}
-      />
+      <LoginPrompt />
     </div>
   )
 }

@@ -145,10 +145,15 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Form 137 Dashboard</h1>
           <p className="text-muted-foreground">Manage and track Form 137 requests</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link href="/request/new">New Request</Link>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {stats && (

@@ -21,12 +21,22 @@ export function useAuth(): AuthHook {
   const [fallbackUser, setFallbackUser] = useState<UserWithRoles | null>(null)
   const [fallbackLoading, setFallbackLoading] = useState(false)
   const [authReady, setAuthReady] = useState(false)
+  const [forceFinish, setForceFinish] = useState(false)
 
   // Initialize auth state after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setAuthReady(true)
-    }, 1000)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Force finish loading after a reasonable timeout (3 seconds)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Auth: Forcing finish loading after timeout')
+      setForceFinish(true)
+    }, 3000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -61,7 +71,7 @@ export function useAuth(): AuthHook {
     }
   }, [authReady, auth0Loading, auth0User, fallbackUser, fallbackLoading])
 
-  const isLoading = auth0Loading || (!authReady) || fallbackLoading
+  const isLoading = (auth0Loading && !forceFinish) || (!authReady) || fallbackLoading
 
   console.log('useAuth debug:', {
     auth0User: !!auth0User,
