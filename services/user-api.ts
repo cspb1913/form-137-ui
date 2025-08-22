@@ -119,7 +119,7 @@ export class UserAPI {
       tokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : 'none',
       baseUrl: this.baseUrl 
     })
-    return this.httpClient.get<User>("/api/users/me", true)
+    return this.httpClient.get<User>("/api/users/me", accessToken, true)
   }
 
   /**
@@ -172,31 +172,31 @@ export class UserAPI {
   // Legacy methods for backward compatibility with token passing
   async getUserByAuth0IdWithToken(auth0Id: string, accessToken: string): Promise<User> {
     const encodedAuth0Id = encodeURIComponent(auth0Id)
-    return this.httpClient.get<User>(`/api/users/${encodedAuth0Id}`, true)
+    return this.httpClient.get<User>(`/api/users/${encodedAuth0Id}`, accessToken, true)
   }
 
   async getAllUsersWithToken(accessToken: string): Promise<User[]> {
-    return this.httpClient.get<User[]>("/api/users", true)
+    return this.httpClient.get<User[]>("/api/users", accessToken, true)
   }
 
   async createUserWithToken(userData: CreateUserRequest, accessToken: string): Promise<User> {
-    return this.httpClient.post<User>("/api/users", userData, true)
+    return this.httpClient.post<User>("/api/users", userData, accessToken, true)
   }
 
   async updateUserWithToken(auth0Id: string, userData: UpdateUserRequest, accessToken: string): Promise<User> {
     const encodedAuth0Id = encodeURIComponent(auth0Id)
-    return this.httpClient.put<User>(`/api/users/${encodedAuth0Id}`, userData, true)
+    return this.httpClient.put<User>(`/api/users/${encodedAuth0Id}`, userData, accessToken, true)
   }
 
   async updateUserRolesWithToken(auth0Id: string, roles: string[], accessToken: string): Promise<User> {
     const encodedAuth0Id = encodeURIComponent(auth0Id)
     const requestData: UpdateUserRolesRequest = { roles }
-    return this.httpClient.put<User>(`/api/users/${encodedAuth0Id}/roles`, requestData, true)
+    return this.httpClient.put<User>(`/api/users/${encodedAuth0Id}/roles`, requestData, accessToken, true)
   }
 
   async deactivateUserWithToken(auth0Id: string, accessToken: string): Promise<User> {
     const encodedAuth0Id = encodeURIComponent(auth0Id)
-    return this.httpClient.delete<User>(`/api/users/${encodedAuth0Id}`, true)
+    return this.httpClient.delete<User>(`/api/users/${encodedAuth0Id}`, accessToken, true)
   }
 }
 

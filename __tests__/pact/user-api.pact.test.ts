@@ -12,13 +12,14 @@ const provider = new Pact({
 })
 
 describe("User API Pact Tests", () => {
+  const mockAuth0Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature"
   beforeAll(() => provider.setup())
   afterEach(() => provider.verify())
   afterAll(() => provider.finalize())
 
   describe("GET /api/users/me", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user is authenticated",
         uponReceiving: "a request for current user info",
         withRequest: {
@@ -26,8 +27,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users/me",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -60,36 +60,28 @@ describe("User API Pact Tests", () => {
     })
 
     it("should return current user information", async () => {
-      // Set up environment for custom token generation
-      const originalApiUrl = process.env.NEXT_PUBLIC_FORM137_API_URL
-      const originalSecret = process.env.NEXT_PUBLIC_CSPB_API_SECRET
-      process.env.NEXT_PUBLIC_FORM137_API_URL = "http://localhost:1235"
-      process.env.NEXT_PUBLIC_CSPB_API_SECRET = "test-secret-key-for-pact-tests"
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const userAPI = new UserAPI("http://localhost:1235")
+      const result = await userAPI.getCurrentUserWithToken(mockAuth0Token)
 
-      try {
-        const userAPI = new UserAPI("http://localhost:1235")
-        const result = await userAPI.getCurrentUserWithToken("token123")
-
-        expect(result).toHaveProperty("auth0Id")
-        expect(result).toHaveProperty("email")
-        expect(result).toHaveProperty("name")
-        expect(result).toHaveProperty("roles")
-        expect(result.roles).toBeInstanceOf(Array)
-        expect(result).toHaveProperty("isActive", true)
-        expect(result.profile).toHaveProperty("firstName")
-        expect(result.profile).toHaveProperty("lastName")
-        expect(result.preferences).toHaveProperty("emailNotifications")
-        expect(result.metadata).toHaveProperty("createdAt")
-      } finally {
-        process.env.NEXT_PUBLIC_FORM137_API_URL = originalApiUrl
-        process.env.NEXT_PUBLIC_CSPB_API_SECRET = originalSecret
-      }
+      expect(result).toHaveProperty("auth0Id")
+      expect(result).toHaveProperty("email")
+      expect(result).toHaveProperty("name")
+      expect(result).toHaveProperty("roles")
+      expect(result.roles).toBeInstanceOf(Array)
+      expect(result).toHaveProperty("isActive", true)
+      expect(result.profile).toHaveProperty("firstName")
+      expect(result.profile).toHaveProperty("lastName")
+      expect(result.preferences).toHaveProperty("emailNotifications")
+      expect(result.metadata).toHaveProperty("createdAt")
     })
   })
 
   describe("GET /api/users/:auth0Id", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user exists",
         uponReceiving: "a request for specific user by auth0Id",
         withRequest: {
@@ -97,8 +89,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7C687515def8dcc9049a9c9b57",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -131,8 +122,11 @@ describe("User API Pact Tests", () => {
     })
 
     it("should return user by auth0Id", async () => {
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.getUserByAuth0IdWithToken("auth0|687515def8dcc9049a9c9b57", "token123")
+      const result = await userAPI.getUserByAuth0IdWithToken("auth0|687515def8dcc9049a9c9b57", mockAuth0Token)
 
       expect(result).toHaveProperty("auth0Id", "auth0|687515def8dcc9049a9c9b57")
       expect(result).toHaveProperty("email", "jason@cspb.edu.ph")
@@ -142,8 +136,8 @@ describe("User API Pact Tests", () => {
   })
 
   describe("GET /api/users", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "users exist and requester is admin",
         uponReceiving: "a request for all users",
         withRequest: {
@@ -151,8 +145,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -185,8 +178,11 @@ describe("User API Pact Tests", () => {
     })
 
     it("should return all users (admin only)", async () => {
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.getAllUsersWithToken("admin-token123")
+      const result = await userAPI.getAllUsersWithToken(mockAuth0Token)
 
       expect(result).toBeInstanceOf(Array)
       expect(result[0]).toHaveProperty("auth0Id")
@@ -196,8 +192,8 @@ describe("User API Pact Tests", () => {
   })
 
   describe("POST /api/users", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "admin can create users",
         uponReceiving: "a request to create a new user",
         withRequest: {
@@ -206,8 +202,7 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
           body: {
             auth0Id: like("auth0|new-user-123"),
@@ -270,7 +265,10 @@ describe("User API Pact Tests", () => {
         },
       }
 
-      const result = await userAPI.createUserWithToken(newUser, "admin-token123")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const result = await userAPI.createUserWithToken(newUser, mockAuth0Token)
 
       expect(result).toHaveProperty("auth0Id", "auth0|new-user-123")
       expect(result).toHaveProperty("email", "newuser@cspb.edu.ph")
@@ -280,8 +278,8 @@ describe("User API Pact Tests", () => {
   })
 
   describe("PUT /api/users/:auth0Id", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user exists and can be updated",
         uponReceiving: "a request to update user profile",
         withRequest: {
@@ -290,8 +288,7 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
           body: {
             name: like("Jason Updated"),
@@ -348,7 +345,10 @@ describe("User API Pact Tests", () => {
         },
       }
 
-      const result = await userAPI.updateUserWithToken("auth0|687515def8dcc9049a9c9b57", updateData, "token123")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const result = await userAPI.updateUserWithToken("auth0|687515def8dcc9049a9c9b57", updateData, mockAuth0Token)
 
       expect(result).toHaveProperty("name", "Jason Updated")
       expect(result.profile).toHaveProperty("lastName", "Updated")
@@ -358,8 +358,8 @@ describe("User API Pact Tests", () => {
   })
 
   describe("PUT /api/users/:auth0Id/roles", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user exists and admin can update roles",
         uponReceiving: "a request to update user roles",
         withRequest: {
@@ -368,8 +368,7 @@ describe("User API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
           body: {
             roles: eachLike("Requester"),
@@ -406,10 +405,13 @@ describe("User API Pact Tests", () => {
 
     it("should update user roles (admin only)", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const result = await userAPI.updateUserRolesWithToken(
         "auth0|687515def8dcc9049a9c9b57", 
         ["Requester"], 
-        "admin-token123"
+        mockAuth0Token
       )
 
       expect(result).toHaveProperty("roles")
@@ -418,8 +420,8 @@ describe("User API Pact Tests", () => {
   })
 
   describe("DELETE /api/users/:auth0Id", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user exists and can be deactivated",
         uponReceiving: "a request to deactivate user",
         withRequest: {
@@ -427,8 +429,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7C687515def8dcc9049a9c9b57",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -462,15 +463,18 @@ describe("User API Pact Tests", () => {
 
     it("should deactivate user (soft delete)", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
-      const result = await userAPI.deactivateUserWithToken("auth0|687515def8dcc9049a9c9b57", "admin-token123")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const result = await userAPI.deactivateUserWithToken("auth0|687515def8dcc9049a9c9b57", mockAuth0Token)
 
       expect(result).toHaveProperty("isActive", false)
     })
   })
 
   describe("Error scenarios", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user does not exist",
         uponReceiving: "a request for non-existent user",
         withRequest: {
@@ -478,8 +482,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users/auth0%7Cnonexistent",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -498,13 +501,16 @@ describe("User API Pact Tests", () => {
     it("should handle non-existent user", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
 
-      await expect(userAPI.getUserByAuth0IdWithToken("auth0|nonexistent", "token123")).rejects.toThrow("HTTP error!")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      await expect(userAPI.getUserByAuth0IdWithToken("auth0|nonexistent", mockAuth0Token)).rejects.toThrow("User not found")
     })
   })
 
   describe("Unauthorized access", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "user is not admin",
         uponReceiving: "a non-admin request for all users",
         withRequest: {
@@ -512,8 +518,7 @@ describe("User API Pact Tests", () => {
           path: "/api/users",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -532,7 +537,10 @@ describe("User API Pact Tests", () => {
     it("should prevent non-admin access to user list", async () => {
       const userAPI = new UserAPI("http://localhost:1235")
 
-      await expect(userAPI.getAllUsersWithToken("requester-token123")).rejects.toThrow("HTTP error!")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      await expect(userAPI.getAllUsersWithToken(mockAuth0Token)).rejects.toThrow("Insufficient permissions")
     })
   })
 })

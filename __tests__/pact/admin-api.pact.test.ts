@@ -23,13 +23,14 @@ const provider = new Pact({
 })
 
 describe("Admin API Pact Tests", () => {
+  const mockAuth0Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature"
   beforeAll(() => provider.setup())
   afterEach(() => provider.verify())
   afterAll(() => provider.finalize())
 
   describe("GET /api/dashboard/requests - Admin Access", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "admin has access to all form 137 requests",
         uponReceiving: "a request for all requests from admin",
         withRequest: {
@@ -37,8 +38,7 @@ describe("Admin API Pact Tests", () => {
           path: "/api/dashboard/requests",
           headers: {
             Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
         },
         willRespondWith: {
@@ -80,8 +80,11 @@ describe("Admin API Pact Tests", () => {
     })
 
     it("should return all requests for admin dashboard", async () => {
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.getDashboardData()
+      const result = await adminAPI.getDashboardData(mockAuth0Token)
 
       expect(result.requests).toBeDefined()
       expect(result.stats).toBeDefined()
@@ -93,8 +96,8 @@ describe("Admin API Pact Tests", () => {
   })
 
   describe("PATCH /api/dashboard/request/:id/status - Admin Update", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "admin can update any request status",
         uponReceiving: "a request to update request status from admin",
         withRequest: {
@@ -103,8 +106,7 @@ describe("Admin API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
           body: {
             status: like("completed"),
@@ -141,8 +143,11 @@ describe("Admin API Pact Tests", () => {
     })
 
     it("should allow admin to update request status", async () => {
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.updateRequestStatus("req_001", "completed")
+      const result = await adminAPI.updateRequestStatus("req_001", "completed", mockAuth0Token)
 
       expect(result).toHaveProperty("id", "req_001")
       expect(result).toHaveProperty("status", "completed")
@@ -150,8 +155,8 @@ describe("Admin API Pact Tests", () => {
   })
 
   describe("POST /api/dashboard/request/:id/comment - Admin Comment", () => {
-    beforeEach(() => {
-      return provider.addInteraction({
+    beforeEach(async () => {
+      await provider.addInteraction({
         state: "admin can add comments to any request",
         uponReceiving: "a request to add admin comment",
         withRequest: {
@@ -160,8 +165,7 @@ describe("Admin API Pact Tests", () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIkFkbWluIl19.fake-signature",
           },
           body: {
             message: like("Request has been processed and is ready for pickup"),
@@ -183,8 +187,11 @@ describe("Admin API Pact Tests", () => {
     })
 
     it("should allow admin to add comments", async () => {
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       const adminAPI = new DashboardAPI("http://localhost:1236")
-      const result = await adminAPI.addComment("req_001", "Request has been processed and is ready for pickup")
+      const result = await adminAPI.addComment("req_001", "Request has been processed and is ready for pickup", mockAuth0Token)
 
       expect(result).toHaveProperty("id")
       expect(result).toHaveProperty("message", "Request has been processed and is ready for pickup")

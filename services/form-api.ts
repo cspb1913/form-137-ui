@@ -53,8 +53,8 @@ export class FormApiService {
     this.httpClient = new AuthenticatedHttpClient({ baseUrl })
   }
 
-  async submitForm(formData: FormSubmissionRequest): Promise<FormSubmissionResponse> {
-    const data = await this.httpClient.post<any>("/api/form137/submit", formData, false)
+  async submitForm(formData: FormSubmissionRequest, accessToken?: string): Promise<FormSubmissionResponse> {
+    const data = await this.httpClient.post<any>("/api/form137/submit", formData, accessToken, true)
 
     return {
       success: data.status === "submitted",
@@ -64,7 +64,7 @@ export class FormApiService {
     }
   }
 
-  async getSubmissionStatus(ticketNumber: string): Promise<{
+  async getSubmissionStatus(ticketNumber: string, accessToken?: string): Promise<{
     ticketNumber: string
     status: "pending" | "processing" | "completed" | "rejected"
     submittedAt: string
@@ -77,7 +77,7 @@ export class FormApiService {
       submittedAt: string
       updatedAt: string
       notes?: string
-    }>(`/api/form137/status/${ticketNumber}`, false)
+    }>(`/api/form137/status/${ticketNumber}`, accessToken, true)
   }
 }
 

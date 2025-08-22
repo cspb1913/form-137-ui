@@ -12,6 +12,7 @@ const mockProvider = new Pact({
 })
 
 describe("Form137 API Pact Tests", () => {
+  const mockAuth0Token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5In0.eyJpc3MiOiJodHRwczovL2phc29uY2FsYWxhbmcuYXV0aDAuY29tIiwiYXVkIjoiaHR0cHM6Ly9mb3JtMTM3LmNzcGIuZWR1LnBoL2FwaSIsInN1YiI6ImF1dGgwfDEyMzQ1NiIsInJvbGVzIjpbIlJlcXVlc3RlciJdfQ.fake-signature"
   let apiService: FormApiService
 
   beforeAll(async () => {
@@ -67,9 +68,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
+            "Accept": "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
           body: formData,
         },
@@ -88,7 +89,9 @@ describe("Form137 API Pact Tests", () => {
         },
       })
 
-      const response = await apiService.submitForm(formData)
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      const response = await apiService.submitForm(formData, mockAuth0Token)
 
       expect(response.success).toBe(true)
       expect(response.ticketNumber).toBe("REQ-2025-00123")
@@ -134,9 +137,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
+            "Accept": "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
           body: formData,
         },
@@ -155,7 +158,9 @@ describe("Form137 API Pact Tests", () => {
         },
       })
 
-      const response = await apiService.submitForm(formData)
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      const response = await apiService.submitForm(formData, mockAuth0Token)
 
       expect(response.success).toBe(true)
       expect(response.ticketNumber).toBe("REQ-2025-00124")
@@ -200,9 +205,9 @@ describe("Form137 API Pact Tests", () => {
           method: "POST",
           path: "/api/form137/submit",
           headers: {
+            "Accept": "application/json",
             "Content-Type": "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
           body: invalidFormData,
         },
@@ -224,7 +229,9 @@ describe("Form137 API Pact Tests", () => {
         },
       })
 
-      await expect(apiService.submitForm(invalidFormData)).rejects.toThrow("API Error: Form validation failed")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      await expect(apiService.submitForm(invalidFormData, mockAuth0Token)).rejects.toThrow("Form validation failed")
     })
   })
 
@@ -239,9 +246,9 @@ describe("Form137 API Pact Tests", () => {
           method: "GET",
           path: `/api/form137/status/${ticketNumber}`,
           headers: {
-            Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
         },
         willRespondWith: {
@@ -259,7 +266,9 @@ describe("Form137 API Pact Tests", () => {
         },
       })
 
-      const response = await apiService.getSubmissionStatus(ticketNumber)
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      const response = await apiService.getSubmissionStatus(ticketNumber, mockAuth0Token)
 
       expect(response.ticketNumber).toBe("REQ-2025-00123")
       expect(response.status).toBe("processing")
@@ -278,9 +287,9 @@ describe("Form137 API Pact Tests", () => {
           method: "GET",
           path: `/api/form137/status/${ticketNumber}`,
           headers: {
-            Accept: "application/json",
-            "x-cspb-client-id": "f725239a-f2ff-4be2-834c-196754d7feea",
-            "x-cspb-client-secret": "fTZXWX5mmfvlecwY",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${mockAuth0Token}`,
           },
         },
         willRespondWith: {
@@ -296,7 +305,9 @@ describe("Form137 API Pact Tests", () => {
         },
       })
 
-      await expect(apiService.getSubmissionStatus(ticketNumber)).rejects.toThrow("API Error: Submission not found")
+      // Small delay to ensure interaction is registered
+      await new Promise(resolve => setTimeout(resolve, 50))
+      await expect(apiService.getSubmissionStatus(ticketNumber, mockAuth0Token)).rejects.toThrow("Submission not found")
     })
   })
 })
