@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, getAccessToken } from '@auth0/nextjs-auth0/server'
 
 /**
- * Secure server-side API route for adding comments to requests
- * Implements proper JWT validation and user authorization
+ * Secure server-side API route for individual request details
+ * Implements proper JWT validation and access control
  */
-export async function POST(
+export async function GET(
   request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
@@ -31,42 +31,49 @@ export async function POST(
       )
     }
 
-    // 3. Parse request body
-    const body = await request.json()
-    const { message } = body
-
-    if (!message || typeof message !== 'string' || !message.trim()) {
+    // 3. Verify user has appropriate roles for dashboard access
+    const userRoles = session.user[`${process.env.AUTH0_AUDIENCE}/roles`] || []
+    const hasRequiredRole = userRoles.includes('Admin') || userRoles.includes('Requester')
+    
+    if (!hasRequiredRole) {
       return NextResponse.json(
-        { error: 'Comment message is required' }, 
-        { status: 400 }
+        { error: 'Forbidden - Insufficient permissions' }, 
+        { status: 403 }
       )
     }
 
     // 4. Make authenticated backend API call
     const backendUrl = process.env.NEXT_PUBLIC_FORM137_API_URL || 'http://localhost:8080'
-    const response = await fetch(`${backendUrl}/api/dashboard/request/${params.id}/comment`, {
-      method: 'POST',
+    const response = await fetch(`${backendUrl}/api/dashboard/request/${params.id}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ message: message.trim() }),
     })
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          {
+            error: 'Request not found',
+            code: 'REQUEST_NOT_FOUND'
+          }, 
+          { status: 404 }
+        )
+      }
       console.error('Backend API error:', response.status, response.statusText)
       return NextResponse.json(
-        { error: `Failed to add comment: ${response.status}` }, 
+        { error: `Backend API error: ${response.status}` }, 
         { status: response.status }
       )
     }
 
-    // 5. Return created comment
-    const comment = await response.json()
-    return NextResponse.json(comment)
+    // 5. Return request details
+    const requestDetails = await response.json()
+    return NextResponse.json(requestDetails)
 
   } catch (error) {
-    console.error('Failed to add comment:', error)
+    console.error('Failed to fetch request details:', error)
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

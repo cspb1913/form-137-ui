@@ -63,7 +63,7 @@ export async function POST(
 
     // 5. Return created comment
     const comment = await response.json()
-    return NextResponse.json(comment)
+    return NextResponse.json(comment, { status: 201 })
 
   } catch (error) {
     console.error('Failed to add comment:', error)
